@@ -11,6 +11,7 @@ SBCL=/usr/local/bin/sbcl
 CMUCL=/usr/local/bin/lisp
 CLISP=/usr/bin/clisp
 ACL=/usr/local/allegro/8.1/alisp
+CCL=/usr/local/bin/ccl
 
 usage()
 {
@@ -39,6 +40,12 @@ fi
 case $1 in
     sbcl)
 	LISP=$SBCL
+	QUIT="(quit)"
+	IMAGE=garnet
+	;;
+    ccl)
+	BUILD="$CCL --batch"
+	LOAD=$CCL
 	QUIT="(quit)"
 	IMAGE=garnet
 	;;

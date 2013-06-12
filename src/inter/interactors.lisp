@@ -271,7 +271,7 @@ Change log:
 
 (defun Beep ()
   "Causes a beep or bell to sound"
-  (gem:beep (g-value opal::DEVICE-INFO :current-root)))
+  (gem:beep (g-value opal:DEVICE-INFO :current-root)))
 
 
 (defun Warp-Pointer (window x y)

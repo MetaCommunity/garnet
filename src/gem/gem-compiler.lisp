@@ -8,19 +8,33 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; Changes:
 ;;; 10/2/03 RGA --- New compile/load protocol
 ;;;        7/28/96 RGA --- changed to use garnet-compile/load
 ;;;  1-Nov-93 Mickish - Created
 
 
-
 (in-package "COMMON-LISP-USER")
+
+(defvar *debug-gem-mode* t)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-gem-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
 
 (Defvar Garnet-Gem-Files
   '(
     "gem"
     "define-methods"
+    "x"
     ))
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
@@ -34,8 +48,4 @@
 (garnet-copy-files Garnet-Gem-Src Garnet-Gem-Pathname
 		   '("gem-loader.lisp"))
 
-
 (setf (get :garnet-modules :gem) T)
-
-#+allegro-V3.1 (gc t)
-

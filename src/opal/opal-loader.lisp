@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; Changes:
 ;;; 10/2/03 RGA --- Changed from switching on #+apple to #+(and apple (not clx))
 ;;; 11/8/93 AMICKISH Added x.lisp and called gem:init-device
@@ -69,15 +71,15 @@
     "virtual-aggregates"
     "pixmaps"
     "open-and-close"
-    #-(and apple (not clx)) "x"
-    #+(and apple (not clx)) "mac"))
+;;;    "x"
+    ))
 
 (dolist (file Garnet-Opal-Files)
-  (load (garnet-pathnames file Garnet-Opal-PathName)
+  (load (merge-pathnames file Garnet-Opal-PathName)
 	:verbose T))
 
 (setf (get :garnet-modules :opal) t)
 (format t "...Done Opal.~%")
 
-#-(and apple (not clx)) (gem:init-device :X NIL)
-#+(and apple (not clx)) (gem:init-device :MAC NIL)
+(gem:init-device :X NIL)
+
