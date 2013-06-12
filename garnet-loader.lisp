@@ -1198,6 +1198,7 @@ to a 31 character filename with a .lisp suffix."
    #+(and lucid lcl3.0) (lucid-common-lisp:environment-variable "DISPLAY")
    #+(and lucid (not lcl3.0)) (system:environment-variable "DISPLAY")
    #+sbcl (sb-posix:getenv "DISPLAY")
+   #+ccl (ccl:getenv "DISPLAY")
    ;; RGA hope this works as a sensible default.  Need a new function to
    ;; support other Lisp.
    ":0"
@@ -1470,6 +1471,10 @@ running Garnet."
   #+cmu
   (ext:process-output (ext:run-program "/bin/sh" (list "-c" command)
 				       :wait NIL :output :stream))
+
+  #+ccl
+  (external-process-output-stream (run-program "/bin/sh" (list "-c" command)
+					       :wait NIL :output :stream))
   #+sbcl
   (sb-ext:process-output (sb-ext:run-program "/bin/sh" (list "-c" command)
 				       :wait NIL :output :stream))

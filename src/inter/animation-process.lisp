@@ -175,6 +175,12 @@ Change log:
 	   #'(lambda ()
 	       (Timer-Process-Main-Loop inter time once))
 	   :name "Garnet Timer")
+	  #+ccl
+	  (ccl:process-run-function 
+	   "Garnet Timer"
+	   ;; Use a lambda to pass the parameters.
+	   #'(lambda ()
+	       (Timer-Process-Main-Loop inter time once)))
 	  #+sb-thread
 	  (sb-thread:make-thread 
 	   #'(lambda ()

@@ -310,8 +310,8 @@ Change log:
 
 ;; read the events
 (defun Read-All-Transcript-Events ()
-  (let ((display (opal::display-info-display
-		  (the opal::DISPLAY-INFO
+  (let ((display (gem:display-info-display
+		  (the gem:DISPLAY-INFO
 		       (g-value (car *transcript-window-list*)
 				:display-info))))
 	(start-time (get-internal-real-time))
@@ -492,7 +492,7 @@ Change log:
 		       (if want-enter-leave :E-K :K)))))
 	(gem:set-window-property window :EVENT-MASK em)
 	(s-value window :event-mask em)))
-    (if (and drawable (eq event-mask opal::*exposure-event-mask*))
+    (if (and drawable (eq event-mask gem:*exposure-event-mask*))
         (gem:set-interest-in-moved window NIL))))
 
 

@@ -124,6 +124,22 @@
 
 ;;; This is the export list for *some* of OPAL
 (eval-when (:execute :load-toplevel :compile-toplevel)
+  (import '(gem:Display-Info
+	    gem:Make-Display-Info gem:Copy-Display-Info
+	    gem:Display-Info-Display gem:Display-Info-Screen gem:Display-Info-Root-Window
+	    gem:Display-Info-Line-Style-GC gem:Display-Info-Filling-Style-GC
+	    gem:*update-lock* gem:*screen-width* gem:*screen-height*
+
+	    gem:*Fixed-Font-Family* gem:*Serif-Font-Family* gem:*Sans-Serif-Font-Family*
+	    gem:*Small-Font-Size* gem:*Medium-Font-Size*
+	    gem:*Large-Font-Size* gem:*Very-Large-Font-Size*
+	    gem:*Small-Font-Point-Size* gem:*Medium-Font-Point-Size* 
+	    gem:*Large-Font-Point-Size* gem:*Very-Large-Font-Point-Size*
+	    gem:default-font-from-file
+	    ) (find-package "OPAL"))
+)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(bottom right center-x center-y
 	    gv-bottom gv-right gv-center-x gv-center-y
 	    gv-center-x-is-center-of gv-center-y-is-center-of
@@ -157,9 +173,10 @@
 	    hourglass-cursor hourglass-cursor-mask hourglass-pair
 	    garbage-cursor garbage-cursor-mask garbage-pair
 	    with-hourglass-cursor with-cursor default-font
-	    display-info-display display-info-screen
-	    display-info-root-window display-info-line-style-gc
-	    display-info-filling-style-gc
+;;;	    display-info-display display-info-screen
+;;;	    display-info-root-window display-info-line-style-gc
+;;	    display-info-filling-style-gc
+	    device-info
 	    convert-coordinates get-cursor-index string-width string-height
 	    change-cursors restore-cursors char-width
 	    move-cursor-down-one-line
@@ -194,6 +211,7 @@
 	    color white black red green blue cyan yellow orange purple
 	    motif-gray motif-blue motif-orange motif-green motif-light-gray
 	    motif-light-blue motif-light-orange motif-light-green
+	    color-to-index
 	    
 	    ;; From Clean-Up.Lisp
 	    clean-up change-garnet-display update-all reset-cursor
@@ -211,6 +229,7 @@
 	    virtual-aggregate remove-item add-item change-item point-to-rank
 	    recalculate-virtual-aggregate-bboxes do-in-clip-rect
 	    do-items ;; [2003/09/16:rpg]
+
 	    
 	    get-standard-font
 	    )))
@@ -334,6 +353,25 @@ being a string display designator.")
 (defvar *function-alist*)
 (defvar *copy*)
 
+;;; Moved all the X display / screen / etc. stuff into x.lisp to
+;;  respect the modularity of the code.
+
+;; (defvar *default-x-display-name*)
+;; (setf (documentation '*default-x-display-name* 'variable)
+;;       "This is an unfortunately misnamed entity, since it is
+;; actually an X HOSTNAME and not a display name in the sense of
+;; being a string display designator.")
+;; (defvar *default-x-display*)
+;; (defvar *default-x-display-number*)
+;; (defvar *default-x-screen-number*)
+;; (defvar *default-x-screen*)
+;; (defvar *default-x-root*)
+;; (defvar *default-x-colormap*)
+;; (defvar *screen-width*)
+;; (defvar *screen-height*)
+;; (defvar *white*)
+;; (defvar *black*)
+;; (defvar *function-alist*)
 
 ;;replaced old *colormap-index-table* in array form with a hash-table
 ;;[1995/09/12:goldman]
@@ -415,8 +453,7 @@ being a string display designator.")
 	 (member screen-type '(:direct-color :pseudo-color) :test #'eq))))
     
   (with-constants-disabled
-    (s-value opal::COLOR :color-p *is-this-a-color-screen?*))
-  (setq *HP-display-type?* (and *is-this-a-color-screen?* (zerop *black*)))
+    (s-value opal::COLOR :color-p gem:*color-screen-p*))
   )
   
 
@@ -458,16 +495,6 @@ being a string display designator.")
   (percent 0)
   (device-image nil)
   (filling-style nil))
-
-;;; This defstruct generates the functions Make-Display-Info, Copy-Display-Info,
-;;; Display-Info-Display, Display-Info-Screen, Display-Info-Root-Window,
-;;; Display-Info-Line-Style-GC, and Display-Info-Filling-Style-GC.
-(defstruct (DISPLAY-INFO (:print-function display-info-printer))
-  display
-  screen
-  root-window
-  line-style-gc
-  filling-style-gc)
 
 ;;; This defstruct generates the functions Make-Cut-String, Copy-Cut-String,
 ;;; Cut-String-String, Cut-String-Width, and Cut-String-Left-Bearing.

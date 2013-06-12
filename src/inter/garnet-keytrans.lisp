@@ -60,7 +60,7 @@ Change log:
 	(rplacd map modifier-name)
 	(push (cons clx-mask modifier-name) *modifier-translations*))))
 
-(let ((root (g-value opal::device-info :current-root)))
+(let ((root (g-value opal:device-info :current-root)))
   (define-keyboard-modifier (gem:create-state-mask root :control) :control)
   (define-keyboard-modifier (gem:create-state-mask root :mod-1) :meta)
   (define-keyboard-modifier (gem:create-state-mask root :shift) :shift)

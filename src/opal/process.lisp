@@ -255,6 +255,13 @@
     (setf *main-event-loop-process* nil)
     (sb-thread:terminate-thread p))))
 
+#+ccl
+(defun kill-main-event-loop-process ()
+  "Kill the current main-event-loop process."
+  (let ((p *main-event-loop-process*))
+    (when (and p (ccl::processp p))
+      (setf *main-event-loop-process* nil)
+      (ccl:process-kill p))))
 
 #-(or allegro lucid lispworks (and cmu mp) sb-thread)
 (defun kill-main-event-loop-process ())

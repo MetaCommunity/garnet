@@ -226,6 +226,8 @@
     pixmap))
 
 
+
+
 ;;; Initalize the buffer to be background color.
 (defun clear-buffer (a-window)
   (gem:clear-area a-window nil nil nil nil T))
@@ -510,12 +512,6 @@
 	      (setf (bbox-valid-p exposed-bbox) NIL)))))))
   t)
 
-
-
-(defun display-info-printer (s stream ignore)
-  (declare (ignore ignore))
-  (format stream "#<OPAL-DISPLAY-INFO ~A>" (display-info-display s)))
-
 (defun initialize-display (root-window)
   (unless opal:diamond-fill
     ;; Moved here from halftones.lisp.  Used to be done at load time.
@@ -741,7 +737,7 @@
 			 ;; current device.
 			 (g-value device-info :current-root)))
              ;; NIL background-color means white
-	     (background (gem:color-to-index a-window
+	     (background (color-to-index a-window
                           (g-value a-window :background-color)))
 	     (drawable (gem:create-window
 			parent
@@ -906,7 +902,21 @@
     (if make-new-buffer
       (expand-buffer a-window))))
 
-
+(defun Delete-Notify (event-debug event-window)
+  (if event-debug (format t " delete-notify ~s~%" event-window))
+  ;; Will be changed to take a-window as a parameter, rather than event-window.
+  ;; Hence, the following will be unnecessary.
+  (let ((a-window (getf (xlib:drawable-plist event-window) :garnet)))
+    (if a-window
+      (if (schema-p a-window)
+	(let ((drawable (g-value a-window :drawable)))
+	  (if (and drawable (= (xlib:window-id drawable)
+			       (xlib:window-id event-window)))
+	    (opal:destroy a-window)
+	    ;; Then event-window is an orphaned window
+	    (gem:delete-window a-window event-window)))
+	;; Then event-window is an orphaned window
+	(gem:delete-window NIL event-window)))))
 
 (define-method :destroy-me opal::window (a-window)
   ;; first recursively destroy all subwindows

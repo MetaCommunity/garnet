@@ -21,6 +21,7 @@
   '(
     "gem"
     "define-methods"
+    "x"
     ))
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
