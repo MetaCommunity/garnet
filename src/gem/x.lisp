@@ -193,13 +193,16 @@ being a string display designator.")
     (setq *read-write-colormap-cells-p* 
 	  (and *color-screen-p*
 	       (member screen-type '(:direct-color :pseudo-color) :test #'eq))))
-  (setq *HP-display-type?* (and *color-screen-p* (zerop gem:*black*))))
+  (setq *HP-display-type?* (and *color-screen-p* (zerop *black*))))
 
 
 (defun x-color-to-index (root-window a-color)
   (declare (ignore root-window))
-  (when a-color
-    (g-value a-color :colormap-index)))
+  (if *color-screen-p*
+      (if a-color (g-value a-color :colormap-index) *white*)
+      (if (eq a-color opal::black) 	; XXX this breaks modularity.
+	  *black*
+          *white*)))
 
 
 ;; The following two variables used to be in Inter/i-windows.lisp; they
@@ -1247,6 +1250,9 @@ pixmap format in the list of valid formats."
   `(format t "event-handler ~S   ~S~%" ,message ',args))
 
 
+(declaim (inline get-atom-id))
+(defun get-atom-id (data)
+  (aref (the (simple-array (unsigned-byte 32) (5)) data) 0))
 
 ;;; Input event handling
 ;;;
@@ -1258,7 +1264,7 @@ pixmap format in the list of valid formats."
      (:CLIENT-MESSAGE
       (event-window type data format)
       (event-handler-debug :CLIENT-MESSAGE event-window type data format)
-      (interactors::do-client-message event-window type data format display))
+      (interactors::do-client-message event-window type (get-atom-id data) format display))
      (:MAP-NOTIFY
       (event-window)
       (event-handler-debug :MAP-NOTIFY)
@@ -2189,7 +2195,7 @@ returns the HOST name, stripping off the display number."
   "Create Alist since CLX likes to get the draw function in the form of an
 integer.  We want to specify nice keywords instead of those silly
  numbers."
-  (gem:set-draw-function-alist root-window)
+  (set-draw-function-alist root-window)
   (dolist (fn-pair *function-alist*)
     (setf (get (car fn-pair) :x-draw-function) (cdr fn-pair))))
 
@@ -2418,7 +2424,7 @@ integer.  We want to specify nice keywords instead of those silly
        ;; Does the buffer need to be recreated?
        (and old-buffer (> value (xlib:drawable-width old-buffer)))))
     (T
-     (format t "Unknown property ~S in gem:x-set-window-property.~%"
+     (format t "Unknown property ~S in gem::x-set-window-property.~%"
 	     property))))
 
 
