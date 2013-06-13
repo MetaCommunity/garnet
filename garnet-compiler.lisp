@@ -61,12 +61,12 @@ Change log:
 	     (boundp 'load-aggregraphs-p-copy)  
 	     (boundp 'load-debug-p-copy)        (boundp 'Garnet-Debug-Src)
 	     (boundp 'load-gadgets-p-copy)      (boundp 'Garnet-Gadgets-Src)
+	     (boundp 'load-protected-eval-p-copy)    (boundp 'Garnet-protected-eval-Src)
 	     (boundp 'load-gesture-p-copy)      (boundp 'Garnet-Gesture-Src)
 	     (boundp 'load-demos-p-copy)        (boundp 'Garnet-Demos-Src)
 	     (boundp 'load-C32-p-copy)          (boundp 'Garnet-C32-Src)
 	     (boundp 'load-lapidary-p-copy)     (boundp 'Garnet-Lapidary-Src)
 	     (boundp 'load-gilt-p-copy)         (boundp 'Garnet-Gilt-Src)
-	     (boundp 'load-protected-eval-p-copy)    (boundp 'Garnet-protected-eval-Src)
 	     )
   (error "** Must load Garnet-Prepare-Compile and Garnet-Loader before
   loading this file"))
@@ -154,6 +154,14 @@ Change log:
 (when load-debug-p-copy
   (unless compile-debug-p
     (do-load Garnet-Debug-Loader)))
+
+
+(when compile-protected-eval-p
+  (format T "~%  %%%%%%%%%%%%%%  Compiling Protected-Eval %%%%%%%%%%%%%%% ~%")
+  (garnet-load "protected-eval-src:protected-eval-compiler"))
+(when load-protected-eval-p-copy
+  (unless compile-protected-eval-p
+    (load Garnet-protected-eval-Loader)))
 
 
 (when compile-gesture-p

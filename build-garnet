@@ -41,13 +41,13 @@ case $1 in
     sbcl)
 	LISP=$SBCL
 	QUIT="(quit)"
-	IMAGE=garnet
+	IMAGE=garnet-sbcl
 	;;
     ccl)
 	BUILD="$CCL --batch"
 	LOAD=$CCL
 	QUIT="(quit)"
-	IMAGE=garnet
+	IMAGE=garnet-ccl
 	;;
     cmucl)
 	LISP=$CMUCL
@@ -83,5 +83,10 @@ EOF
 
 $LISP << EOF
 (load "garnet-loader")
-(opal:make-image "$IMAGE" #+sbcl :executable #+sbcl t)
+
+(let ((args (list "$IMAGE"
+                  #+sbcl :executable #+sbcl t
+                  #+cmu :executable #+cmu t
+                  #+ccl :prepend-kernel #+ccl t)))
+ (apply #'opal:make-image args))
 EOF

@@ -207,10 +207,8 @@ This file defines a host of Lisp utilities used by other Garnet code.
 ;;; (end) Verify-Binding
 ;;;---------------------------------------------------------------------------
 
-
-;; Lucid thinks NIL and keywords are functions!
 (defun safe-functionp (fn)
-  (or (and fn (not (keywordp fn)) (functionp fn))
+  (or (functionp fn)
       (and (symbolp fn) (fboundp fn))))
 
 (defun probe-directory (filename)

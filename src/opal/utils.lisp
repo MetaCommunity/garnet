@@ -246,6 +246,12 @@ Please consult your lisp's user manual for instructions.~%")
     (setf ext:*after-save-initializations*
  	  (append  ext:*after-save-initializations* (list #'garnet-restart-function))) 
     (apply #'ext:save-lisp filename extra-args))
+
+  #+ccl
+  (progn
+    (pushnew #'garnet-restart-function ccl:*lisp-startup-functions*)
+    (apply #'ccl:save-application filename extra-args))
+
   
   #+sbcl
   (progn
