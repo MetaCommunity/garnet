@@ -187,16 +187,16 @@
 (defun make-keyword-char (symbol bits)
   (let ((prefix (aref *prefixes* (logand bits 15))))
     (if prefix
-      (intern (concatenate 'simple-string
-			    prefix
-			    (if (characterp symbol)
-				(let ((name (char-name symbol)))
-				  (if name
-				      (string-upcase name)
-				      (string symbol)))
-				(symbol-name symbol)))
-	      'keyword)
-      symbol)))
+	(intern (concatenate 'simple-string
+			     prefix
+			     (if (characterp symbol)
+				 (let ((name (char-name symbol)))
+				   (if name
+				       (string-upcase name)
+				       (string symbol)))
+				 (symbol-name symbol)))
+		'keyword)
+	symbol)))
 
 (defun base-char-to-character (base-char bits)
   (if (keywordp base-char)		; special, create a symbol for the keyword

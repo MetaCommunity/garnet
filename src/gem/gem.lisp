@@ -133,7 +133,7 @@
 		 args)))
 
        ;; Export the interface function from the Gem package.
-       (eval-when (eval load compile) (export ',macro-name)))))
+       (eval-when (:execute :load-toplevel :compile-toplevel) (export ',macro-name)))))
 
 ;; Same, generates a function instead of a macro.
 #-(and)

@@ -226,13 +226,13 @@ when a saved image is restarted (see opal:make-image in opal/utils.lisp).")
 ;; and want it to run faster, remove :GARNET-DEBUG from the *features* list
 ;; and RECOMPILE all of Garnet and your code.  The result will be smaller and
 ;; somewhat faster.
-;; To remove :GARNET-DEBUG from the *features* list, either defvar
-;; Garnet-Garnet-Debug to NIL before you load the garnet-loader, or simply
-;; comment out the next few lines.
-(defvar Garnet-Garnet-Debug T)
-(if Garnet-Garnet-Debug
-    (pushnew :garnet-debug *features*)
-    (setf *features* (delete :garnet-debug *features*)))
+;;
+;; Note: It's probably better to leave the debugging feature on, because it
+;; includes some useful tools and doesn't seem to have that much of an
+;; impact on size and speed.
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  #+(and) (pushnew :garnet-debug *features*)
+  #-(and) (setf *features* (delete :garnet-debug *features*)))
 
 
 (defvar *garnet-compile-debug-mode* nil
@@ -240,7 +240,7 @@ when a saved image is restarted (see opal:make-image in opal/utils.lisp).")
 to make it more debuggable.")
 
 (defvar *garnet-compile-debug-settings*
-  '(optimize (speed 2) (safety 3) (debug 3) (space 3) (compilation-speed 0))
+  '(optimize (speed 2) (safety 3) (debug 3) (space 3) (compilation-speed #+ccl 3 #-ccl 0))
   "Use these settings for globally debugging the system or for debugging
 a specific module. They emphasize debuggability at the cost of some speed.
 
@@ -255,7 +255,7 @@ With SBCL:
 - They allow all possible debugging features.")
 
 (defvar *garnet-compile-production-settings*
-  '(optimize (speed 3) (safety 1) (space 0) (debug 2) (compilation-speed 0))
+  '(optimize (speed 3) (safety 1) (space 0) (debug 1) (compilation-speed 0))
   "Production compiler policy settings. Emphasize speed, de-emphasize debugging.")
   
 (defvar *default-garnet-proclaim*
@@ -273,13 +273,16 @@ With SBCL:
 3. Otherwise (for 'production' builds) just set *garnet-compile-debug-mode* 
    to nil and leave everything else alone.")
 
+;; Make SBCL calmer.
+#+sbcl
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+#+sbcl
+(declaim (sb-ext:muffle-conditions sb-kernel::style-warning))
 
- #+sbcl
- (eval-when (:compile-toplevel :load-toplevel :execute)
-   (setf sb-ext:*muffled-warnings* 'sb-kernel::style-warning))
 
- (when *default-garnet-proclaim*
-   (proclaim *default-garnet-proclaim*))
+
+(when *default-garnet-proclaim*
+  (proclaim *default-garnet-proclaim*))
 
  
  ;;; Defpackages.

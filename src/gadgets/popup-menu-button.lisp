@@ -67,7 +67,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Popup-Menu-Button lines-bitmap downarrow-bitmap))
 
   #+garnet-test

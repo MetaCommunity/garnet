@@ -113,8 +113,7 @@ Change log:
 
 (in-package "GILT")
 
-(eval-when #-(or cmu lucid) (:compile-toplevel :load-toplevel :execute)
-	   #+(or cmu lucid) (compile load eval)
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(Do-Go Do-Stop)))
 
 (defparameter Gilt-Version "V3.0")
@@ -351,8 +350,7 @@ Change log:
 			(gg:is-a-motif-rect gad))
 	      (pushnew (string-downcase (Load-File-Name item)) gadgets-to-load)))))
     (when gadgets-to-load
-      (format T "(eval-when #-(or cmu lucid) (:compile-toplevel :load-toplevel :execute)
-           #+(or cmu lucid) (compile load eval)~%")
+      (format T "(eval-when (:compile-toplevel :load-toplevel :execute)~%")
       (format T "  (dolist (gadget '(")
       (dolist (gad gadgets-to-load)
 	(format T "\"~a-loader\"~%		    " gad))

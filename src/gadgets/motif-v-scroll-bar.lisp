@@ -63,7 +63,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Motif-V-Scroll-Bar))
   #+garnet-test
   (export '(Motif-V-Scroll-Go Motif-V-Scroll-Stop

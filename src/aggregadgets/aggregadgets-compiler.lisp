@@ -57,13 +57,14 @@
     "scalable-aggregraph-image"
     ))
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-Aggregadgets-Pathname))
 
-(dolist (file Garnet-Aggregadgets-Files)
-  (let ((gfile (concatenate 'string "aggregadgets:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
+(with-compilation-unit ()
+  (dolist (file Garnet-Aggregadgets-Files)
+    (let ((gfile (concatenate 'string "aggregadgets:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Aggregadgets-Src Garnet-Aggregadgets-Pathname
 		   '("aggregadgets-loader.lisp"

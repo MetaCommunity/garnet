@@ -71,7 +71,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Scrolling-Labeled-Box Scrolling-Labeled-Box-Win
 	    Scrolling-Labeled-Box-Go Scrolling-Labeled-Box-Stop
 	    Scrolling-Labeled-Box-Obj)))

@@ -79,7 +79,7 @@
 
 (in-package :GARNET-GADGETS)
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Insert-Text-Into-Box Motif-Scrolling-Labeled-Box Motif-Scrolling-Unlabeled-Box))
   #+garnet-test
   (export '(Motif-Scrolling-Labeled-Box-Go Motif-Scrolling-Labeled-Box-Stop

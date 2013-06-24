@@ -267,8 +267,7 @@ number.  <stream> is the stream (default *query-io*) and <option-list>
 is the list of options (default '(:yes no)).  <message> is displayed
 first on the stream as a prompt."
   (declare (type String message) (type Stream stream in-stream out-stream)
-	   (type List option-list)
-	   (:returns (type (Member option-list) option)))
+	   (type List option-list))
   (kr:s-value selector-display :beep-p beep)
   (gg:display-query-and-wait selector-display message option-list))
 

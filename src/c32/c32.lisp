@@ -126,7 +126,7 @@
 
 (in-package "C32")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Do-Go Do-Stop)))
 
 ;;;*******************************************************************

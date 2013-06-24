@@ -254,7 +254,6 @@
 
 (defvar *exit-main-event-loop-function* NIL)
 
-(defvar *inside-main-event-loop* nil)
 
 ;; returns t if any top level window is visible
 (defun any-top-level-window-visible ()
@@ -883,6 +882,8 @@
     (if make-new-buffer
       (expand-buffer a-window))))
 
+
+;; XXX FMG Modularity leakage (xlib symbols in opal).
 (defun Delete-Notify (event-debug event-window)
   (if event-debug (format t " delete-notify ~s~%" event-window))
   ;; Will be changed to take a-window as a parameter, rather than event-window.

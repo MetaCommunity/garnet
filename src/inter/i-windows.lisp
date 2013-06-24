@@ -225,11 +225,13 @@
     (when win
       (format *trans-to-file*
 	  "> ~s ~s ~s ~s ~s ~s ~s ~s~%"
-	  (event-char event) (event-code event) (event-mousep event)
-	  (event-downp event) (event-x event) (event-y event)
-	  (- (get-internal-real-time) *trans-time*) ; store time difference
-						    ; from start time
-	  (force-output *trans-to-file*)
+	  (event-char event)
+	  (event-code event)
+	  (event-mousep event)
+	  (event-downp event)
+	  (event-x event)
+	  (event-y event)
+	  (- (get-internal-real-time) *trans-time*) ; store time difference from start time
 	  win))))
 
 ;; recursively add all the subwindows of the windows in win-list 
@@ -717,6 +719,7 @@
   (opal::Map-Notify (debug-p :event) event-window))
 
 (defun do-motion-notify (a-window x y display)
+  (declare (ignore display))
   (if *trans-from-file*
     T					; ignore events when read transcript
     (Motion-Notify a-window x y)))
@@ -724,12 +727,13 @@
 (defun do-unmap-notify (a-window)
   (opal::Unmap-Notify (debug-p :event) a-window))
 
-(defun do-client-message (event-window type data format display)
+;;; XXX FMG This breaks modularity --- xlib symbols in interactors.
+(defun do-client-message (event-window type atom-id format display)
   (cond ((and (eq format 32)
 	      (eq type :WM_PROTOCOLS)
 	      (eq (xlib:atom-name 
 		   display
-		   (aref (the (simple-array (unsigned-byte 32) (5)) data) 0))
+		   atom-id)
 		  :WM_DELETE_WINDOW))
 	 (opal::Delete-Notify NIL event-window))
 	((and (eq format 32)
@@ -737,8 +741,7 @@
 	 (if interactors::*trans-from-file*
 	   T
 	   ;; ignore events when read transcript
-	   (interactors::Queue-Timer-Event
-	    (aref (the (simple-array (unsigned-byte 32) (5)) data) 0)))))
+	   (interactors::Queue-Timer-Event atom-id))))
   NIL)
 
 
@@ -764,7 +767,7 @@
 
 (defun main-event-loop (&key (exit-when-no-window-visible :on))
   "Event handler for the interactor windows"
-  (unless opal::*main-event-loop-process*
+  (unless opal:*main-event-loop-process*
     (if (and (eq exit-when-no-window-visible :on)
 	     (not (opal::any-top-level-window-visible)))
 	(format t "Cannot call main-event-loop when no window is visible~%")
@@ -780,14 +783,15 @@
 
 
 (defun exit-main-event-loop ()
-  (when (and (null opal::*main-event-loop-process*)
-	     opal::*inside-main-event-loop*)
-    (setq opal::*inside-main-event-loop* NIL)
+  (when (and (null opal:*main-event-loop-process*)
+	     opal:*inside-main-event-loop*)
+    (setq opal:*inside-main-event-loop* NIL)
     (throw 'exit-main-loop-exception t)))
 
-(defvar opal::*exit-main-event-loop-function* #'exit-main-event-loop
-  "This variable tells opal what function to call when you delete the
-last window, so that main-loop will be exited automatically.")
+
+;; This variable tells opal what function to call when you delete the
+;; last window, so that main-loop will be exited automatically.
+(setf opal:*exit-main-event-loop-function* #'exit-main-event-loop)
 
 
 ;;; Wait-Interaction-Complete

@@ -84,7 +84,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Polyline-Creator Stop-Polyline-Creator Abort-Polyline-Creator
 	    Toggle-Polyline-Handles Destroy-Polyline-Handles
 	    Hide-Polyline-Handles))

@@ -144,8 +144,8 @@
 (defun Disconnect-Garnet ()
   (when *garnet-has-been-disconnected*
     (return-from disconnect-garnet))
+  (setq *main-event-loop-process-was-halted* t)
   (when (main-event-loop-process-running-p)
-    (setq *main-event-loop-process-was-halted* t)
     (kill-main-event-loop-process))
   (setq *all-the-windows* (copy-list *garnet-windows*))
   (setq *all-windows-which-have-been-closed* nil)
@@ -172,7 +172,7 @@
     #'(lambda (txt)
 	(if (g-cached-value txt :update-slots-values)
 	    (setf (aref (g-cached-value txt :update-slots-values)
-			*text-xfont*)
+			+text-xfont+)
 		  :closed))))
   
   ;; Remove all connections to X from the window objects.
@@ -194,6 +194,8 @@
   (unless *garnet-has-been-disconnected*
     (return-from reconnect-garnet))
 
+  (format t "Reconnecting Garnet ...~%")
+  
   (let ((current-device (g-value DEVICE-INFO :current-device))
         root-window)
 
@@ -227,8 +229,8 @@
 	(do-all-instances text
 	  #'(lambda (txt)
 	      (let ((vals (g-cached-value txt :update-slots-values)))
-		(if (and vals (eq (aref vals *text-xfont*) :closed))
-		  (setf (aref vals *text-xfont*)
+		(if (and vals (eq (aref vals +text-xfont+) :closed))
+		  (setf (aref vals +text-xfont+)
 			(s-value txt :xfont (g-value txt :font :xfont))))))))
 
     (dolist (f *auxilliary-reconnect-routines*)
@@ -244,9 +246,11 @@
     (setf *garnet-windows* *all-the-windows*)
 
     (when *main-event-loop-process-was-halted*
+      (format t "Starting event loop process ...")
       (launch-main-event-loop-process))
 
     (gem:set-window-property root-window :REPORT-ASYNCHRONOUS-ERRORS NIL)
 
     (setq *garnet-has-been-disconnected* nil)
+    (format t "Done.~%")
     t))

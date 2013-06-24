@@ -85,7 +85,7 @@ affected aggrelist.
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(gadget-add-item gadget-remove-item)))
 
 

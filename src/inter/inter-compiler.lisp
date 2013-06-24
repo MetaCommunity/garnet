@@ -86,10 +86,11 @@
     "angleinter"
     "animatorinter"))
 
-(dolist (file Garnet-Inter-Files)
+(with-compilation-unit ()
+  (dolist (file Garnet-Inter-Files)
   (let ((gfile (concatenate 'string "inter:" file)))
     (garnet-compile gfile)
-    (garnet-load gfile)))
+    (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Inter-Src Garnet-Inter-Pathname
 		   '("inter-loader.lisp"))

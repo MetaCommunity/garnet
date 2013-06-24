@@ -156,6 +156,7 @@ Change log:
         ;; RGA --- added call to get-obj-slots-for-movegrow
     (multiple-value-bind (left top width height)
 	(get-obj-slots-for-movegrow obj nil an-interactor)
+      (declare (ignore left top))
         ;; use a global to avoid cons-ing
       (setf (first *glo-points*)
 	(case attach
@@ -462,7 +463,6 @@ Change log:
 ;;; vis = NIL
 (defun sel-change-feedback-visible (an-interactor feedback
 						  object-being-changed vis)
-  #-garnet-debug (declare (ignore an-interactor))
   (when feedback
     (let ((val (if vis object-being-changed NIL)))
       (dbprint-feed :obj-over feedback val an-interactor)
@@ -479,7 +479,6 @@ Change log:
 
 ;; Copies the 4 values into an existing list if there, otherwise creates one
 (defun set-obj-list4-slot (obj slot new-list4 inter feedbackp)
-  #-garnet-debug (declare (ignore inter feedbackp))
   (dbprint-either slot obj new-list4 inter feedbackp)
   (set-obj-list4-slot-no-db obj slot new-list4))
 
@@ -523,7 +522,6 @@ Change log:
 	    (t (error "bad :slots-to-set in ~s.  Should be :box :points or list of slots" inter))))))
 	     
 (defun slot-set (obj slot default-slot new-val inter feedbackp)
-  #-garnet-debug (declare (ignore feedbackp))
   (cond ((null slot)) ; don't set
 	((eq slot T)
 	 (dbprint-either default-slot obj new-val inter feedbackp)
@@ -538,7 +536,7 @@ Change log:
 (defun get-obj-slots-for-movegrow (obj line-p inter)
   (when obj 
     (let ((slots-to-set (g-value inter :slots-to-set))
-	  (old-points (kr:g-value obj (if line-p :points :box))))
+	  #-(and) (old-points (kr:g-value obj (if line-p :points :box))))
       (cond ((member slots-to-set '(:box :points))
 	     ;; RGA using old-points gives some odd effects
 	     ;; (if old-points (values-list old-points))
@@ -577,7 +575,7 @@ Change log:
 ;;; Default Procedures to go into the slots
 ;;;============================================================
 
-(proclaim '(special Move-Grow-Interactor))
+(declaim (special Move-Grow-Interactor))
 
 (defun Move-Grow-Interactor-Initialize (new-Move-Grow-schema)
   (if-debug new-Move-Grow-schema (format T "Select change initialize ~s~%"
@@ -749,7 +747,7 @@ Change log:
 	  (GoToStartState an-interactor NIL)
 	  (kr-send an-interactor :stop-action an-interactor obj points))))))
 
-#| ----------------------------------------------------------------------
+#|| ----------------------------------------------------------------------
 ---- Pedro's proposal for :where-hit when filter doesn't work because
 ---- object jumps to off-grid even if it was on grid to start with
 (defun Move-Grow-do-start (an-interactor new-obj-over event)
@@ -807,7 +805,7 @@ Change log:
 	  (GoToStartState an-interactor NIL)
 	  (kr-send an-interactor :stop-action an-interactor obj points))))))
 ----------------------------------------------------------------------
-|#
+||#
 
 (defun Move-Grow-do-outside (an-interactor)
   (if-debug an-interactor (format T "Move-Grow outside~%"))

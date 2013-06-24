@@ -55,7 +55,7 @@
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(HALF K-FRAMED-TEXT)))
 (defmacro half (n)
   `(truncate ,n 2))

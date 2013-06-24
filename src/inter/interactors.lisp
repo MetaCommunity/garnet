@@ -299,19 +299,17 @@ NOTE: inter is an interactor or may be one of:
       :event -- show all events that come in
       :next -- trace the next interactor to run"
   #+garnet-debug
-    `(when (and *int-debug* (trace-test ,inter))
-    (let ((*print-pretty* NIL))
-      ,@body))
+  `(when (and *int-debug* (trace-test ,inter))
+     (let ((*print-pretty* NIL))
+       ,@body))
   )
   
 (defmacro debug-p (inter)
   "Returns T or NIL based on whether should trace or not.  Should be same
 test as in if-debug (used when debugging value being passed as a parameter).
 If no debug (because :garnet-debug is not on *features*), just generate NIL"
-  #+garnet-debug
-  `(and *int-debug* (trace-test ,inter))
-  #-garnet-debug
-  nil)
+  #-garnet-debug nil
+  #+garnet-debug `(and *int-debug* (trace-test ,inter)))
 
 (defun trace-test (inter)
   "Hook used to enable/disable fancy tracing"
@@ -367,8 +365,9 @@ If no debug (because :garnet-debug is not on *features*), just generate NIL"
 
 #-garnet-debug
 (defun trace-inter (&optional (trace-what :status))
-    (format T "** Can't debug since Interactors was compiled with
-        :garnet-debug not in the *features* list (see garnet-loader.lisp)."))
+  (declare (ignore trace-what))
+  (format T "** Can't debug since Interactors was compiled with 
+       :garnet-debug not in the *features* list (see garnet-loader.lisp)."))
 
 #+garnet-debug
 (defun untrace-inter (&optional untrace-what)
@@ -386,6 +385,7 @@ If no debug (because :garnet-debug is not on *features*), just generate NIL"
 
 #-garnet-debug
 (defun untrace-inter (&optional untrace-what)
+  (declare (ignore untrace-what))
   (format T "** Can't debug since Interactors was compiled with
         :garnet-debug not in the *features* list (see garnet-loader.lisp)."))
 
@@ -415,15 +415,15 @@ If no debug (because :garnet-debug is not on *features*), just generate NIL"
 	(incf inactive sub-inactive)))
     (values total inactive)))
 
-(declaim (inline  Check-and-handle-debug-next-inter))
-(defun Check-and-handle-debug-next-inter ()
-  "This is called by General-Go when there is a value in
-*debug-next-inter*.  Calls the function in *debug-next-inter* and
-clears the variable."
+
+(declaim (inline check-and-handle-debug-next-inter))
+(defun Check-and-handle-debug-next-inter (an-interactor)
   (when *debug-next-inter*
     (Handle-Debug-Next-Inter an-interactor)))
 
 (defun Handle-Debug-Next-Inter (an-interactor)
+  "This is called when there is a value in *debug-next-inter*.  
+Calls the function in *debug-next-inter* and clears the variable."
   (let ((fn *debug-next-inter*))
     (setq *debug-next-inter* NIL)	; clear first in case the function crashes
     (funcall fn an-interactor)))
@@ -431,27 +431,31 @@ clears the variable."
 
 ;;; Macros to print debugging information
 ;;
-
+(declaim (inline dbprinter))
 (defun dbprinter (slot obj val feedbackp)
   (format T "  * Setting ~s of ~s~a to ~s~%" slot obj
 	  (if feedbackp " (Feedback-Obj)" "")
 	  val))
 
 (declaim (inline dbprint))
-(defun dbprint (slot obj val inter) 
-  (if-debug inter (dbprinter slot obj val NIL)))
+(defun dbprint (slot obj val inter)
+  #-garnet-debug (declare (ignore slot obj val inter))  
+  #+garnet-debug (if-debug inter (dbprinter slot obj val NIL)))
 
 (declaim (inline dbprint-either))
 (defun dbprint-either (slot obj val inter feedbackp) 
-  (if-debug inter (dbprinter slot obj val feedbackp))) 
+  #-garnet-debug (declare (ignore slot obj val inter feedbackp))
+  #+garnet-debug (if-debug inter (dbprinter slot obj val feedbackp))) 
 
 (declaim (inline dbprint-sel))
 (defun dbprint-sel (slot obj val inter) 
-  (if-debug inter (dbprinter slot obj val NIL)))
+  #-garnet-debug (declare (ignore slot obj val inter))  
+  #+garnet-debug (if-debug inter (dbprinter slot obj val NIL)))
 
 (declaim (inline dbprint-feed))
 (defun dbprint-feed (slot obj val inter) 
-  (if-debug inter (dbprinter slot obj val T)))
+  #-garnet-debug (declare (ignore slot obj val inter))  
+  #+garnet-debug (if-debug inter (dbprinter slot obj val T)))
 
 (defun dbstrprinter (obj feedbackp)
   (format T "  * Setting :string of ~s~a to ~s and :cursor-index to ~s~%" obj
@@ -461,7 +465,8 @@ clears the variable."
 
 (declaim (inline dbprint-str))
 (defun dbprint-str (obj inter feedbackp) 
-  (if-debug inter (dbstrprinter obj feedbackp)))
+  #-garnet-debug (declare (ignore obj inter feedbackp))
+  #+garnet-debug (if-debug inter (dbstrprinter obj feedbackp)))
 
 
 ;;; Priority levels
@@ -1826,7 +1831,7 @@ and stop. We cannot count on getting different events for this."
 		    (progn
 		      (if-debug :short
 				(format T "starting ~s~%" an-interactor))
-		      (Check-and-handle-debug-next-inter)
+		      (Check-and-handle-debug-next-inter an-interactor)
 		      ;; these next two slots might be used in formulas
 		      (s-value an-interactor :first-obj-over obj)
 		      (s-value an-interactor :current-obj-over obj)
@@ -1835,7 +1840,7 @@ and stop. We cannot count on getting different events for this."
 						an-interactor obj event)))
 		    ;; else exit and return NIL
 		    (return-from general-go NIL)))
-	(:running (Check-and-handle-debug-next-inter)
+	(:running (Check-and-handle-debug-next-inter an-interactor)
 		  (s-value an-interactor :current-window event-window)
 		  (if (check-event event :abort-event an-interactor)
 		      (progn
@@ -1874,7 +1879,7 @@ and stop. We cannot count on getting different events for this."
 				    (setq return-val 
 					  (Kr-Send an-interactor
 						   :Do-running an-interactor obj event)))))))))
-	(:outside (Check-and-handle-debug-next-inter)
+	(:outside (Check-and-handle-debug-next-inter an-interactor)
 		  (s-value an-interactor :current-window event-window)
 		  (if (check-event event :abort-event an-interactor)
 		      (progn

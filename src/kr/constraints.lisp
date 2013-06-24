@@ -723,7 +723,10 @@ dotted pairs, where each pair consists of a schema and a slot."
 
 
 ;;; Define basic builtin types.  These definitions must come after the
-;; file KR.LISP is loaded. Note that ORDER IS CRUCIAL HERE.
+;; file KR.LISP is loaded.
+;;
+
+;;; The order in which the following definitions occur IS CRUCIAL HERE.
 ;;
 
 (def-kr-type kr-no-type () '(satisfies no-type-error-p)

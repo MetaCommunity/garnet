@@ -158,6 +158,16 @@
 	exposed-bbox
 )
 
+#+allegro
+(defun set-win-update-info-height (win-update-info value)
+  (setf (win-update-info-height win-update-info)
+	value))
+
+#+allegro
+(defun set-win-update-info-width (win-update-info value)
+  (setf (win-update-info-height win-update-info)
+	value))
+
 ;;; The invalid objects slot used to be unprintable because it had
 ;;; an extra item at the end, but that has been eliminated.
 (defun win-update-info-print-function (struct stream depth)

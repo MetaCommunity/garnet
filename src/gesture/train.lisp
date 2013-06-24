@@ -37,7 +37,7 @@ Change log:
 
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(gest-add-example
 	    gest-classifier-train
 	    gest-done-adding 

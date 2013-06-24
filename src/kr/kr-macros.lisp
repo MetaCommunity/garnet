@@ -53,7 +53,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *special-kr-optimization*
-    '(optimize (speed 3) (safety 0) (space 0) (debug 0) #+ALLEGRO (debug 0))))
+    '(optimize (speed 3) (safety 0) (space 0) (debug 0))))
 
 ;; This enables the eager-evaluation version.
 ;;  Currently turned off.
@@ -584,6 +584,26 @@
   (declare (ignore forms))
   #-GARNET-DEBUG
   nil)
+
+
+(defparameter types-array NIL
+  "Array used to decode a number into its corresponding Lisp type.")
+
+(defparameter type-fns-array NIL
+  "Array used to decode a number into its corresponding type-fn.")
+
+(defparameter type-docs-array NIL
+  "Array used to decode a number into its corresponding documentation string.")
+
+(defparameter types-table (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl t)
+  "Hash table used to look up a Lisp type and returns its code")
+
+(declaim (fixnum *types-array-inc*))
+(defparameter *types-array-inc* 255) ;; allocate in blocks of this size
+
+(declaim (fixnum *next-type-code*))
+(defparameter *next-type-code*  0)   ;; next code to allocate
+
 
 (declaim (inline formula-p deleted-p not-deleted-p is-inherited is-parent is-constant
 		 is-update-slot set-is-update-slot is-local-only is-parameter

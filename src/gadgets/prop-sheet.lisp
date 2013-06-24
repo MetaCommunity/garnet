@@ -262,7 +262,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Prop-Sheet ReUsePropSheet prop-sheet-for-obj
 	    ReUsePropSheetObj Get-Val-For-PropSheet-Value
 	    Set-Val-For-PropSheet-Value)))
@@ -1240,7 +1240,7 @@ so set there"      val slot fail-objs
 
 
 #+garnet-test
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(prop-sheet-for-obj-Go  prop-sheet-for-obj-stop)))
 
 #+garnet-test

@@ -80,7 +80,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Gauge))
   #+garnet-test
   (export '(Gauge-Go Gauge-Stop Gauge-Obj Gauge-Top-Agg Gauge-Win)))

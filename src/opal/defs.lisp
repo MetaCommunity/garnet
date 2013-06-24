@@ -119,6 +119,9 @@
 
 ;;; This is the export list for *some* of OPAL
 (eval-when (:execute :load-toplevel :compile-toplevel)
+  ;; Import these because at one point they were in Garnet.
+  ;; Makes it easier to just go forward.
+  ;; XXX Should rethink this if we ever want to add another backend (especially the font stuff).
   (import '(gem:Display-Info
 	    gem:Make-Display-Info gem:Copy-Display-Info
 	    gem:Display-Info-Display gem:Display-Info-Screen gem:Display-Info-Root-Window
@@ -219,6 +222,9 @@
 	    kill-main-event-loop-process
 	    main-event-loop-process-running-p
 	    running-main-event-loop-process-elsewhere-p
+	    *inside-main-event-loop*
+	    *main-event-loop-process*
+	    *exit-main-event-loop-function*
 	    
 	    ;; From virtual-aggregates.lisp
 	    virtual-aggregate remove-item add-item change-item point-to-rank

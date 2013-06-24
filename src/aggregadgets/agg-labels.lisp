@@ -24,7 +24,7 @@ Change log:
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Single-Button-Get-Label Panel-Get-Label)))
 
 ;;

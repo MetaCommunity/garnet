@@ -33,7 +33,7 @@
 
 (in-package "COMMON-LISP-USER")
 
-(defvar *debug-opal-mode* t)
+(defvar *debug-opal-mode* nil)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (proclaim
@@ -84,10 +84,11 @@
 #+ALLEGRO
 (proclaim '(optimize (debug 0)))
 
-(dolist (file Garnet-Opal-Files)
-  (let ((gfile (concatenate 'string "opal:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
+(with-compilation-unit ()
+  (dolist (file Garnet-Opal-Files)
+    (let ((gfile (concatenate 'string "opal:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Opal-Src Garnet-Opal-Pathname
 		   '("opal-loader.lisp"

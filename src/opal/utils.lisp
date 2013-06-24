@@ -46,8 +46,6 @@
 ;;             function in CMUCL when restarting
 ;;  03/05/93 amickish - Created with shell-exec and make-image
 
-(in-package "COMMON-LISP")
-
 (in-package "OPAL")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
@@ -129,6 +127,7 @@
 (defun garnet-restart-function ()
   (format t "*** Restarting Garnet ~A image created with opal:make-image ***~%"
 	  common-lisp-user::Garnet-Version-Number)
+  (format t "*** Lisp: ~A, ~A ***~%" (lisp-implementation-type) (lisp-implementation-version))
   (if (boundp 'garnet-image-date)
       (format t "*** Image creation date: ~A ***~%" garnet-image-date))
   (opal:reconnect-garnet))

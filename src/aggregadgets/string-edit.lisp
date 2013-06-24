@@ -24,7 +24,7 @@ Change log:
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(string-set-func)))
 
 ;; Used for testing the string-set-func methods

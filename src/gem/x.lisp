@@ -60,8 +60,10 @@
 	    *function-alist*
 	    *white* *black*
 	    *color-screen-p*
+	    *default-x-colormap*
 	    *read-write-colormap-cells-p*
 	    *update-lock*
+	    *garnet-break-key*
 	    ;; Font stuff.
 	    *Fixed-Font-Family* *Serif-Font-Family* *Sans-Serif-Font-Family*
 	    *Small-Font-Size* *Medium-Font-Size*
@@ -582,6 +584,7 @@ affects an area of <width> by <height>."
 a pixmap.  Same for the <mask>.  <x> and <y> are a position when the
 source is a pixmap; otherwise, they are the cursor-char and the mask-char
 for the two fonts."
+  (declare (ignore root-window))
   (if from-font-p
       (xlib:create-glyph-cursor :source-font source :mask-font mask
 				:source-char x
@@ -1249,6 +1252,8 @@ pixmap format in the list of valid formats."
 (defmacro event-handler-debug (message &rest args)
   `(format t "event-handler ~S   ~S~%" ,message ',args))
 
+;; Forward reference.
+(declaim (special interactors::*garnet-break-key*))
 
 (declaim (inline get-atom-id))
 (defun get-atom-id (data)
@@ -1555,7 +1560,8 @@ pixmap format in the list of valid formats."
 	       adjusted-face-part
 	       "-*-*-*-" 
 	       size-part
-	       "-*-*-*-*-iso8859-1"))))))
+	       "-*-*-*-*-iso8859-1"
+#-(and)	       "-*-*-*-*-iso10646-1"))))))
 
 
 
@@ -1591,8 +1597,7 @@ pixmap format in the list of valid formats."
   (let ((dx-plist (g-value font-from-file :display-xfont-plist))
 	(display (the-display root-window)))
     (or (getf dx-plist display)
-	(let ((font-path (fix-font-path
-			  (g-value font-from-file :font-path)))
+	(let ((font-path (g-value font-from-file :font-path))
 	      (font-name (g-value font-from-file :font-name)))
 	  (when font-path
 	    (let ((xfont-path (mapcar #'remove-null-char
@@ -1928,8 +1933,6 @@ pixmap format in the list of valid formats."
 		     :data (list index))))
 
 
-
-
 (defparameter *update-lock*
   #+ALLEGRO (mp:make-process-lock :name "UPDATE-LOCK")
   #+(and cmu mp) (mp:make-lock "UPDATE-LOCK")
@@ -1949,10 +1952,10 @@ pixmap format in the list of valid formats."
       (mp:with-process-lock (*update-lock*)
 	(xlib:map-window drawable)
 	(xlib:display-force-output display)
-	(xlib:event-case (display :discard-p nil :peek-p t :timeout 5)
-	  (:map-notify (event-window)
-		       (eq event-window drawable)))))))
-
+	(loop
+	   (if (eq (xlib:window-map-state drawable) :unmapped)
+	       (sleep .1)
+	       (return t)))))))
 
 #+ccl
 (defun x-map-and-wait (a-window drawable)
@@ -1965,8 +1968,6 @@ pixmap format in the list of valid formats."
 	 (if (eq (xlib:window-map-state drawable) :unmapped)
 	     (sleep .1)
 	     (return t))))))
-
-
 
 #+cmu
 (defun x-map-and-wait (a-window drawable)
@@ -2041,6 +2042,8 @@ pixmap format in the list of valid formats."
   (xlib:read-bitmap-file pathname))
 
 
+;; Forward references.
+(declaim (special opal::window opal::device-info))
 
 ;;; Reparent a window.
 ;;;
@@ -2119,9 +2122,8 @@ returns the HOST name, stripping off the display number."
 
 (defun x-set-device-variables (root-window full-display-name
 			       &aux auth-name auth-data)
-;;  (declare (ignore root-window)
-;;	   (ignore auth-name auth-data)
-;;	   )
+  (declare (ignore root-window)
+	   (ignore auth-name auth-data))
   (setf *default-x-display-number* 
         (if full-display-name 
             (get-display-number full-display-name)
@@ -2344,6 +2346,9 @@ integer.  We want to specify nice keywords instead of those silly
      (let ((old-buffer (g-value window :buffer)))
        (setf (xlib:drawable-height (g-value window :drawable))
 	     (max 0 value))
+       #+allegro
+       (opal::set-win-update-info-height (g-value window :win-update-info) value)
+       #-allegro
        (setf (opal::win-update-info-height (g-value window :win-update-info))
 	     value)
        ;; Does the buffer need to be recreated?
@@ -2419,6 +2424,9 @@ integer.  We want to specify nice keywords instead of those silly
      (let ((old-buffer (g-value window :buffer)))
        (setf (xlib:drawable-width (g-value window :drawable))
 	     (max 0 value))
+       #+allegro
+       (opal::set-win-update-info-width (g-value window :win-update-info) value)
+       #-allegro
        (setf (opal::win-update-info-width (g-value window :win-update-info))
 	     value)
        ;; Does the buffer need to be recreated?
@@ -2527,8 +2535,6 @@ the X drawable."
 
 
 ;;; --------------------------------------------------
-
-
 
 (defun attach-X-methods (x-device)
 

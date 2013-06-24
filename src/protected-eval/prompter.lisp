@@ -129,40 +129,13 @@
     (s-value prompter :value value)
     (s-value prompter :modified? t)))
 
-
-(defun prompter-gadget-eval-func (button but-value)
-  (declare (ignore but-value))
-  (let* ((prompter (g-value button :parent))
-	 (val (g-value prompter :value))
-	 (+ (g-value prompter :+))
-	 (* (g-value prompter :*))
-	 - new-val)
-    (setq -
-      (restart-case
-	  (old-garnet-protected-read-from-string
-	   val :read-package (g-value prompter :read-package)
-	   :read-bindings (g-value prompter :default-bindings)
-	   :default-value (g-value prompter :default-value))
-	(abort () :report "Ignore Read/Eval request."
-	  (return-from prompter-gadget-eval-func))))
-    (setq new-val
-      (restart-case
-	  (old-garnet-protected-eval -)
-	(abort () :report "Ignore Eval request."
-	  (return-from prompter-gadget-eval-func))))
-    (s-value prompter :+ -)
-    (s-value prompter :* new-val)
-    (s-value prompter :value (format nil "~S" new-val))
-    (s-value prompter :modified? nil)
-    (opal:update (g-value prompter :window))))
-
 (defun Prompter-Gadget-Sel-Func (button but-value)
   (let* ((window (g-value button :window))
 	 (prompter (g-value button :parent))
 	 (waiting (g-value prompter :waiting))
 	 (value (if (g-value prompter :modified?)
 		    (restart-case
-			(old-garnet-protected-read-from-string
+			(garnet-protected-read-from-string
 			 (g-value prompter :value)
 			 :read-package (g-value prompter :read-package)
 			 :read-bindings (g-value prompter :read-bindings)

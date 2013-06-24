@@ -531,25 +531,6 @@ an inherited formula."
 
 ;;; ENCODE TYPES
 
-(defparameter types-table (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl t)
-  "Hash table used to look up a Lisp type and returns its code")
-
-(declaim (fixnum *types-array-inc*))
-(defparameter *types-array-inc* 255) ;; allocate in blocks of this size
-
-(declaim (fixnum *next-type-code*))
-(defparameter *next-type-code*  0)   ;; next code to allocate
-
-(defparameter types-array NIL
-  "Array used to decode a number into its corresponding Lisp type.")
-
-(defparameter type-fns-array NIL
-  "Array used to decode a number into its corresponding type-fn.")
-
-(defparameter type-docs-array NIL
-  "Array used to decode a number into its corresponding documentation string.")
-
-
 (declaim (inline find-lisp-predicate))
 (defun find-lisp-predicate (simple-type)
   "Given simple type ('NULL, 'KEYWORD, etc...), returns the name of
@@ -2399,7 +2380,7 @@ RETURNS: a list, with elements as follows:
 	(had-constants NIL)		; true if declared, including NIL
 	(cancel-constants (find '(:constant) slot-specifiers :test #'equal))
 	(parent (car is-a))
-	(slot-counter (if is-a 1 0)))
+	(slot-counter (if is-a 1 0))) ; This seems to be a relic of debugging.
 
        ((null slots)
 	;; Process the type declarations.
@@ -2465,7 +2446,8 @@ RETURNS: a list, with elements as follows:
 		 ;; dependencies, etc.
 		 (s-value schema slot-name slot-value)
 		 ;; No check needed in this case.
-		 (setf slot-counter
+		 (setf slot-counter 	; This seems to be a relic of debugging;
+		                        ; the following call seems to be what's important.
 		       (internal-s-value schema slot-name slot-value)))))
 	  (T
 	   (format t "Incorrect slot specification: object ~S ~S~%"

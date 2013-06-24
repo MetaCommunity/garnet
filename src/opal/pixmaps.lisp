@@ -142,9 +142,9 @@
 	 (setq line (read-line fstream)))
 	(setq line (read-from-string line)))
       (let ((bitmap-p (not (g-value color :color-p)))
-	    ;; RGA This next will loose on a Mac.  ***TODO:  Fix
+	    ;; RGA This next will lose on a Mac.  ***TODO:  Fix
 	    ;; this.*** 
-	    (depth (gem::x-window-depth root-window))
+	    (depth (gem:window-depth root-window))
 	    width height ncolors left-pad chars-per-pixel)
 	;; DZG (declare (type (or null xlib:card16) width height)
 	;; DZG	 (type (or null xlib:image-depth) depth)
@@ -310,16 +310,13 @@
                             left-pad data))))))
 
 
+
+#-(and)					; Dead code.
 (defun digit-to-hex (n)
   (code-char (+ (if (< n 10) 48 55) n)))
 
-
 (defun print-hex (f n)
-  (format f "~A~A~A~A" (digit-to-hex (mod (floor n 4096) 16))
-		       (digit-to-hex (mod (floor n 256) 16))
-		       (digit-to-hex (mod (floor n 16) 16))
-		       (digit-to-hex (mod n 16))))
-
+  (format f "~4,'0X" n))
 
 
 ;;;

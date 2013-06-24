@@ -48,7 +48,7 @@ Change log:
 (in-package "OPAL")
 
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(AGGREGRAPH AGGREGRAPH-NODE-PROTOTYPE AGGREGRAPH-LINK-PROTOTYPE
 	    LAYOUT-TREE))
   (export '(source-to-graph-node remove-root make-root add-node layout-graph)))

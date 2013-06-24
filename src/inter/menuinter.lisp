@@ -110,7 +110,6 @@ Change log:
 ;;;============================================================
 
 (defun Clear-Finals (an-interactor feedback-objs-in-use)
-  #-garnet-debug (declare (ignore an-interactor))
   (dolist (f feedback-objs-in-use)
     (dbprint-feed :obj-over f NIL an-interactor)    
     (s-value f :obj-over NIL)))

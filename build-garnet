@@ -78,6 +78,7 @@ EOF
 (load "garnet-loader")
 
 (let ((args (list "$IMAGE"
+		  #+allegro :quit #+allegro t
                   #+sbcl :executable #+sbcl t
                   #+cmu :executable #+cmu t
                   #+ccl :prepend-kernel #+ccl t)))

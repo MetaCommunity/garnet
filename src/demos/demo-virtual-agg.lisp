@@ -216,7 +216,10 @@ Change log:
                    (:outside :last)
                    (:start-where `(:in ,little-star))
                    (:obj-to-change nil)
-                   (:feedback-obj feedback-star)
+		   ;; Nobody does it this way any more.
+;;                   (:feedback-obj feedback-star)
+		   ;; Real "drag-and-drop"
+		   (:feedback-obj little-star)
                    (:attach-point :where-hit))
 
   (create-instance 'DESTROYER inter:two-point-interactor

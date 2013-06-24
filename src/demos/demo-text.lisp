@@ -87,7 +87,8 @@ Change log:
     (:initial-text
      (list
       (list
-       (cons "left edit; middle create; right either"
+;;       (cons "left edit; middle create; right either"
+       (cons "Here's some greek: ἢ πῶς ἐρεῖς τῷ ἀδελφῷ σου, ἄφες ἐκβάλω τὸ κάρφος ἐκ τοῦ"
 	     variable-font))))
     (:left 10) (:top 10))
   (opal:add-component agg text-obj)

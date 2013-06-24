@@ -314,7 +314,7 @@ Note that this is like the garnet-error-handler without the option to
 continue."
   (declare (type String context)
 	   (type Condition condition))
-  (garnet-error-handler context condition :allow-debug nil))
+  (garnet-error-handler context condition :allow-debugger nil))
 
 
 (defmacro with-garnet-error-handling (context &body forms)
@@ -355,7 +355,7 @@ which error occured."
   `(handler-bind
        ((error
 	 (lambda (condition)
-	   (garnet-error-handler context condition :allow-debugger nil))))
+	   (garnet-error-handler ,context condition :allow-debugger nil))))
      ,.forms))
 
 
@@ -392,8 +392,10 @@ which error occured."
   keywords.  <option-list> is the list of options (default '(:yes no)).  
   <message> is displayedfirst  as a prompt."
   (declare (type String message) 
-	   (type List option-list) (ignore keys)
-	   (:returns (type (Member option-list) option)))
+	   (type List option-list)
+	   (ignore keys)
+	   (ignore font-spec)
+	   #-(and)(:returns (type (Member option-list) option)))
   (when beep (inter:beep))
   (display-query-and-wait PROTECTED-EVAL-ERROR-GADGET
                           message option-list))
@@ -610,8 +612,8 @@ garnet-protected-eval).
 
 (defun do-prompt (prompt
 		  &key (local-abort nil) (default-value nil dv?) (abort-val :ABORT)
-		       (satisfy-test #'(lambda (obj) T)) (eval-input? nil) 
-		       (allow-eval? (not eval-input?))
+		       (satisfy-test #'(lambda (obj) (declare (ignore obj)) T)) 
+		       (eval-input? nil) (allow-eval? (not eval-input?))
 		  &aux flag form val test?)
   "Prompts user for an input.  <Prompt> is printed with ~A as a prompt.
 If <local-abort> is true a local abort is set up which will return the
@@ -670,7 +672,8 @@ test fails, the user is prompted again."
     (setq -
 	  (restart-case
 	      (garnet-protected-read-from-string
-	       val :read-package (g-value prompter :read-package)
+	       val
+	       :read-package (g-value prompter :read-package)
 	       :read-bindings (g-value prompter :default-bindings)
 	       :default-value (g-value prompter :default-value))
 	    (abort () :report "Ignore Read/Eval request."
@@ -689,28 +692,6 @@ test fails, the user is prompted again."
 (kr:s-value (kr:g-value Prompter-Gadget :eval-but) :selection-function
   (lambda (button value)
     (Prompter-Gadget-Eval-Func button value)))
-
-(defun Prompter-Gadget-Sel-Func (button but-value)
-  (let* ((window (g-value button :window))
-	 (prompter (g-value button :parent))
-	 (waiting (g-value prompter :waiting))
-	 (value (if (g-value prompter :modified?)
-		    (restart-case
-			(garnet-protected-read-from-string
-			 (g-value prompter :value)
-			 :read-package (g-value prompter :read-package)
-			 :read-bindings (g-value prompter :read-bindings)
-			 :default-value (g-value prompter :default-value))
-		      (abort () :report "Abort Input"
-			(setq but-value :abort)))
-		  (g-value prompter :*))))
-    (kr-send prompter :selection-function prompter value but-value)
-    (unless (eql but-value :apply)
-      (when (schema-p window)		; May have been destroyed by
-					; :selection-function! 
-	(s-value window :visible NIL)
-	(opal:update window)))
-    (when waiting (inter:interaction-complete (list value but-value)))))
 
 
 (kr:s-value (kr:g-value Prompter-Gadget :button) :selection-function

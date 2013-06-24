@@ -102,7 +102,6 @@ Change log:
 
 ;; turn the cursor visibility on or off
 (defun obj-or-feedback-cursor-on-off (obj-over feedback-obj turn-on-p inter)
-  #-garnet-debug (declare (ignore inter))
   (when (or feedback-obj (schema-p obj-over)) ; otherwise, just exit because no
                                               ; object to set
     (let ((obj (or feedback-obj obj-over))

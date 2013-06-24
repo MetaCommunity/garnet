@@ -73,7 +73,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(MOTIF-ERROR-GADGET MOTIF-QUERY-GADGET)))
 
 ;; NOTE:  If :parent-window is specified, then the parent window must already
@@ -213,7 +213,7 @@ Change log:
 
 ;;; testing/demo function for error-gadgets and query gadgets
 #+garnet-test
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Motif-Error-Gadget-Go Motif-Error-Gadget-Stop MOTIF-EGADGET
 	    MOTIF-QGADGET))
   (proclaim '(special MOTIF-EG-WIN MOTIF-EG-AGG MOTIF-EG-FEED

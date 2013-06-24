@@ -35,7 +35,7 @@
 (in-package "GARNET-GADGETS")
 (defparameter demo-motif-ob NIL)
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(motif-option-button
 	    #+garnet-test motif-option-button-go
 	    #+garnet-test motif-option-button-stop)))

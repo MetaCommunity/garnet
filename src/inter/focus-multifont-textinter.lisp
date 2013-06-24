@@ -38,7 +38,7 @@
 
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export
    '(FOCUS-MULTIFONT-TEXTINTER
      SET-FOCUS
@@ -64,12 +64,12 @@
 ;;; Go procedure utilities
 
 (defun Focus-Do-Start (an-interactor obj-over event)
-   (if-debug an-interactor (format T "Text starting over ~s~%" obj-over))
-   ;; if obj-to-change supplied, then use that, otherwise use whatever was
-   ;; under the mouse when started
-   (let ((obj (g-value an-interactor :obj-to-change)))
-      (when obj
-	(kr-send an-interactor :stop-action an-interactor obj event))))
+  (if-debug an-interactor (format T "Text starting over ~s~%" obj-over))
+  ;; if obj-to-change supplied, then use that, otherwise use whatever was
+  ;; under the mouse when started
+  (let ((obj (g-value an-interactor :obj-to-change)))
+    (when obj
+      (kr-send an-interactor :stop-action an-interactor obj event))))
 
 
 (defun Focus-Error (an-interactor &rest args)

@@ -2771,8 +2771,6 @@
            (cursor-high (higher-cursor cursor-line cursor-pos
 				       select-line select-pos))
 	   frag frag-pos
-;;;          amickish - removed reference to first-fcolor and first-bcolor
-;;;          first-fcolor first-bcolor
            )
       (if cursor-high
 	(progn
@@ -2782,17 +2780,12 @@
           (setq frag (g-value gob :select-frag))
           (setq frag-pos (g-value gob :select-frag-pos))))
       (when (= frag-pos (frag-length frag))
-	 (setq frag (frag-next frag)))
-;;;     amickish - removed reference to first-fcolor and first-bcolor
-;;;     (multiple-value-setq (first-fcolor first-bcolor)
-	(search-for-color (if cursor-high cursor-line select-line)
-			  frag)
-;;;       )
-;;;     amickish - removed reference to first-fcolor and first-bcolor
-;;;     (multiple-value-setq (first-fcolor first-bcolor)
-	(search-for-color (if cursor-high cursor-line select-line)
-			  frag)
-;;;       )
+	(setq frag (frag-next frag)))
+
+      #-(and) ;; This seems useless. FMG
+      (search-for-color (if cursor-high cursor-line select-line)
+			frag)
+
       (if cursor-high
 	(change-color gob cursor-line cursor-pos select-line select-pos
 		      fcolor bcolor)

@@ -80,11 +80,11 @@ ChangeLog:
 
 (in-package "GARNET-DEBUG")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(explain-short explain-slot explain-nil
 	    fix-up-window flash ident invert 
 	    is-a-tree kids look look-inter 
-	    uninvert what where #-apple windows break-on-slot-set
+	    uninvert what where windows break-on-slot-set
 	    notify-on-slot-set clear-slot-set call-func-on-slot-set)))
 
 
@@ -118,11 +118,6 @@ ChangeLog:
 |#
 
     (dotimes (n number-of-blinks)
-      #+apple
-      (ccl:without-interrupts
-       (ccl:with-focused-view window
-         (gem:draw-rectangle win left top width height :xor NIL opal:black-fill)))
-      #-apple
       (gem:draw-rectangle win left top width height :xor NIL opal:black-fill)
       (gem:flush-output win)
       (sleep 0.1))
@@ -519,117 +514,50 @@ ChangeLog:
     ;; (inter:change-active interactor nil) -- :self-deactivate does this
     ))
 
-#+apple
-(defvar ident-info ())
-
-#+apple
-(defun mac-ident-event-handler ()
-  ;; The WHAT field of *current-event* is 0 unless something like a keyboard
-  ;; or mouse-click event is being handled -- see Inside Mac I-249
-  (let* ((what (ccl:rref ccl:*current-event* :EventRecord.what))
-         (mousedown? (eql what 1))
-         (keydown? (eql what 3)))
-    (when (or mousedown? keydown?)
-      ;; Convert coordinates from global to event-window
-      (let* ((where (ccl:rref ccl:*current-event* :EventRecord.where))
-             (time (ccl:rref ccl:*current-event* :EventRecord.when))
-             (view (ccl:find-view-containing-point NIL where))
-             (wptr (ccl:wptr view))
-             (top-window (ccl:window-object wptr))
-             
-             #|
-             (opal-window (gem:window-from-drawable
-                           gem::*root-window* gem::*active-drawable*))
-             (where (ccl::%global-to-local
-                     wptr (ccl:rref ccl:*current-event* :EventRecord.where)))
-             |#
-             )
-        (setf where (ccl::%global-to-local wptr where))
-        (unless (eq view top-window)
-          (setf where (ccl:convert-coordinates where top-window view)))
-        (let ((x (ccl:point-h where))
-              (y (ccl:point-v where)))
-          (setf ident-info (list view what time x y)))))))
 
 (defun ident (&optional (verbose t))
   "Wait for user to point to a garnet object and returns (obj window x y code). 
   Use (ident nil) to suppress normal printout"
   (let ((a-window (get-an-opal-window))
         suspend-process
-	opal-display display-info obj window loc-x loc-y garnet-code)
-    (cond (a-window
-	   (if verbose
-	     (format t "Click or Type on any object or window...~%"))
-           (when (opal:main-event-loop-process-running-p)
-	     (setf suspend-process T)
-	     (opal:kill-main-event-loop-process))
-	   (setf opal-display (the gem:DISPLAY-INFO
-				   (g-value a-window :display-info)))
-	   (setf display-info (gem:display-info-display
-			       opal-display))
-         #+apple
-         (unwind-protect
-           (setf ident-info ())
-           (gu:while (eq ident-info ())
-             (setf ccl:*eventhook* 'mac-ident-event-handler))
-           (setf ccl:*eventhook* NIL)
-           (let* ((view (first ident-info))
-                  (what (second ident-info))
-                  (time (third ident-info))
-                  (code (case what
-                          (1 inter::*left-button*)
-                          (3 (logand (ccl:rref ccl:*current-event*
-                                               :EventRecord.message)
-                                     #xFFFF))))
-                  (state (gem::get-event-bits))
-                  (x (fourth ident-info))
-                  (y (fifth ident-info)))
-             (setf window (gem:window-from-drawable gem::*root-window* view))
-             (setf garnet-code
-                   (case what
-                     (1 (gem:translate-mouse-character
-                         gem::*root-window* code state :BUTTON-PRESS))
-                     (3 (gem:translate-character gem::*root-window*
-                                                 x y state code time))))
-             (setf loc-x x) (setf loc-y y)
-             (setf obj (identify window x y garnet-code verbose)))
-           )
-
-         #-apple
-         (progn
-	   ;; first, throw away any pending events
-	   (xlib:event-case (opal::*default-x-display* :discard-p t :timeout 1)
-			    (:destroy-notify () NIL)  ; get rid of warnings
-			    (otherwise () t))
-	   (xlib:event-case
-	    (display-info :discard-p t :force-output-p t)
-	    (button-press
-	     (event-window x y state code event-key)
-	     (setf window (getf (xlib:drawable-plist event-window) :garnet))
-	     (setf loc-x x)
-	     (setf loc-y y)
-	     (setf garnet-code (gem:translate-mouse-character
-				gem::*root-window* code state event-key))
-	     (setf obj (identify window x y garnet-code verbose))
-	     t)
-	    (key-press
-	     (event-window x y state code)
-	     (setf window (getf (xlib:drawable-plist event-window) :garnet))
-	     (setf loc-x x)
-	     (setf loc-y y)
-	     (setf garnet-code (interactors::translate-character
-				(gem:display-info-display
-				 (the gem:DISPLAY-INFO
-				      (g-value window :display-info)))
-				code state))
-	     (cond (garnet-code
-		    (setf obj (identify window x y garnet-code verbose))
-		    t);; exit the event loop
-		   (t nil);; must have been shift key, etc.  Loop for more.
-		   ))))
-	   (when suspend-process
-	     (opal:launch-main-event-loop-process))
-	   ))
+	gem-display-info gem-display obj window loc-x loc-y garnet-code)
+    (when a-window
+      (when verbose
+	(format t "Click or Type on any object or window...~%"))
+      (when (opal:main-event-loop-process-running-p)
+	(setf suspend-process T)
+	(opal:kill-main-event-loop-process))
+      (setf gem-display-info (the gem:DISPLAY-INFO
+				  (g-value a-window :display-info)))
+      (setf gem-display (gem:display-info-display gem-display-info))
+      ;; first, throw away any pending events
+      (xlib:event-case (gem-display :discard-p t :timeout 1)
+	(:destroy-notify () NIL)  ; get rid of warnings
+	(otherwise () t))
+      (xlib:event-case (gem-display :discard-p t :force-output-p t)
+	(button-press
+	 (event-window x y state code event-key)
+	 (setf window (getf (xlib:drawable-plist event-window) :garnet))
+	 (setf loc-x x)
+	 (setf loc-y y)
+	 (setf garnet-code 
+	       (gem:translate-mouse-character 
+		(gem:display-info-root-window gem-display-info) code state event-key))
+	 (setf obj (identify window x y garnet-code verbose))
+	 t)
+	(key-press
+	 (event-window x y state code)
+	 (setf window (getf (xlib:drawable-plist event-window) :garnet))
+	 (setf loc-x x)
+	 (setf loc-y y)
+	 (setf garnet-code (interactors::translate-character gem-display code state))
+	 (cond (garnet-code
+		(setf obj (identify window x y garnet-code verbose))
+		t)			; exit the event loop
+	       (t nil)			; must have been shift key, etc.  Loop for more.
+	       ))))
+    (when suspend-process
+      (opal:launch-main-event-loop-process))
     (list obj window loc-x loc-y garnet-code)))
 
 
@@ -733,72 +661,70 @@ ChangeLog:
 (defun opal::legal-type-p (object slot value)
   (if
    (case slot
-    ((:top :left :x1 :x2 :y1 :y2 :head-x :head-y :from-x :from-y)
+     ((:top :left :x1 :x2 :y1 :y2 :head-x :head-y :from-x :from-y)
 	(typep value 'integer))
-    ((:width :height :radius :draw-radius :length :diameter)
+     ((:width :height :radius :draw-radius :length :diameter)
 	(and (typep value 'integer) (>= value 0)))
-    (:line-style
-	(or (null value)
-	    (and (schema-p value)
-	         (is-a-p value opal:line-style))))
-    (:filling-style
-	(or (null value)
-	    (and (schema-p value)
-	         (is-a-p value opal:filling-style))))
-    (:draw-function
-	(assoc value gem:*function-alist*))
-    ((:angle1 :angle2)
-	(numberp value))
-    (:point-list
-	(and (listp value)
-	     (zerop (mod (length value) 2))		;; of even length?
-	     (not (dolist (coord value)
-		    (unless (typep coord 'integer) (return T))))))
-    ((:string :title :icon-title)
-	(or (null value) (stringp value)))
-    (:font
-	(and (schema-p value)
-	     (or (is-a-p value opal:font)
-		 (is-a-p value opal:font-from-file))))
-    (:xfont
-     #-apple (xlib:font-p value)
-     #+apple (listp value))
-    (:text-extents
-	(listp value))
-    (:cursor-index
-	(or (null value)
-	    (and (typep value 'integer) (>= value 0))))
-    (:justification
-	(member value '(:left :center :right)))
-    (:cut-strings
-	(and (listp value)
-	     (not (dolist (cut-string-member value)
-		    (unless (opal::cut-string-p cut-string-member) (return T))))))
-    (:image			;; bitmap
-     #-apple (xlib::image-p value)
-     #+apple (eq gem::*MAC-BUFFER* (class-of value)))
-    (:aggregate
-	(or (null value)
-	    (is-a-p value opal:aggregate)))
-    (:parent			;; window's can only have window's!
-	(or (null value)
-	    (and (schema-p value)
-		 (if (is-a-p object opal::window)
-		     (is-a-p value opal::window)
-		     T))))
-    (:cursor
-	(and (listp value)
-	     (is-a-p (car value) opal:bitmap)
-	     (is-a-p (cdr value) opal:bitmap)))
-    (:display
-	(stringp value))
-    (otherwise
-	T)
-   )
-  T
-  (format t "*** Warning:  Object ~A, Slot ~A, Value ~A is illegal!~%"
-	object slot value))
-)
+     (:line-style
+      (or (null value)
+	  (and (schema-p value)
+	       (is-a-p value opal:line-style))))
+     (:filling-style
+      (or (null value)
+	  (and (schema-p value)
+	       (is-a-p value opal:filling-style))))
+     (:draw-function
+      (assoc value gem:*function-alist*))
+     ((:angle1 :angle2)
+      (numberp value))
+     (:point-list
+      (and (listp value)
+	   (zerop (mod (length value) 2)) ; of even length?
+	   (not (dolist (coord value)
+		  (unless (typep coord 'integer) (return T))))))
+     ((:string :title :icon-title)
+      (or (null value) (stringp value)))
+     (:font
+      (and (schema-p value)
+	   (or (is-a-p value opal:font)
+	       (is-a-p value opal:font-from-file))))
+     (:xfont
+      (xlib:font-p value))
+     (:text-extents
+      (listp value))
+     (:cursor-index
+      (or (null value)
+	  (and (typep value 'integer) (>= value 0))))
+     (:justification
+      (member value '(:left :center :right)))
+     (:cut-strings
+      (and (listp value)
+	   (not (dolist (cut-string-member value)
+		  (unless (opal::cut-string-p cut-string-member) (return T))))))
+     (:image				; bitmap
+      ;; (xlib::image-p value)
+      (typep value 'xlib::image))	; clx doesn't define the image-p predicate.
+     (:aggregate
+      (or (null value)
+	  (is-a-p value opal:aggregate)))
+     (:parent				; window's can only have window's!
+      (or (null value)
+	  (and (schema-p value)
+	       (if (is-a-p object opal::window)
+		   (is-a-p value opal::window)
+		   T))))
+     (:cursor
+      (and (listp value)
+	   (is-a-p (car value) opal:bitmap)
+	   (is-a-p (cdr value) opal:bitmap)))
+     (:display
+      (stringp value))
+     (otherwise
+      T)
+     )
+   T
+   (format t "*** Warning:  Object ~A, Slot ~A, Value ~A is illegal!~%"
+	   object slot value)))
 
 
 

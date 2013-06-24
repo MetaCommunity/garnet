@@ -50,6 +50,8 @@
 (defparameter *main-event-loop-process* nil
   "The variable which is a handle to the main-event-loop process.")
 
+(defvar *inside-main-event-loop* nil
+  "Are we running code while inside the main event loop?")
 
 ;;; Define opal:launch-main-event-loop-process
 ;;
@@ -247,6 +249,8 @@
   #+ccl
   (when common-lisp-user::update-locking-p
     (ccl:without-interrupts
+      ;; XXX This uses an undocumented interface, though it seems that
+      ;; this functionality ought to be available.
       (unless (eq (ccl::%%lock-owner *update-lock*) ccl:*current-process*)
 	(ccl:grab-lock *update-lock*))))
   #+sb-thread

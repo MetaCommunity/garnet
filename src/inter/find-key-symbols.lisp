@@ -22,12 +22,11 @@
 
 (let* ((display-name #+cmu (cdr (assoc :DISPLAY lisp::*environment-list*))
                      #+allegro (sys::getenv "DISPLAY")
+		     #+ccl (ccl:getenv "DISPLAY")
 		     #+sbcl (posix-getenv "DISPLAY"))
        (colon-posn (position #\: display-name)))
   (when colon-posn (setq display-name (subseq display-name 0 colon-posn)))
-  (setq display-name (or display-name
-			 #-allegro (machine-instance)
-			 #+allegro (short-site-name)))
+  (setq display-name (or display-name ""))
   (let* ((display (xlib:open-display display-name))
          (screen (xlib:display-default-screen display))
          (root (xlib:screen-root screen))

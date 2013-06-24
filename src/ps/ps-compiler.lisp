@@ -35,7 +35,7 @@
 (unless (get :garnet-modules :multifont)
   (load (merge-pathnames "multifont-loader" Garnet-Opal-PathName)))
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-ps-Pathname))
 
 (Defparameter Garnet-PS-Files
@@ -44,10 +44,11 @@
     "ps-multifont"
     ))
 
-(dolist (file Garnet-PS-Files)
-  (let ((gfile (concatenate 'string "ps:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
+(with-compilation-unit ()
+  (dolist (file Garnet-PS-Files)
+    (let ((gfile (concatenate 'string "ps:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Ps-Src Garnet-Ps-Pathname
 		   '("ps-loader.lisp"))
