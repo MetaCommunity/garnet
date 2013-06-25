@@ -11,9 +11,9 @@
 ;;; $Id::                                                             $
 
 ;;; This file  compiles all the garnet modules.
-;;; First load the file: 	garnet-prepare-compile
-;;; Then load 			garnet-loader
-;;; Then load this file:	garnet-compiler
+;;; First load the file:        garnet-prepare-compile
+;;; Then load                   garnet-loader
+;;; Then load this file:        garnet-compiler
 ;;;
 ;;; ** See the comments at the top of garnet-prepare-compile
 ;;;
@@ -35,7 +35,7 @@ Change log:
          04/05/93 Dave Kosbie - Added Garnet-Utils
          07/23/92 Dario Giuse - Moved C32 before Lapidary
          06/24/92 Andrew Mickish - Added C32
-	 04/02/92 McDaniel - new multifont
+         04/02/92 McDaniel - new multifont
          02/20/92 Andrew Mickish - Added gestures
          03/11/91 Andrew Mickish - Added aggregraphs
          12/5/89 Brad Myers - Fixed so works when files are in /src directories
@@ -49,24 +49,24 @@ Change log:
 
 (unless (and (boundp 'load-utils-p-copy)        (boundp 'Garnet-Utils-Src)
              (boundp 'load-kr-p-copy)           (boundp 'Garnet-KR-Src)
-	     (boundp 'load-gworld-p-copy)       (boundp 'Garnet-Gworld-Src)
-	     (boundp 'load-gem-p-copy)          (boundp 'Garnet-Gem-Src)
-	     (boundp 'load-opal-p-copy)         (boundp 'Garnet-Opal-Src)
-	     (boundp 'load-truetype-p-copy)     (boundp 'Garnet-Truetype-Src)
-	     (boundp 'load-inter-p-copy)        (boundp 'Garnet-Inter-Src)
-	     (boundp 'load-multifont-p-copy)
-	     (boundp 'load-ps-p-copy)           (boundp 'Garnet-PS-Src)
-	     (boundp 'load-aggregadgets-p-copy) (boundp 'Garnet-Aggregadgets-Src)
-	     (boundp 'load-aggregraphs-p-copy)  
-	     (boundp 'load-debug-p-copy)        (boundp 'Garnet-Debug-Src)
-	     (boundp 'load-gadgets-p-copy)      (boundp 'Garnet-Gadgets-Src)
-	     (boundp 'load-protected-eval-p-copy)    (boundp 'Garnet-protected-eval-Src)
-	     (boundp 'load-gesture-p-copy)      (boundp 'Garnet-Gesture-Src)
-	     (boundp 'load-demos-p-copy)        (boundp 'Garnet-Demos-Src)
-	     (boundp 'load-C32-p-copy)          (boundp 'Garnet-C32-Src)
-	     (boundp 'load-lapidary-p-copy)     (boundp 'Garnet-Lapidary-Src)
-	     (boundp 'load-gilt-p-copy)         (boundp 'Garnet-Gilt-Src)
-	     )
+             (boundp 'load-gworld-p-copy)       (boundp 'Garnet-Gworld-Src)
+             (boundp 'load-gem-p-copy)          (boundp 'Garnet-Gem-Src)
+             (boundp 'load-opal-p-copy)         (boundp 'Garnet-Opal-Src)
+             (boundp 'load-truetype-p-copy)     (boundp 'Garnet-Truetype-Src)
+             (boundp 'load-inter-p-copy)        (boundp 'Garnet-Inter-Src)
+             (boundp 'load-multifont-p-copy)
+             (boundp 'load-ps-p-copy)           (boundp 'Garnet-PS-Src)
+             (boundp 'load-aggregadgets-p-copy) (boundp 'Garnet-Aggregadgets-Src)
+             (boundp 'load-aggregraphs-p-copy)  
+             (boundp 'load-debug-p-copy)        (boundp 'Garnet-Debug-Src)
+             (boundp 'load-gadgets-p-copy)      (boundp 'Garnet-Gadgets-Src)
+             (boundp 'load-protected-eval-p-copy)    (boundp 'Garnet-protected-eval-Src)
+             (boundp 'load-gesture-p-copy)      (boundp 'Garnet-Gesture-Src)
+             (boundp 'load-demos-p-copy)        (boundp 'Garnet-Demos-Src)
+             (boundp 'load-C32-p-copy)          (boundp 'Garnet-C32-Src)
+             (boundp 'load-lapidary-p-copy)     (boundp 'Garnet-Lapidary-Src)
+             (boundp 'load-gilt-p-copy)         (boundp 'Garnet-Gilt-Src)
+             )
   (error "** Must load Garnet-Prepare-Compile and Garnet-Loader before
   loading this file"))
 
@@ -129,10 +129,10 @@ Change log:
   (format T "~%  %%%%%%%%%%%%%%  Compiling Aggregadgets %%%%%%%%%%%%%%% ~%")
   (garnet-load "aggregadgets-src:aggregadgets-compiler"))
 (when (or load-aggregadgets-p-copy compile-demos-p
-	     compile-lapidary-p compile-gadgets-p)
+             compile-lapidary-p compile-gadgets-p)
   (unless compile-aggregadgets-p
     (load Garnet-Aggregadgets-Loader)))  ; need this if compile demos, gadgets,
-				         ; or lapidary
+                                         ; or lapidary
 
 
 (when compile-gadgets-p
