@@ -892,8 +892,10 @@ directory."
   (or
    #+cmu (cdr (assoc :DISPLAY lisp::*environment-list*))
    #+allegro (sys::getenv "DISPLAY")
-   #+sbcl (sb-posix:getenv "DISPLAY")
-   #+ccl (ccl:getenv "DISPLAY")
+   #+(and sbcl (not darwin)) (sb-posix:getenv "DISPLAY")
+   #+(and sbcl darwin) (sb-posix:getenv "HOST")
+   #+(and ccl (not darwin)) (ccl:getenv "DISPLAY")
+   #+(and ccl darwin) (ccl:getenv "HOST")
    ;; RGA hope this works as a sensible default.  Need a new function to
    ;; support other Lisp.
    ":0"
