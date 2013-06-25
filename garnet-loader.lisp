@@ -234,6 +234,8 @@ when a saved image is restarted (see opal:make-image in opal/utils.lisp).")
   #+(and) (pushnew :garnet-debug *features*)
   #-(and) (setf *features* (delete :garnet-debug *features*)))
 
+#+(and sbcl (not sb-thread))
+(error "Garnet is not supported on single-threaded SBCL.")
 
 (defvar *garnet-compile-debug-mode* nil
   "Setting this variable to T sets the policy for the entire system
