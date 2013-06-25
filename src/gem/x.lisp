@@ -2206,8 +2206,8 @@ integer.  We want to specify nice keywords instead of those silly
 (defun x-set-draw-function-alist (root-window)
   (declare (ignore root-window))
   (setq *function-alist*
-	(cond ((or t (zerop *white*)) ; Sparc
-	       `((:clear . ,boole-clr)	    ; (color, *white* = 0)
+	(cond ((zerop *white*)		; Sparc (actually b&w I guess)
+	       `((:clear . ,boole-clr)	; (color, *white* = 0)
 		 (:set . ,boole-set)
 		 (:copy . ,boole-1)
 		 (:no-op . ,boole-2)
@@ -2223,8 +2223,8 @@ integer.  We want to specify nice keywords instead of those silly
 		 (:and-reverse . ,boole-andc2)
 		 (:or-inverted . ,boole-orc1)
 		 (:or-reverse . ,boole-orc2)))
-	      (*color-screen-p* ; HP
-	       `((:clear . ,boole-set)	       ; (color, *white* = 1)
+	      (*color-screen-p*		; HP
+	       `((:clear . ,boole-set)	; (color, *white* = 1)
 		 (:set . ,boole-clr)
 		 (:copy . ,boole-1)
 		 (:no-op . ,boole-2)
