@@ -74,128 +74,130 @@ Change log:
 (when Multiple-Garnet-Bin-Dirs
   (garnet-mkdir-if-needed Garnet-Binary-Pathname))
 
-(when compile-utils-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Utils %%%%%%%%%%%%%%% ~%")
-  (garnet-load "utils-src:utils-compiler"))
-(unless compile-utils-p
-  (load Garnet-Utils-Loader))
+(with-compilation-unit ()
+
+  (when compile-utils-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Utils %%%%%%%%%%%%%%% ~%")
+    (garnet-load "utils-src:utils-compiler"))
+  (unless compile-utils-p
+    (load Garnet-Utils-Loader))
 
 
-(when compile-kr-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling KR %%%%%%%%%%%%%%% ~%")
-  (garnet-load "kr-src:kr-compiler"))
-(unless compile-kr-p
-  (load Garnet-KR-Loader))
+  (when compile-kr-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling KR %%%%%%%%%%%%%%% ~%")
+    (garnet-load "kr-src:kr-compiler"))
+  (unless compile-kr-p
+    (load Garnet-KR-Loader))
 
-(when compile-kr-doc-p
-  (garnet-compile "kr:kr-doc")
-  (garnet-load "kr:kr-doc"))
+  (when compile-kr-doc-p
+    (garnet-compile "kr:kr-doc")
+    (garnet-load "kr:kr-doc"))
 
-(when compile-gem-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Gem %%%%%%%%%%%%%%% ~%")
-  (garnet-load "gem-src:gem-compiler"))
-(unless compile-gem-p
-  (load Garnet-Gem-Loader))
+  (when compile-gem-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Gem %%%%%%%%%%%%%%% ~%")
+    (garnet-load "gem-src:gem-compiler"))
+  (unless compile-gem-p
+    (load Garnet-Gem-Loader))
 
-(when compile-opal-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Opal %%%%%%%%%%%%%%% ~%")
-  (garnet-load "opal-src:opal-compiler"))
-(unless compile-opal-p
-  (load Garnet-Opal-Loader))
+  (when compile-opal-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Opal %%%%%%%%%%%%%%% ~%")
+    (garnet-load "opal-src:opal-compiler"))
+  (unless compile-opal-p
+    (load Garnet-Opal-Loader))
 
-#-(or allegro CMU)
-(when compile-truetype-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Truetype %%%%%%%%%%%%%%% ~%")
-  (garnet-load "truetype-src:truetype-compiler"))
-#-(or allegro CMU)
-(unless compile-truetype-p
-  (load Garnet-Truetype-Loader))
+  #-(or allegro CMU)
+  (when compile-truetype-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Truetype %%%%%%%%%%%%%%% ~%")
+    (garnet-load "truetype-src:truetype-compiler"))
+  #-(or allegro CMU)
+  (unless compile-truetype-p
+    (load Garnet-Truetype-Loader))
 
-(when compile-inter-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Inter %%%%%%%%%%%%%%% ~%")
-  (garnet-load "inter-src:inter-compiler"))
-(unless compile-inter-p
-  (load Garnet-Inter-Loader))  ; have to load this to go on
-
-
-(when compile-PS-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling PS %%%%%%%%%%%%%%% ~%")
-  (garnet-load "ps-src:ps-compiler"))
-(unless compile-PS-p
-  (load Garnet-PS-Loader))  ; have to load this to go on
+  (when compile-inter-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Inter %%%%%%%%%%%%%%% ~%")
+    (garnet-load "inter-src:inter-compiler"))
+  (unless compile-inter-p
+    (load Garnet-Inter-Loader))  ; have to load this to go on
 
 
-(when compile-aggregadgets-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Aggregadgets %%%%%%%%%%%%%%% ~%")
-  (garnet-load "aggregadgets-src:aggregadgets-compiler"))
-(when (or load-aggregadgets-p-copy compile-demos-p
-             compile-lapidary-p compile-gadgets-p)
-  (unless compile-aggregadgets-p
-    (load Garnet-Aggregadgets-Loader)))  ; need this if compile demos, gadgets,
-                                         ; or lapidary
+  (when compile-PS-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling PS %%%%%%%%%%%%%%% ~%")
+    (garnet-load "ps-src:ps-compiler"))
+  (unless compile-PS-p
+    (load Garnet-PS-Loader))  ; have to load this to go on
 
 
-(when compile-gadgets-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Gadgets %%%%%%%%%%%%%%% ~%")
-  (garnet-load "gadgets-src:gadgets-compiler"))
-(when (or load-gadgets-p-copy compile-demos-p compile-lapidary-p)
-  (unless compile-gadgets-p
-    (load Garnet-Gadgets-Loader)))
+  (when compile-aggregadgets-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Aggregadgets %%%%%%%%%%%%%%% ~%")
+    (garnet-load "aggregadgets-src:aggregadgets-compiler"))
+  (when (or load-aggregadgets-p-copy compile-demos-p
+            compile-lapidary-p compile-gadgets-p)
+    (unless compile-aggregadgets-p
+      (load Garnet-Aggregadgets-Loader)))  ; need this if compile demos, gadgets,
+                                        ; or lapidary
 
 
-(when compile-debug-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Debugging Routines %%%%%%%%%%%%% ~%")
-  (garnet-load "debug-src:debug-compiler"))
-(when load-debug-p-copy
-  (unless compile-debug-p
-    (load Garnet-Debug-Loader)))
+  (when compile-gadgets-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Gadgets %%%%%%%%%%%%%%% ~%")
+    (garnet-load "gadgets-src:gadgets-compiler"))
+  (when (or load-gadgets-p-copy compile-demos-p compile-lapidary-p)
+    (unless compile-gadgets-p
+      (load Garnet-Gadgets-Loader)))
 
 
-(when compile-protected-eval-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Protected-Eval %%%%%%%%%%%%%%% ~%")
-  (garnet-load "protected-eval-src:protected-eval-compiler"))
-(when load-protected-eval-p-copy
-  (unless compile-protected-eval-p
-    (load Garnet-protected-eval-Loader)))
+  (when compile-debug-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Debugging Routines %%%%%%%%%%%%% ~%")
+    (garnet-load "debug-src:debug-compiler"))
+  (when load-debug-p-copy
+    (unless compile-debug-p
+      (load Garnet-Debug-Loader)))
 
 
-(when compile-gesture-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Gestures %%%%%%%%%%%%%%% ~%")
-  (garnet-load "gesture-src:gesture-compiler"))
-(unless compile-gesture-p
-  (load Garnet-Gesture-Loader))  ; have to load this to go on
+  (when compile-protected-eval-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Protected-Eval %%%%%%%%%%%%%%% ~%")
+    (garnet-load "protected-eval-src:protected-eval-compiler"))
+  (when load-protected-eval-p-copy
+    (unless compile-protected-eval-p
+      (load Garnet-protected-eval-Loader)))
 
 
-(when compile-demos-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Demos %%%%%%%%%%%%%%% ~%")
-  (garnet-load "demos-src:demos-compiler"))
-(when load-demos-p-copy
-  (unless compile-demos-p
-    (load Garnet-Demos-Loader)))
+  (when compile-gesture-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Gestures %%%%%%%%%%%%%%% ~%")
+    (garnet-load "gesture-src:gesture-compiler"))
+  (unless compile-gesture-p
+    (load Garnet-Gesture-Loader))  ; have to load this to go on
 
 
-(when compile-gilt-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Gilt %%%%%%%%%%%%%%% ~%")
-  (garnet-load "gilt-src:gilt-compiler"))
-(when load-gilt-p-copy
-  (unless compile-gilt-p
-    (load Garnet-Gilt-Loader)))
+  (when compile-demos-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Demos %%%%%%%%%%%%%%% ~%")
+    (garnet-load "demos-src:demos-compiler"))
+  (when load-demos-p-copy
+    (unless compile-demos-p
+      (load Garnet-Demos-Loader)))
 
 
-(when compile-C32-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling C32 %%%%%%%%%%%%%%% ~%")
-  (garnet-load "c32-src:c32-compiler"))
-(when load-C32-p-copy
-  (unless compile-C32-p
-    (load Garnet-C32-Loader)))
+  (when compile-gilt-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Gilt %%%%%%%%%%%%%%% ~%")
+    (garnet-load "gilt-src:gilt-compiler"))
+  (when load-gilt-p-copy
+    (unless compile-gilt-p
+      (load Garnet-Gilt-Loader)))
 
 
-(when compile-lapidary-p
-  (format T "~%  %%%%%%%%%%%%%%  Compiling Lapidary %%%%%%%%%%%%%%% ~%")
-  (garnet-load "lapidary-src:lapidary-compiler"))
-(when load-lapidary-p-copy
-  (unless compile-lapidary-p
-    (load Garnet-Lapidary-Loader)))
+  (when compile-C32-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling C32 %%%%%%%%%%%%%%% ~%")
+    (garnet-load "c32-src:c32-compiler"))
+  (when load-C32-p-copy
+    (unless compile-C32-p
+      (load Garnet-C32-Loader)))
 
+
+  (when compile-lapidary-p
+    (format T "~%  %%%%%%%%%%%%%%  Compiling Lapidary %%%%%%%%%%%%%%% ~%")
+    (garnet-load "lapidary-src:lapidary-compiler"))
+  (when load-lapidary-p-copy
+    (unless compile-lapidary-p
+      (load Garnet-Lapidary-Loader)))
+  )                                       ; end of WITH-COMPILATION-UNIT
 
 (setf *Garnet-Going-To-Compile* NIL)  ; no longer in compile mode
