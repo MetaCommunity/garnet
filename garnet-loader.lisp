@@ -65,7 +65,7 @@
 ;; 15-Feb-2010 Fred Gilham - Updates for SBCL, added Allegro 8.1.
 ;; 10/04/03 Russell Almond - Changed #+garnet-protected-eval to
 ;;                           (load-protected-eval-p) (Protected-eval
-;; 			     basically replaces code in processes.lisp
+;;                           basically replaces code in processes.lisp
 ;; 10/04/03 Russell Almond - Added fix for MCL #\return vs #\linefeed
 ;;                           issue. (do-load function).
 ;; 10/04/03 Russell Almond - Added new extensions for MCL-5.0
@@ -312,21 +312,21 @@ With SBCL:
    (defpackage :DEMO-ARITH (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    (defpackage :DEMO-SCHEMA-BROWSER (:use :COMMON-LISP :KR)
      (:export DO-GO DO-STOP SCHEMA-BROWSER SCHEMA-BROWSER-WIN
-	      SCHEMA-BROWSER-TOP-AGG))
+              SCHEMA-BROWSER-TOP-AGG))
    (defpackage :DEMO-ARRAY (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :DEMO-SCROLLBAR (:use :COMMON-LISP :KR)
      (:export DO-GO DO-STOP
-	      MAC-obj MAC-Go MAC-Stop
-	      Open-obj Open-Go Open-Stop
-	      NEXT-obj NEXT-Go NEXT-Stop
-	      Motif-obj Motif-Go Motif-Stop))
+              MAC-obj MAC-Go MAC-Stop
+              Open-obj Open-Go Open-Stop
+              NEXT-obj NEXT-Go NEXT-Stop
+              Motif-obj Motif-Go Motif-Stop))
    (defpackage :DEMO-CLOCK (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    (defpackage :DEMO-SEQUENCE (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :DEMO-EDITOR (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    (defpackage :DEMO-TEXT (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :DEMO-FILE-BROWSER (:use :COMMON-LISP :KR)
      (:export DO-GO DO-STOP FILE-BROWSER FILE-BROWSER-WIN
-	      FILE-BROWSER-TOP-AGG))
+              FILE-BROWSER-TOP-AGG))
    (defpackage :DEMO-TRUCK (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    (defpackage :DEMO-GADGETS (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :DEMO-TWOP (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
@@ -334,7 +334,7 @@ With SBCL:
    (defpackage :DEMO-UNISTROKES (:use :COMMON-LISP :KR :INTER) (:export DO-GO DO-STOP))
    (defpackage :DEMO-GRAPH (:use :COMMON-LISP :KR)
      (:export DO-GO DO-STOP SCHEMA-GRAPH DEMO-GRAPH-ERROR-GADGET ROOT-BOX
-	      RELAYOUT DEMO-GRAPH-WIN))
+              RELAYOUT DEMO-GRAPH-WIN))
    (defpackage :DEMO-VIRTUAL-AGG (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :DEMO-GROW (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    (defpackage :DEMO-XASPERATE (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
@@ -349,8 +349,8 @@ With SBCL:
    (defpackage :DEMO-MOTIF (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
    (defpackage :MGE (:use :COMMON-LISP :KR)
      (:export DO-GO DO-STOP
-	      CREATE-PIECE DESTROY-PIECE DESTROY-ALL-PIECES
-	      GO-INITIALIZE EDITOR-SHOW-WINDOW))
+              CREATE-PIECE DESTROY-PIECE DESTROY-ALL-PIECES
+              GO-INITIALIZE EDITOR-SHOW-WINDOW))
    (defpackage :DEMO-MOVELINE (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
    )
 
@@ -441,7 +441,7 @@ Garnet-Loader again."))
 
 ;; RGA --- This can be made mostly obsolete by simply doing (require
 ;; :clx) before loading garnet.
-					;(require :clx)
+                                        ;(require :clx)
 ;;; RGA I moved this line up earlier to make register in the defvar.
 #+NOTUSED
 (defvar Your-CLX-Pathname
@@ -452,7 +452,7 @@ Garnet-Loader again."))
   ;; This should work on Ansi compliant lisps.  Try it, if not
   ;; hardcode the pathname.
   (namestring (make-pathname :directory
-			     (pathname-directory *load-truename*)))
+                             (pathname-directory *load-truename*)))
   #+comment"**FILL THIS IN**"                ;; SET THIS
   )
 
@@ -479,23 +479,23 @@ Garnet-Loader again."))
   "This is a little utility for accessing the subdirectory of a
 directory."
   (let ((pnd (pathname-directory pathnme))
-	(dlist (if (listp dirstring) 
-		   dirstring
-		   (list dirstring))))
+        (dlist (if (listp dirstring) 
+                   dirstring
+                   (list dirstring))))
     (let ((raw-pathname
-	   (merge-pathnames (make-pathname :directory (append pnd dlist))
-			    pathnme)))
+           (merge-pathnames (make-pathname :directory (append pnd dlist))
+                            pathnme)))
       (directorify raw-pathname))))
 
 ;; the following is just bloody awful, but I won't be able to fix it
 ;; until version 4 comes along. [2006/01/05:rpg]
 (defun Get-Garnet-Binary-Pathname ()
   (let ((directory-name
-	 #+sbcl "bin.sbcl"
-	 #+ccl "bin.ccl"
-	 #+cmu "bin.cmu"
-	 #+allegro "bin.allegro"
-	 #-(or sbcl ccl cmu allegro) (error "~S is an invalid garnet-version" version)))
+         #+sbcl "bin.sbcl"
+         #+ccl "bin.ccl"
+         #+cmu "bin.cmu"
+         #+allegro "bin.allegro"
+         #-(or sbcl ccl cmu allegro) (error "~S is an invalid garnet-version" version)))
     (unless multiple-garnet-bin-dirs (setq directory-name "bin"))
     (append-directory Your-Garnet-Pathname directory-name)))
 
@@ -612,7 +612,7 @@ directory."
 ;; function to compile directly into the source directory, no muss, no fuss.
 ;; This way compilation does not depend on a unix utility.
  ;; (when (and (boundp '*Garnet-Going-To-Compile*)
- ;; 	   *Garnet-Going-To-Compile*)
+ ;;        *Garnet-Going-To-Compile*)
  ;;  (setf Garnet-Utils-Pathname Garnet-Utils-Src)
  ;;  (setf Garnet-KR-Pathname Garnet-KR-Src)
  ;;  (setf Garnet-Gworld-Pathname Garnet-Gworld-Src)
@@ -637,81 +637,81 @@ directory."
 #+cmu
 (progn
   (setf (ext:search-list "utils:")
-	(list (namestring Garnet-Utils-PathName)))
+        (list (namestring Garnet-Utils-PathName)))
   (setf (ext:search-list "utils-src:")
-	(list (namestring Garnet-Utils-Src)))
+        (list (namestring Garnet-Utils-Src)))
 
   (setf (ext:search-list "kr:")
-	(list (namestring Garnet-KR-PathName)))
+        (list (namestring Garnet-KR-PathName)))
   (setf (ext:search-list "kr-src:")
-	(list (namestring Garnet-KR-Src)))
+        (list (namestring Garnet-KR-Src)))
 
   (setf (ext:search-list "gem:")
-	(list (namestring Garnet-Gem-PathName)))
+        (list (namestring Garnet-Gem-PathName)))
   (setf (ext:search-list "gem-src:")
-	(list (namestring Garnet-Gem-Src)))
+        (list (namestring Garnet-Gem-Src)))
 
   (setf (ext:search-list "opal:")
-	(list (namestring Garnet-Opal-PathName)))
+        (list (namestring Garnet-Opal-PathName)))
   (setf (ext:search-list "opal-src:")
-	(list (namestring Garnet-Opal-Src)))
+        (list (namestring Garnet-Opal-Src)))
 
   (setf (ext:search-list "inter:")
-	(list (namestring Garnet-Inter-PathName)))
+        (list (namestring Garnet-Inter-PathName)))
   (setf (ext:search-list "inter-src:")
-	(list (namestring Garnet-Inter-Src)))
+        (list (namestring Garnet-Inter-Src)))
 
   (setf (ext:search-list "gesture:")
-	(list (namestring Garnet-Gesture-PathName)))
+        (list (namestring Garnet-Gesture-PathName)))
   (setf (ext:search-list "gesture-src:")
-	(list (namestring Garnet-Gesture-Src)))
+        (list (namestring Garnet-Gesture-Src)))
   (setf (ext:search-list "gesture-data:")
-	(list (namestring Garnet-Gesture-Data-PathName)))
+        (list (namestring Garnet-Gesture-Data-PathName)))
 
   (setf (ext:search-list "ps:")
-	(list (namestring Garnet-PS-PathName)))
+        (list (namestring Garnet-PS-PathName)))
   (setf (ext:search-list "ps-src:")
-	(list (namestring Garnet-PS-Src)))
+        (list (namestring Garnet-PS-Src)))
 
   (setf (ext:search-list "aggregadgets:")
-	(list (namestring Garnet-Aggregadgets-PathName)))
+        (list (namestring Garnet-Aggregadgets-PathName)))
   (setf (ext:search-list "aggregadgets-src:")
-	(list (namestring Garnet-Aggregadgets-Src)))
+        (list (namestring Garnet-Aggregadgets-Src)))
 
   (setf (ext:search-list "gadgets:")
-	(list (namestring Garnet-Gadgets-PathName)))
+        (list (namestring Garnet-Gadgets-PathName)))
   (setf (ext:search-list "gadgets-src:")
-	(list (namestring Garnet-Gadgets-Src)))
+        (list (namestring Garnet-Gadgets-Src)))
 
   (setf (ext:search-list "debug:")
-	(list (namestring Garnet-Debug-PathName)))
+        (list (namestring Garnet-Debug-PathName)))
   (setf (ext:search-list "debug-src:")
-	(list (namestring Garnet-Debug-Src)))
+        (list (namestring Garnet-Debug-Src)))
 
   (setf (ext:search-list "demos:")
-	(list (namestring Garnet-Demos-PathName)))
+        (list (namestring Garnet-Demos-PathName)))
   (setf (ext:search-list "demos-src:")
-	(list (namestring Garnet-Demos-Src)))
+        (list (namestring Garnet-Demos-Src)))
 
   (setf (ext:search-list "gilt:")
-	(list (namestring Garnet-Gilt-PathName)))
+        (list (namestring Garnet-Gilt-PathName)))
   (setf (ext:search-list "gilt-src:")
-	(list (namestring Garnet-Gilt-Src)))
+        (list (namestring Garnet-Gilt-Src)))
 
   (setf (ext:search-list "c32:")
-	(list (namestring Garnet-C32-PathName)))
+        (list (namestring Garnet-C32-PathName)))
   (setf (ext:search-list "c32-src:")
-	(list (namestring Garnet-C32-Src)))
+        (list (namestring Garnet-C32-Src)))
 
   (setf (ext:search-list "lapidary:")
-	(list (namestring Garnet-Lapidary-PathName)))
+        (list (namestring Garnet-Lapidary-PathName)))
   (setf (ext:search-list "lapidary-src:")
-	(list (namestring Garnet-Lapidary-Src)))
+        (list (namestring Garnet-Lapidary-Src)))
 
   (setf (ext:search-list "contrib:")
-	(list (namestring Garnet-Contrib-PathName)))
+        (list (namestring Garnet-Contrib-PathName)))
   (setf (ext:search-list "contrib-src:")
-	(list (namestring Garnet-Contrib-Src)))
+        (list (namestring Garnet-Contrib-Src)))
 
   )
 
@@ -797,18 +797,18 @@ directory."
 (defun Garnet-Load (filename)
   (let ((pos (position #\: filename)))
     (if pos
-	(let* ((head (subseq filename 0 pos))
-	       (tail (subseq filename (1+ pos)))
-	       (prefix (or (eval (cdr (assoc head Garnet-Load-Alist
-					     :test #'string=)))
-			   (error "Bad prefix ~S~%" head)))
-	       (finalname (merge-pathnames tail prefix)))
-	  (format T "Loading ~s~%" finalname)
-	  (load finalname))
-	;; else no colon, load regular
-	(progn
-	  (format T "NO COLON, Loading ~s~%" filename)
-	  (load filename)))))
+        (let* ((head (subseq filename 0 pos))
+               (tail (subseq filename (1+ pos)))
+               (prefix (or (eval (cdr (assoc head Garnet-Load-Alist
+                                             :test #'string=)))
+                           (error "Bad prefix ~S~%" head)))
+               (finalname (merge-pathnames tail prefix)))
+          (format T "Loading ~s~%" finalname)
+          (load finalname))
+        ;; else no colon, load regular
+        (progn
+          (format T "NO COLON, Loading ~s~%" filename)
+          (load filename)))))
 
 
 ;;; Garnet-Compile.
@@ -835,21 +835,21 @@ directory."
 (defun Garnet-Compile (filename)
   (let ((pos (position #\: filename)))
     (if pos
-	(let* ((head (subseq filename 0 pos))
-	       (tail (subseq filename (1+ pos)))
-	       (head-src (concatenate 'string head "-src"))
-	       (src-prefix
-		(or (eval (cdr (assoc head-src Garnet-Load-Alist
-				      :test #'string=)))
-		    (eval (cdr (assoc head Garnet-Load-Alist
-				      :test #'string=)))
-		    (error "Prefix ~S not found in Garnet-Load-Alist"
-			   head)))
-	       (bin-prefix
-		(or (eval (cdr (assoc head Garnet-Load-Alist
-				      :test #'string=)))
-		    (error "Prefix ~S not found in Garnet-Load-Alist"
-			   head)))
+        (let* ((head (subseq filename 0 pos))
+               (tail (subseq filename (1+ pos)))
+               (head-src (concatenate 'string head "-src"))
+               (src-prefix
+                (or (eval (cdr (assoc head-src Garnet-Load-Alist
+                                      :test #'string=)))
+                    (eval (cdr (assoc head Garnet-Load-Alist
+                                      :test #'string=)))
+                    (error "Prefix ~S not found in Garnet-Load-Alist"
+                           head)))
+               (bin-prefix
+                (or (eval (cdr (assoc head Garnet-Load-Alist
+                                      :test #'string=)))
+                    (error "Prefix ~S not found in Garnet-Load-Alist"
+                           head)))
                (src-finalname (merge-pathnames
                                (concatenate 'string tail ".lisp") src-prefix))
                (bin-finalname (merge-pathnames
@@ -923,14 +923,14 @@ directory."
 
 (defun verify-display-can-be-opened ()
   (let* ((full-display-name (get-full-display-name))
-	 (d-name (if full-display-name
-		     (get-display-name full-display-name)
-		     (machine-instance)))
-	 (d-number (get-display-number full-display-name)))
+         (d-name (if full-display-name
+                     (get-display-name full-display-name)
+                     (machine-instance)))
+         (d-number (get-display-number full-display-name)))
     (multiple-value-bind (val errorp)
-	(ignore-errors (xlib:open-display d-name :display d-number))
+        (ignore-errors (xlib:open-display d-name :display d-number))
       (if errorp
-	  (error "Could not open a display for ~S.
+          (error "Could not open a display for ~S.
      You must already be running X to load or compile Garnet.  Your DISPLAY
 environment variable must be set with the name of the machine on which the
 Garnet windows will be displayed.  Please exit lisp and execute a command
@@ -943,8 +943,8 @@ to appear on the same machine that Garnet is running on.
      Additionally, you must execute the command \"xhost +\" on the machine
 that the windows will be displayed on, if it is different from the machine
 running Garnet."
-		 full-display-name)
-	  (xlib:close-display val))
+                 full-display-name)
+          (xlib:close-display val))
       T)))
 
 ;;; RGA --- sometimes I only want to load KR.  Don't need a display we
@@ -962,7 +962,7 @@ running Garnet."
 ;;
 (if load-utils-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :utils))
-	(format T "~%****** Utils already loaded *******~%")
+        (format T "~%****** Utils already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Utils %%%%%%%%~%")
           (load Garnet-Utils-Loader)))
@@ -970,7 +970,7 @@ running Garnet."
 
 (if load-kr-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :kr))
-	(format T "~%****** KR already loaded *******~%")
+        (format T "~%****** KR already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading KR %%%%%%%%~%")
           (load Garnet-KR-Loader)))
@@ -980,7 +980,7 @@ running Garnet."
 
 (if load-gem-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :gem))
-	(format T "~%****** Gem already loaded *******~%")
+        (format T "~%****** Gem already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Gem %%%%%%%%~%")
           (load Garnet-Gem-Loader)))
@@ -988,7 +988,7 @@ running Garnet."
 
 (if load-opal-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :opal))
-	(format T "~%****** Opal already loaded *******~%")
+        (format T "~%****** Opal already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Opal %%%%%%%%~%")
           (load Garnet-Opal-Loader)))
@@ -996,7 +996,7 @@ running Garnet."
 
 (if load-truetype-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :truetype))
-	(format T "~%****** Truetype already loaded *******~%")
+        (format T "~%****** Truetype already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Truetype %%%%%%%%~%")
           (load Garnet-Truetype-Loader)))
@@ -1004,7 +1004,7 @@ running Garnet."
 
 (if load-inter-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :inter))
-	(format T "~%****** Interactors already loaded *******~%")
+        (format T "~%****** Interactors already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Interactors %%%%%%%%~%")
           (load Garnet-Inter-Loader)))
@@ -1012,7 +1012,7 @@ running Garnet."
 
 (if load-multifont-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :multifont))
-	(format T "~%****** Multifont already loaded *******~%")
+        (format T "~%****** Multifont already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Multifont %%%%%%%%~%")
           (load Garnet-Multifont-Loader)))
@@ -1020,7 +1020,7 @@ running Garnet."
 
 (if load-gesture-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :gesture))
-	(format T "~%****** Gestures already loaded *******~%")
+        (format T "~%****** Gestures already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Gestures %%%%%%%%~%")
           (load Garnet-Gesture-Loader)))
@@ -1028,7 +1028,7 @@ running Garnet."
 
 (if load-ps-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :ps))
-	(format T "~%****** PS already loaded *******~%")
+        (format T "~%****** PS already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading PS %%%%%%%%~%")
           (load Garnet-PS-Loader)))
@@ -1036,7 +1036,7 @@ running Garnet."
 
 (if load-aggregadgets-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :aggregadgets))
-	(format T "~%****** Aggregadgets already loaded *******~%")
+        (format T "~%****** Aggregadgets already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Aggregadgets %%%%%%%%~%")
           (load Garnet-Aggregadgets-Loader)))
@@ -1044,7 +1044,7 @@ running Garnet."
 
 (if load-aggregraphs-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :aggregraphs))
-	(format T "~%****** Aggregraphs already loaded *******~%")
+        (format T "~%****** Aggregraphs already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Aggregraphs %%%%%%%%~%")
           (load Garnet-Aggregraphs-Loader)))
@@ -1054,7 +1054,7 @@ running Garnet."
 
 (if load-gadgets-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :gadgets))
-	(format T "~%****** Gadgets already loaded *******~%")
+        (format T "~%****** Gadgets already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Gadgets %%%%%%%%~%")
           (load Garnet-Gadgets-Loader)))
@@ -1062,7 +1062,7 @@ running Garnet."
 
 (if load-debug-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :debug))
-	(format T "~%****** Debugging programs already loaded *******~%")
+        (format T "~%****** Debugging programs already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Debugging programs %%%%%%%%~%")
           (load Garnet-Debug-Loader)))
@@ -1071,7 +1071,7 @@ running Garnet."
 
 (if load-demos-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :demos))
-	(format T "~%****** Demos already loaded *******~%")
+        (format T "~%****** Demos already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Demos %%%%%%%%~%")
           (load Garnet-Demos-Loader)))
@@ -1080,7 +1080,7 @@ running Garnet."
 
 (if load-gilt-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :gilt))
-	(format T "~%****** Gilt already loaded *******~%")
+        (format T "~%****** Gilt already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Gilt %%%%%%%%~%")
           (load Garnet-Gilt-Loader)))
@@ -1089,7 +1089,7 @@ running Garnet."
 
 (if load-c32-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :c32))
-	(format T "~%****** C32 already loaded *******~%")
+        (format T "~%****** C32 already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading C32 %%%%%%%%~%")
           (load Garnet-C32-Loader)))
@@ -1098,7 +1098,7 @@ running Garnet."
 
 (if load-lapidary-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :lapidary))
-	(format T "~%****** Lapidary already loaded *******~%")
+        (format T "~%****** Lapidary already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Lapidary %%%%%%%%~%")
           (load Garnet-Lapidary-Loader)))
@@ -1107,7 +1107,7 @@ running Garnet."
 
 (if load-protected-eval-p
     (if (and *dont-load-modules-twice* (get :garnet-modules :protected-eval))
-	(format T "~%****** Protected-eval already loaded *******~%")
+        (format T "~%****** Protected-eval already loaded *******~%")
         (progn
           (format T "~% %%%%%%%% Loading Protected-eval %%%%%%%%~%")
           (load Garnet-Protected-Eval-Loader)))
@@ -1128,25 +1128,25 @@ running Garnet."
   "This is a quick and dirty version of opal:shell-exec used just
    for the compiler.  This currently looses on Mac OS."
   #+allegro (excl:run-shell-command command :wait NIL :output :stream
-				    :error-output :stream)
+                                    :error-output :stream)
   #+cmu
   (ext:process-output (ext:run-program "/bin/sh" (list "-c" command)
-				       :wait NIL :output :stream))
+                                       :wait NIL :output :stream))
 
   #+ccl
   (ccl:external-process-output-stream 
    (ccl:run-program "/bin/sh" (list "-c" command)
-		    :wait NIL :output :stream))
+                    :wait NIL :output :stream))
   #+sbcl
   (sb-ext:process-output (sb-ext:run-program "/bin/sh" (list "-c" command)
-				       :wait NIL :output :stream)))
+                                       :wait NIL :output :stream)))
 
 (defun garnet-copy-files (src-dir bin-dir file-list)
   "Copies a list of files (usually loader files) from source directory
   to binary directory."
   (dolist (file file-list)
     (let ((src (merge-pathnames file src-dir))
-	  (dest (merge-pathnames file bin-dir)))
+          (dest (merge-pathnames file bin-dir)))
       (garnet-shell-exec (format nil "cp ~A ~A~%" src dest)))))
 
 (format t "~%... Garnet Load Complete ...~%")
