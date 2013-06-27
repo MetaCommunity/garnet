@@ -65,6 +65,7 @@
     "buttoninter"
     "twopointinter"
     "textkeyhandling"
+    "text-bindings"
     "textinter"
     "angleinter"
     "animatorinter"))
