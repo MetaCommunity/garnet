@@ -7,14 +7,14 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; This file prepares to compile all the garnet modules.  Of course, you
 ;;; need to have write priviledges on all the directories where the files
 ;;; are stored.  (These directories are set in garnet-loader).
-;;; 
-;;; First load this file: 	garnet-prepare-compile
-;;; Then load 			garnet-loader
-;;; Then load 			garnet-compiler
+;;;
+;;; First load this file:       garnet-prepare-compile
+;;; Then load                   garnet-loader
+;;; Then load                   garnet-compiler
 ;;;
 ;;; The result will be that all the files will be compiled and loaded (the
 ;;; initial files need to be loaded before later files can be compiled
@@ -23,15 +23,15 @@
 ;;;
 ;;; ** To prevent certain parts from being compiled, first set
 ;;;      user::compile-XX-p to NIL.  To compile lapidary, set
-;;; 	 compile-lapidary-p to T (the default is not to compile it)
+;;;      compile-lapidary-p to T (the default is not to compile it)
 ;;; ** To have the demos or lapidary be loaded after they are
-;;; 	 compiled, set user::load-demos-p and user::load-lapidary-p
-;;; 	 to T (the default is to NOT load these after compiling them
+;;;      compiled, set user::load-demos-p and user::load-lapidary-p
+;;;      to T (the default is to NOT load these after compiling them
 ;;; ** To override where something is loaded from, set Garnet-xx-PathName before
 ;;;      loading this file.
 ;;;
 ;;; The controlling variables are:
-;;; 
+;;;
 ;;;  compile-utils-p        (Default: T   => utils compiled and loaded)
 ;;;  compile-kr-p           (Default: T   => kr compiled and loaded)
 ;;;  compile-kr-doc-p       (Default: NIL => kr-doc compiled and loaded)
@@ -52,7 +52,7 @@
 ;;;
 ;;; To override any particular file name place, it is only necessary to
 ;;; assign the variable name Garnet-XX-Pathname before this file is loaded
-;;; (since they are defined here using defvar, the old name will stay in affect). 
+;;; (since they are defined here using defvar, the old name will stay in affect).
 ;;;
 
 #|
@@ -63,14 +63,14 @@ Change log:
         11/10/93 Andrew Mickish - Added Gem
          4/ 5/93 Dave Kosbie    - Added Garnet-Utils
          6/24/92 Andrew Mickish - Added C32
-	 5/14/92 Pedro Szekely - Initialize launch-process-p to NIL.
+         5/14/92 Pedro Szekely - Initialize launch-process-p to NIL.
          5/4/92 Russell Almond - Added allegro-v4.1 switches
-	 4/29/92 VanderZanden - Released lapidary.
-	 4/2/92 McDaniel - New multifont.
+         4/29/92 VanderZanden - Released lapidary.
+         4/2/92 McDaniel - New multifont.
          3/19/92 Andrew Mickish - Changed setf's to defvar's
          2/27/91 Dilip D'Souza - added everything with #+allegro-v4.0 switches
          12/5/89 Brad Myers - Fixed so works by setting special flag for
-				garnet-loader
+                                garnet-loader
          10/30/89 Brad Myers - Added Debug
          8/18/89 Brad Myers - Added Toolkit
          6/21/89 Brad Myers - Created
@@ -80,7 +80,7 @@ Change log:
 #+lucid (in-package :USER)
 #+lucid (rename-package (find-package :LISP) :LISP (list :COMMON-LISP))
 #+lucid (rename-package (find-package :USER) :USER (list :COMMON-LISP-USER
-							 :CL-USER))
+                                                         :CL-USER))
 
 #-lucid
 (in-package :COMMON-LISP-USER)
@@ -113,6 +113,7 @@ Change log:
 (defvar load-gem-p NIL)
 (defvar load-opal-p NIL)
 (defvar load-inter-p NIL)
+(defvar load-truetype-p nil)
 (defvar load-multifont-p NIL)
 (defvar load-gesture-p NIL)
 (defvar load-ps-p NIL)
@@ -127,41 +128,43 @@ Change log:
 (defvar load-protected-eval-p NIL)
 
 (defparameter load-utils-p-copy (if (boundp 'load-utils-p)
-				 load-utils-p T))
+                                 load-utils-p T))
 (defparameter load-kr-p-copy (if (boundp 'load-kr-p)
-				 load-kr-p T))
+                                 load-kr-p T))
 (defparameter load-gworld-p-copy (if (boundp 'load-gworld-p)
-				     load-gworld-p T))
+                                     load-gworld-p T))
 (defparameter load-gem-p-copy (if (boundp 'load-gem-p)
-				   load-gem-p T))
+                                   load-gem-p T))
 (defparameter load-opal-p-copy (if (boundp 'load-opal-p)
-				   load-opal-p T))
+                                   load-opal-p T))
+(defparameter load-truetype-p-copy (if (boundp 'load-truetype-p)
+                                   load-truetype-p T))
 (defparameter load-inter-p-copy (if (boundp 'load-inter-p)
-				    load-inter-p T))
+                                    load-inter-p T))
 (defparameter load-multifont-p-copy (if (boundp 'load-multifont-p)
-				    load-multifont-p T))
+                                    load-multifont-p T))
 (defparameter load-gesture-p-copy (if (boundp 'load-inter-p)
-				      load-gesture-p T))
+                                      load-gesture-p T))
 (defparameter load-ps-p-copy (if (boundp 'load-ps-p)
-				    load-ps-p T))
+                                    load-ps-p T))
 (defparameter load-aggregadgets-p-copy (if (boundp 'load-aggregadgets-p)
-					   load-aggregadgets-p T)) 
+                                           load-aggregadgets-p T))
 (defparameter load-aggregraphs-p-copy (if (boundp 'load-aggregraphs-p)
-					   load-aggregraphs-p T)) 
+                                           load-aggregraphs-p T))
 (defparameter load-gadgets-p-copy (if (boundp 'load-gadgets-p)
-				      load-gadgets-p T))
+                                      load-gadgets-p T))
 (defparameter load-debug-p-copy (if (boundp 'load-debug-p)
-				    load-debug-p T))
+                                    load-debug-p T))
 (defparameter load-demos-p-copy (if (boundp 'load-demos-p)
-				    load-demos-p NIL))
+                                    load-demos-p NIL))
 (defparameter load-lapidary-p-copy (if (boundp 'load-lapidary-p)
-				       load-lapidary-p NIL))
+                                       load-lapidary-p NIL))
 (defparameter load-gilt-p-copy (if (boundp 'load-gilt-p)
-				    load-gilt-p NIL))
+                                    load-gilt-p NIL))
 (defparameter load-c32-p-copy (if (boundp 'load-c32-p)
-				  load-c32-p NIL))
+                                  load-c32-p NIL))
 (defparameter load-protected-eval-p-copy (if (boundp 'load-protected-eval-p)
-				  load-protected-eval-p NIL))
+                                  load-protected-eval-p NIL))
 
 
 ;; tell garnet-loader to not launch the main event loop process.
