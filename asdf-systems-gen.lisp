@@ -82,34 +82,35 @@
                                 (source-type "lisp")
                                 (errorp t))
   ;; New feature in Garnet API
-  (labels ((xl (pathname prefer-source)
-             (merge-pathnames
-              pathname
-              (make-pathname :type (if prefer-source
-                                       source-type
-                                       #.(pathname-type
-                                          (compile-file-pathname "foo")))
-                             :defaults (if prefer-source
-                                           garnet-src-pathname
-                                           garnet-binary-pathname))))
+  (labels ((foo ()
+             (make-pathname
+              :name (pathname-name pathname)
+              :type (if prefer-source
+                        source-type
+                        #.(pathname-type  (compile-file-pathname "foo")))
+              :defaults
+              (translate-logical-pathname pathname)))
            (compute-dest (path prefer-source)
              (cond
                (prefer-source
-                (make-pathname :type source-type :defaults (xl path prefer-source)))
+                (merge-pathnames (make-pathname :type source-type
+                                                :defaults path)
+                                 garnet-src-pathname))
                (t
-                (make-pathname
-                 :type #.(pathname-type  (compile-file-pathname "foo"))
-                 :defaults
-                 (asdf:apply-output-translations (xl path prefer-source)))))))
-    (let ((p (translate-logical-pathname pathname)))
-      (or (probe-file p)
-          (let ((pref-dest (compute-dest pathname prefer-source)))
-            (or (probe-file pref-dest)
+                (merge-pathnames (make-pathname
+                                  :type #.(pathname-type  (compile-file-pathname "foo"))
+                                  :defaults path)
+                                 garnet-binary-pathname)))))
+      (or (probe-file pathname)
+          (let ((foo (foo))
+                (pref-dest (compute-dest pathname prefer-source)))
+            (or (probe-file foo)
+                (probe-file pref-dest)
                 (let ((alt-dest (compute-dest pathname (not prefer-source))))
                   (or (probe-file alt-dest)
                       (when errorp
-                        (error "Cannot locate file ~s (tried paths ~s and ~s and ~s)"
-                               pathname p pref-dest alt-dest))))))))))
+                        (error "Cannot locate file ~s (also tried paths ~s ~s and ~s)"
+                               pathname foo pref-dest alt-dest)))))))))
 
 
 
@@ -125,14 +126,37 @@
 ;; (garnet-probe "gadgets:GAD-scroll-parts")
 ;; ^ FIXME. failing only due to pathname case
 
+
+
 ;; (translate-logical-pathname  "gadgets:GAD-scroll-parts.lisp")
-;; ^ NOTE that that "reconverts" the pathname case
+;; ^ NOTE that that "reconverts" the pathname case onto the source
+;;   code repository pathname, thus making the pathname seem
+;;   "unavailable" though the file exists by a different name case
+;;   (Linux) (CLtL2)
 
-;; Legacy Garnet System Functions
+;; (garnet-probe "gadgets:GAD-scroll-parts" :prefer-source t)
+;; ^ FIXME, "MAKE THAT WORK"
 
-(defun garnet-load (pathname)
+#+NIL
+(probe-file (merge-pathnames
+             "GAD-scroll-parts"
+             (merge-pathnames
+              (make-pathname :directory
+                             '(:relative "gadgets")
+                             :type "lisp"
+                             :defaults garnet-src-pathname)
+              garnet-src-pathname)))
+
+
+;; NOTE: A closer conversion to ASDF system definitions
+;; may seve to work around the hairy pathname issues
+
+;; Ports of Legacy Garnet System Functions
+
+(defun garnet-load (pathname &key (prefer-source nil))
   ;; frob, nothing with regards to garnet-load-alist
-  (let ((file (garnet-probe pathname)))
+  (let ((file (garnet-probe pathname
+                            :prefer-source prefer-source)))
     (load file)))
 
 (defun garnet-compile (pathname)
@@ -170,7 +194,7 @@
 (defparameter Garnet-Version-Number "3.3")
 (pushnew :GARNET *features*)
 (pushnew :GARNET-V3 *features*)
-(setf *features* (delete :GARNET-V3.0 *features*))
+#+NIL (setf *features* (delete :GARNET-V3.0 *features*))
 (pushnew :GARNET-V3.3 *features*)
 
 (defvar *garnet-compile-debug-mode* t
@@ -286,7 +310,16 @@ With SBCL:
 
     (setf (logical-pathname-translations src-host-name)
           (append lpn-translations
-                  (list (list "**;*.*.*"
+                  (list
+                   (list "**;*"
+                         (merge-pathnames (make-pathname :directory
+                                                         '(:relative :wild-inferiors)
+                                                         :name :wild
+                                                         :type "lisp"
+                                                         :version :wild
+                                                         )
+                                          src-host-pathname))
+                   (list "**;*.*.*"
                               (merge-pathnames (make-pathname :directory
                                                               '(:relative :wild-inferiors)
                                                               :name :wild
@@ -297,14 +330,24 @@ With SBCL:
 
     (setf (logical-pathname-translations bin-host-name)
           (append lpn-translations
-                  (list (list "**;*.*.*"
-                              (merge-pathnames (make-pathname :directory
-                                                              '(:relative :wild-inferiors)
-                                                              :name :wild
-                                                              :type :wild
-                                                              :version :wild
-                                                              )
-                                               bin-host-pathname)))))))
+                  (list
+                   (list "**;*"
+                         (merge-pathnames (make-pathname
+                                           :directory
+                                           '(:relative :wild-inferiors)
+                                           :name :wild
+                                           :type
+                                           #.(pathname-type (compile-file-pathname "FOO"))
+                                           :version :wild)
+                                          src-host-pathname))
+                   (list "**;*.*.*"
+                         (merge-pathnames (make-pathname :directory
+                                                         '(:relative :wild-inferiors)
+                                                         :name :wild
+                                                         :type :wild
+                                                         :version :wild
+                                                         )
+                                          bin-host-pathname)))))))
 
 
 ;;  (probe-file "kr-src:")

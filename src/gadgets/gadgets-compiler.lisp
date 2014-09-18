@@ -34,7 +34,7 @@
 ;;;                           motif-scrolling-window
 ;;; 03/14/91 Edward Pervin - Added motif-gauge.
 ;;; 02/28/91 Edward Pervin - Call (gc t) after every load in allegro.
-;;;			     Also, added motif-menu.
+;;;                          Also, added motif-menu.
 ;;; 01/17/91 Andrew Mickish - Added motif gadgets
 ;;; 08/10/90 Pavan Reddy - Changed "multi-feedback" to "polyline-creator"
 ;;; 08/07/90 Pavan Reddy - Added "multi-feedback" and "scrolling-window"
@@ -46,7 +46,7 @@
 ;;; 04/12/90 Mitchell - Added #+allegro (gc t)
 ;;; 03/26/90 Andrew Mickish - Added scrolling-menu and error-gadget
 ;;; 03/22/90 Robert Cook - Define the package "GARNET-GADGETS"
-;;;			   for the TI Explorer
+;;;                        for the TI Explorer
 ;;; 02/16/90 - Andrew Mickish - Removed defvar for Garnet-Gadgets-Pathname
 
 (in-package :COMMON-LISP-USER)
@@ -69,7 +69,7 @@
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (garnet-mkdir-if-needed Garnet-Gadgets-Pathname))
-		    
+
 (Defvar Garnet-Gadgets-Files
   '(
     "GAD-scroll-parts"			; Helper modules containing definitions for 
@@ -141,7 +141,7 @@
     "motif-save-gadget"
     "motif-load-gadget"
     "motif-menubar"
-    
+
     "multifont-gadget"
     "scrolling-window-multifont"
     "standard-edit"
