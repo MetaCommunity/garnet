@@ -1,1 +1,8 @@
+*~
+*#
+.#*
 bin.*/
+*.fasl
+*.FASL
+*.lisp-temp
+*.x86f
