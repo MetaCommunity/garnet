@@ -34,7 +34,7 @@
 ;;;                           motif-scrolling-window
 ;;; 03/14/91 Edward Pervin - Added motif-gauge.
 ;;; 02/28/91 Edward Pervin - Call (gc t) after every load in allegro.
-;;;			     Also, added motif-menu.
+;;;                          Also, added motif-menu.
 ;;; 01/17/91 Andrew Mickish - Added motif gadgets
 ;;; 08/10/90 Pavan Reddy - Changed "multi-feedback" to "polyline-creator"
 ;;; 08/07/90 Pavan Reddy - Added "multi-feedback" and "scrolling-window"
@@ -46,7 +46,7 @@
 ;;; 04/12/90 Mitchell - Added #+allegro (gc t)
 ;;; 03/26/90 Andrew Mickish - Added scrolling-menu and error-gadget
 ;;; 03/22/90 Robert Cook - Define the package "GARNET-GADGETS"
-;;;			   for the TI Explorer
+;;;                        for the TI Explorer
 ;;; 02/16/90 - Andrew Mickish - Removed defvar for Garnet-Gadgets-Pathname
 
 (in-package :COMMON-LISP-USER)
@@ -57,10 +57,10 @@
   (proclaim
    (if *debug-gadgets-mode*
        (and (boundp '*garnet-compile-debug-settings*)
-	    *garnet-compile-debug-settings*)
+            *garnet-compile-debug-settings*)
        ;; Global default settings.
-       (and (boundp '*default-garnet-proclaim*) 
-	    *default-garnet-proclaim*))))
+       (and (boundp '*default-garnet-proclaim*)
+            *default-garnet-proclaim*))))
 
 
 ;; Only loads this file when not compiling all of Garnet.
@@ -69,10 +69,10 @@
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (garnet-mkdir-if-needed Garnet-Gadgets-Pathname))
-		    
+
 (Defvar Garnet-Gadgets-Files
   '(
-    "GAD-scroll-parts"			; Helper modules containing definitions for 
+    "GAD-scroll-parts"			; Helper modules containing definitions for
     "GAD-slider-parts"			; scroll bar and slider objects
     "GAD-v-arrows"
     "GAD-v-boxes"
@@ -141,7 +141,7 @@
     "motif-save-gadget"
     "motif-load-gadget"
     "motif-menubar"
-    
+
     "multifont-gadget"
     "scrolling-window-multifont"
     "standard-edit"
@@ -149,63 +149,76 @@
     ))
 
 (dolist (file Garnet-Gadgets-Files)
-  (let ((gadget-str (concatenate 'string "gadgets:" file)))
-    (garnet-compile gadget-str)
-    (garnet-load gadget-str)))
+  (let ((gadget-str (concatenate 'string "gadgets:" file))
+        (gadget-src-path (merge-pathnames
+                      file
+                      (or *load-truename*
+                          *default-pathname-defaults*))))
+    (garnet-compile gadget-src-path)
+    ;; workaround - in upstream Garnet Lisp, the GAD files are
+    ;; compiled, but are not stored under garnet-binary-pathname.
+    ;; As a workaround about a matter of logical pathname
+    ;; conversion as related to that, garnet-load will reference the
+    ;; source file for each GAD file, during garnet-load (ported)
+    ;; here leaving out Garnet's "system:" and "system-src:"
+    ;; prefix filename notation
+    (garnet-load (if (string= (subseq file 0 3) "GAD")
+                      gadget-src-path
+                      gadget-str))))
 
 (format t "Copying gadget loader files to ~A~%" Garnet-Gadgets-Pathname)
 
 (garnet-copy-files Garnet-Gadgets-Src Garnet-Gadgets-Pathname
-		   '("arrow-line-loader.lisp"
-		     "browser-gadget-loader.lisp"
-		     "error-gadget-loader.lisp"
-		     "gadgets-loader.lisp"
-		     "gauge-loader.lisp"
-		     "graphics-loader.lisp"
-		     "h-scroll-loader.lisp"
-		     "h-slider-loader.lisp"
-		     "labeled-box-loader.lisp"
-		     "menu-loader.lisp"
-		     "menubar-loader.lisp"
-		     "motif-check-buttons-loader.lisp"
-		     "motif-error-gadget-loader.lisp"
-		     "motif-gauge-loader.lisp"
-		     "motif-h-scroll-loader.lisp"
-		     "motif-menu-loader.lisp"
-		     "motif-menubar-loader.lisp"
-		     "motif-option-button-loader.lisp"
-		     "motif-prop-sheet-win-loader.lisp"
-		     "motif-radio-buttons-loader.lisp"
-		     "motif-save-gadget-loader.lisp"
-		     "motif-scrolling-labeled-box-loader.lisp"
-		     "motif-scrolling-menu-loader.lisp"
-		     "motif-scrolling-window-loader.lisp"
-		     "motif-slider-loader.lisp"
-		     "motif-text-buttons-loader.lisp"
-		     "motif-trill-device-loader.lisp"
-		     "motif-v-scroll-loader.lisp"
-		     "mouseline-loader.lisp"
-		     "multi-selection-loader.lisp"
-		     "multifont-gadget-loader.lisp"
-		     "option-button-loader.lisp"
-		     "polyline-creator-loader.lisp"
-		     "popup-menu-button-loader.lisp"
-		     "prop-sheet-loader.lisp"
-		     "prop-sheet-win-loader.lisp"
-		     "prop-value-loader.lisp"
-		     "radio-buttons-loader.lisp"
-		     "save-gadget-loader.lisp"
-		     "scrolling-input-string-loader.lisp"
-		     "scrolling-labeled-box-loader.lisp"
-		     "scrolling-unlabeled-box-loader.lisp"
-		     "scrolling-menu-loader.lisp"
-		     "scrolling-window-loader.lisp"
-		     "standard-edit-loader.lisp"
-		     "text-buttons-loader.lisp"
-		     "trill-device-loader.lisp"
-		     "v-scroll-loader.lisp"
-		     "v-slider-loader.lisp"
-		     "x-buttons-loader.lisp"))
+                   '("arrow-line-loader.lisp"
+                     "browser-gadget-loader.lisp"
+                     "error-gadget-loader.lisp"
+                     "gadgets-loader.lisp"
+                     "gauge-loader.lisp"
+                     "graphics-loader.lisp"
+                     "h-scroll-loader.lisp"
+                     "h-slider-loader.lisp"
+                     "labeled-box-loader.lisp"
+                     "menu-loader.lisp"
+                     "menubar-loader.lisp"
+                     "motif-check-buttons-loader.lisp"
+                     "motif-error-gadget-loader.lisp"
+                     "motif-gauge-loader.lisp"
+                     "motif-h-scroll-loader.lisp"
+                     "motif-menu-loader.lisp"
+                     "motif-menubar-loader.lisp"
+                     "motif-option-button-loader.lisp"
+                     "motif-prop-sheet-win-loader.lisp"
+                     "motif-radio-buttons-loader.lisp"
+                     "motif-save-gadget-loader.lisp"
+                     "motif-scrolling-labeled-box-loader.lisp"
+                     "motif-scrolling-menu-loader.lisp"
+                     "motif-scrolling-window-loader.lisp"
+                     "motif-slider-loader.lisp"
+                     "motif-text-buttons-loader.lisp"
+                     "motif-trill-device-loader.lisp"
+                     "motif-v-scroll-loader.lisp"
+                     "mouseline-loader.lisp"
+                     "multi-selection-loader.lisp"
+                     "multifont-gadget-loader.lisp"
+                     "option-button-loader.lisp"
+                     "polyline-creator-loader.lisp"
+                     "popup-menu-button-loader.lisp"
+                     "prop-sheet-loader.lisp"
+                     "prop-sheet-win-loader.lisp"
+                     "prop-value-loader.lisp"
+                     "radio-buttons-loader.lisp"
+                     "save-gadget-loader.lisp"
+                     "scrolling-input-string-loader.lisp"
+                     "scrolling-labeled-box-loader.lisp"
+                     "scrolling-unlabeled-box-loader.lisp"
+                     "scrolling-menu-loader.lisp"
+                     "scrolling-window-loader.lisp"
+                     "standard-edit-loader.lisp"
+                     "text-buttons-loader.lisp"
+                     "trill-device-loader.lisp"
+                     "v-scroll-loader.lisp"
+                     "v-slider-loader.lisp"
+                     "x-buttons-loader.lisp"))
 
 
 (progn
