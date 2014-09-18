@@ -82,32 +82,45 @@
                                 (source-type "lisp")
                                 (errorp t))
   ;; New feature in Garnet API
-  (let* ((pathname-with-type
-          (merge-pathnames
-           pathname
-           (make-pathname :type (if prefer-source
-                                    source-type
-                                    #.(pathname-type (compile-file-pathname #"foo"))))))
-         (xl (translate-logical-pathname pathname-with-type)))
-    (or (probe-file xl)
-        (let ((dest
-               (cond
-                 (prefer-source
-                  (make-pathname :type source-type :defaults xl))
-                 (t
-                  (make-pathname
-                   :type #.(pathname-type  (compile-file-pathname "foo"))
-                   :defaults
-                   (asdf:apply-output-translations xl))))))
-          (or (probe-file dest)
-              (when errorp
-                (error "Cannot locate file ~s (tried paths ~s and ~s)"
-                       pathname xl dest)))))))
+  (labels ((xl (pathname prefer-source)
+             (merge-pathnames
+              pathname
+              (make-pathname :type (if prefer-source
+                                       source-type
+                                       #.(pathname-type
+                                          (compile-file-pathname "foo")))
+                             :defaults (if prefer-source
+                                           garnet-src-pathname
+                                           garnet-binary-pathname))))
+           (compute-dest (path psp)
+             (cond
+               (psp
+                (make-pathname :type source-type :defaults (xl path psp)))
+               (t
+                (make-pathname
+                 :type #.(pathname-type  (compile-file-pathname "foo"))
+                 :defaults
+                 (asdf:apply-output-translations (xl path psp)))))))
+
+    (let ((pref-dest (compute-dest pathname prefer-source)))
+      (or (probe-file pref-dest)
+          (let ((alt-dest (compute-dest pathname (not prefer-source))))
+            (or (probe-file alt-dest)
+                (when errorp
+                  (error "Cannot locate file ~s (tried paths ~s ~s and ~s)"
+                         pathname xl pref-dest alt-dest))))))))
 
 
 
 ;; (garnet-probe "kr-src:kr-macros" :prefer-source t)
+;; (garnet-probe "kr-src:kr-macros")
+
+;; (translate-logical-pathname "kr-src:kr-macros")
+;; (translate-logical-pathname "kr-src:kr-macros.lisp")
+
 ;; (garnet-probe "kr:kr-macros"  :prefer-source t)
+;; (garnet-probe "kr:kr-macros")
+
 
 ;; Legacy Garnet System Functions
 
@@ -318,10 +331,8 @@ With SBCL:
                     &key)
   (let* ((name (component-name component))
          (compiler-file-name (format nil "~a-src:~:*~a-compiler.lisp" name))
-         (system-compiler-file (or (cl-user:garnet-probe compiler-file-name
-                                                         :prefer-source t)
-                                   (error "File not found: ~s"
-                                          compiler-file-name))))
+         (system-compiler-file (cl-user:garnet-probe compiler-file-name
+                                                     :prefer-source t)))
     (with-compilation-unit
         (:policy cl-user::*default-garnet-proclaim*)
       (load system-compiler-file))))
@@ -358,7 +369,75 @@ With SBCL:
 ;; (asdf:operate 'asdf:compile-op '#:kr)
 ;; ^ TEST
 
-;;; FIXME: ALSO DEFPACKAGE.
+;;; FIXME: MOVE DEFPACKGE DECLARATIONS INTO INDIVIDUAL SYSTEMS
+;;
+;;; source: garnet-compiler.lisp
+(defpackage :GARNET-UTILS (:use :COMMON-LISP) (:nicknames :GU))
+(defpackage :KR-DEBUG (:use :COMMON-LISP))
+(defpackage :KR (:use :COMMON-LISP :KR-DEBUG))
+(defpackage :GEM (:use :COMMON-LISP :KR :KR-DEBUG))
+(defpackage :OPAL (:use :COMMON-LISP :KR))
+(defpackage :INTERACTORS (:use :COMMON-LISP :KR) (:nicknames :INTER)
+            (:export *GARNET-BREAK-KEY* *LEFT-BUTTON* *TRANS-FROM-FILE*))
+(defpackage :GARNET-GADGETS (:use :COMMON-LISP :KR) (:nicknames :GG))
+(defpackage :GARNET-DEBUG (:use :COMMON-LISP :KR :OPAL) (:nicknames :GD))
+(defpackage :GILT (:use :COMMON-LISP :KR))
+(defpackage :C32 (:use :COMMON-LISP :KR))
+(defpackage :LAPIDARY (:use :COMMON-LISP :KR))
+(defpackage :AGATE (:use :COMMON-LISP :KR))
+
+(defpackage :DEMO-3D (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-MULTIWIN (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-MULTIFONT (:use :COMMON-LISP KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-ANIMATOR (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-ANGLE (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-OTHELLO (:use :KR :COMMON-LISP) (:nicknames :DOTH)
+            (:export DO-GO DO-STOP START-GAME STOP-GAME SET-SCORE))
+(defpackage :DEMO-PIXMAP (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-ARITH (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-SCHEMA-BROWSER (:use :COMMON-LISP :KR)
+            (:export DO-GO DO-STOP SCHEMA-BROWSER SCHEMA-BROWSER-WIN
+                     SCHEMA-BROWSER-TOP-AGG))
+(defpackage :DEMO-ARRAY (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-SCROLLBAR (:use :COMMON-LISP :KR)
+            (:export DO-GO DO-STOP
+                     MAC-obj MAC-Go MAC-Stop
+                     Open-obj Open-Go Open-Stop
+                     NEXT-obj NEXT-Go NEXT-Stop
+                     Motif-obj Motif-Go Motif-Stop))
+(defpackage :DEMO-CLOCK (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-SEQUENCE (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-EDITOR (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-TEXT (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-FILE-BROWSER (:use :COMMON-LISP :KR)
+            (:export DO-GO DO-STOP FILE-BROWSER FILE-BROWSER-WIN
+                     FILE-BROWSER-TOP-AGG))
+(defpackage :DEMO-TRUCK (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-GADGETS (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-TWOP (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-GESTURE (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-UNISTROKES (:use :COMMON-LISP :KR :INTER) (:export DO-GO DO-STOP))
+(defpackage :DEMO-GRAPH (:use :COMMON-LISP :KR)
+            (:export DO-GO DO-STOP SCHEMA-GRAPH DEMO-GRAPH-ERROR-GADGET ROOT-BOX
+                     RELAYOUT DEMO-GRAPH-WIN))
+(defpackage :DEMO-VIRTUAL-AGG (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-GROW (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+(defpackage :DEMO-XASPERATE (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-LOGO (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP RE-ANIMATE))
+(defpackage :DEMOS-CONTROLLER (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-MANYOBJS (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-MENU (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :GARNET-CALCULATOR (:use :COMMON-LISP :KR)
+            (:export START-CALC STOP-CALC DO-GO DO-STOP))
+(defpackage :DEMO-MODE (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :GARNETDRAW (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :DEMO-MOTIF (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
+(defpackage :MGE (:use :COMMON-LISP :KR)
+            (:export DO-GO DO-STOP
+                     CREATE-PIECE DESTROY-PIECE DESTROY-ALL-PIECES
+                     GO-INITIALIZE EDITOR-SHOW-WINDOW))
+(defpackage :DEMO-MOVELINE (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
+
 
 ;; (let ((cl-user-pkg (find-package '#:cl-user)))
 ;;   ;; derive components (TO DO)
