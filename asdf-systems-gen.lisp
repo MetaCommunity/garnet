@@ -311,6 +311,12 @@ With SBCL:
     (setf (logical-pathname-translations src-host-name)
           (append lpn-translations
                   (list
+                   (list "**;"
+                         (merge-pathnames (make-pathname :directory
+                                                         '(:relative :wild-inferiors)
+                                                         :version :wild
+                                                         :defaults src-host-pathname)
+                                          src-host-pathname))
                    (list "**;*"
                          (merge-pathnames (make-pathname :directory
                                                          '(:relative :wild-inferiors)
@@ -331,6 +337,12 @@ With SBCL:
     (setf (logical-pathname-translations bin-host-name)
           (append lpn-translations
                   (list
+                   (list "**;"
+                         (merge-pathnames (make-pathname :directory
+                                                         '(:relative :wild-inferiors)
+                                                         :version :wild
+                                                         :defaults bin-host-pathname)
+                                          bin-host-pathname))
                    (list "**;*"
                          (merge-pathnames (make-pathname
                                            :directory
@@ -339,7 +351,7 @@ With SBCL:
                                            :type
                                            #.(pathname-type (compile-file-pathname "FOO"))
                                            :version :wild)
-                                          src-host-pathname))
+                                          bin-host-pathname))
                    (list "**;*.*.*"
                          (merge-pathnames (make-pathname :directory
                                                          '(:relative :wild-inferiors)
@@ -351,9 +363,11 @@ With SBCL:
 
 
 ;;  (probe-file "kr-src:")
+;;  ?: (probe-file "kr-src:;")
 ;;  (probe-file "kr:")
 
 ;; (translate-logical-pathname "kr:")
+;; ?: (translate-logical-pathname "kr:;")
 ;; (translate-logical-pathname "kr:kr-compiler.lisp")
 ;; (translate-logical-pathname "kr:kr-compiler.fasl")
 ;; (translate-logical-pathname "kr:kr-compiler")
@@ -379,32 +393,36 @@ With SBCL:
 ;;
 ;; garnet-<FOO>-pathname [var] : <FOO> system binary directory
 ;; garnet-<FOO>-src [var] : <FOO> system source directory
-(macrolet
-    ((frob-path-config (s)
-       (labels ((frob-symbol (name)
-                  (let ((s (read-from-string (format nil "#:~a" name))))
-                    (intern (symbol-name s) '#:cl-user)))
-                (frob-bin-sym (name)
-                  (frob-symbol (format nil "garnet-~a-pathname" name)))
-                (frob-src-sym (name)
-                  (frob-symbol (format nil "garnet-~a-src" name)))
-                (frob-bin-path (path)
-                  (apply-output-translations
-                   (translate-logical-pathname path))))
-         (let ((foo-bin-var (frob-bin-sym s))
-               (foo-src-var (frob-src-sym s))
-               (src-dir (format nil "~a-src:" s)))
-           `(progn
-              (defvar ,foo-bin-var
-                ,(frob-bin-path src-dir))
-              (defvar ,foo-src-var
-                ,(translate-logical-pathname src-dir)))))))
-  (dolist (s %garnet-systems%)
-    (frob-path-config s)))
+(macrolet ((frob-do (sname)
+             (macrolet ((frob-symbol (name)
+                          `(let ((s (read-from-string (format nil "#:~a" ,name))))
+                             (intern (symbol-name s) '#:cl-user)))
+                        (frob-bin-sym (name)
+                          `(frob-symbol (format nil "garnet-~a-pathname" ,name)))
+                        (frob-src-sym (name)
+                          `(frob-symbol (format nil "garnet-~a-src" ,name)))
+                        (frob-bin-path (path)
+                          `(apply-output-translations
+                            (translate-logical-pathname ,path))))
+               (let ((foo-bin-var (frob-bin-sym sname))
+                     (foo-src-var (frob-src-sym sname))
+                     (src-dir (format nil "~a-src:" sname)))
+                 `(progn
+                    (defvar ,foo-bin-var
+                      ,(frob-bin-path src-dir))
+                    (defvar ,foo-src-var
+                      ,(translate-logical-pathname src-dir))))))
+             (frob-toplevel ()
+               `(progn
+                  ,@(mapcar (lambda (s)  `(frob-do ,s))
+                            %garnet-systems%))))
+  (frob-toplevel))
 
 ;; ^ NB: in SBCL (1.2.3) a (SET NAME VALUE) call does not in itself
 ;;   register the value of NAME as a defined variable. So, that form
 ;;   was revised to use a macro definition and DEFVAR instead of SET.
+
+;; (describe 'cl-user::garnet-kr-pathname)
 
 ;; --
 
