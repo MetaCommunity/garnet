@@ -82,7 +82,13 @@
                                 (source-type "lisp")
                                 (errorp t))
   ;; New feature in Garnet API
-  (let ((xl (translate-logical-pathname pathname)))
+  (let* ((pathname-with-type
+          (merge-pathnames
+           pathname
+           (make-pathname :type (if prefer-source
+                                    source-type
+                                    #.(pathname-type (compile-file-pathname #"foo"))))))
+         (xl (translate-logical-pathname pathname-with-type)))
     (or (probe-file xl)
         (let ((dest
                (cond
@@ -116,7 +122,7 @@
           (merge-pathnames
            (make-pathname :type #.(pathname-type
                                    (compile-file-pathname "foo")))
-           (apply-output-translation pathname))))
+           (asdf:apply-output-translations pathname))))
     (ensure-directories-exist bin-file)
     (compile-file src-file :output-file bin-file)))
 
@@ -225,14 +231,12 @@ With SBCL:
                                                  :type
                                                  #.(pathname-type
                                                     (compile-file-pathname "foo"))
-                                                 :defaults bin-host-pathname
-                                                 )
+                                                 :defaults bin-host-pathname)
                                   bin-host-pathname)))))
 
     (setf (logical-pathname-translations src-host-name)
           (append lpn-translations
                   (list (list "**;*.*.*"
-                              ;; FIXME: this should differ for src-host-name, bin-host-name
                               (merge-pathnames (make-pathname :directory
                                                               '(:relative :wild-inferiors)
                                                               :name :wild
@@ -244,7 +248,6 @@ With SBCL:
     (setf (logical-pathname-translations bin-host-name)
           (append lpn-translations
                   (list (list "**;*.*.*"
-                              ;; FIXME: this should differ for src-host-name, bin-host-name
                               (merge-pathnames (make-pathname :directory
                                                               '(:relative :wild-inferiors)
                                                               :name :wild
@@ -256,10 +259,18 @@ With SBCL:
 
 ;;  (probe-file "kr-src:")
 ;;  (probe-file "kr:")
-;;
-;; (cl-user::garnet-probe "kr-src:kr-compiler" :prefer-source  t)
-;; (cl-user::garnet-probe "kr:kr-compiler" )
-;;
+
+;; (translate-logical-pathname "kr:")
+;; (translate-logical-pathname "kr:kr-compiler.lisp")
+;; (translate-logical-pathname "kr:kr-compiler.fasl")
+;; (translate-logical-pathname "kr:kr-compiler")
+
+
+;; (cl-user:garnet-probe "kr-src:kr-compiler" :prefer-source  t)
+;; (cl-user:garnet-probe "kr:kr-compiler" )
+;; (cl-user:garnet-probe "kr:kr-compiler" :prefer-source t)
+;; ^ FIXME: last call should not err
+
 
 ;; **** FIXME NOTE : loading kr-doc
 ;;
@@ -307,7 +318,8 @@ With SBCL:
                     &key)
   (let* ((name (component-name component))
          (compiler-file-name (format nil "~a-src:~:*~a-compiler.lisp" name))
-         (system-compiler-file (or (probe-file compiler-file-name )
+         (system-compiler-file (or (cl-user:garnet-probe compiler-file-name
+                                                         :prefer-source t)
                                    (error "File not found: ~s"
                                           compiler-file-name))))
     (with-compilation-unit
@@ -323,7 +335,7 @@ With SBCL:
                     &key)
   (let* ((name (component-name component))
          (loader-file-name (format nil "~a-src:~:*~a-loader.lisp" name))
-         (system-loader-file (or (probe-file loader-file-name )
+         (system-loader-file (or (cl-user:garnet-probe loader-file-name )
                                  (error "File not found: ~s"
                                         loader-file-name))))
     (load system-loader-file)))
@@ -345,6 +357,8 @@ With SBCL:
 ;; FIXME: kr-loader assumes that kr-compiler has been run previously
 ;; (asdf:operate 'asdf:compile-op '#:kr)
 ;; ^ TEST
+
+;;; FIXME: ALSO DEFPACKAGE.
 
 ;; (let ((cl-user-pkg (find-package '#:cl-user)))
 ;;   ;; derive components (TO DO)
