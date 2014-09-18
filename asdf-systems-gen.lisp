@@ -107,8 +107,8 @@
           (let ((alt-dest (compute-dest pathname (not prefer-source))))
             (or (probe-file alt-dest)
                 (when errorp
-                  (error "Cannot locate file ~s (tried paths ~s ~s and ~s)"
-                         pathname xl pref-dest alt-dest))))))))
+                  (error "Cannot locate file ~s (tried paths ~s and ~s)"
+                         pathname pref-dest alt-dest))))))))
 
 
 
@@ -348,8 +348,6 @@ With SBCL:
 ;; FIXME: ensure that COMPILE-OP calls LOAD-OP on same component
 ;;        after compiling
 
-;; FIXME: define COMPILE-OP as prereq to LOAD-OP on GARNET-PROXY-SYSTEM
-
 (defmethod operate ((op load-op) (component garnet-proxy-system)
                     &key)
   (let* ((name (component-name component))
@@ -360,6 +358,9 @@ With SBCL:
     (load system-loader-file)))
 
 
+(defmethod component-depends-on ((op load-op)
+                                 (component garnet-proxy-system))
+  (list (list 'compile-op component)))
 
 (do ((systems (reverse %garnet-systems%)
               (cdr systems)))
@@ -374,8 +375,10 @@ With SBCL:
      :pathname *load-truename*)))
 
 ;; FIXME: kr-loader assumes that kr-compiler has been run previously
+
 ;; (asdf:operate 'asdf:compile-op '#:kr)
-;; ^ TEST
+;; (asdf:operate 'asdf:load-op '#:kr)
+;; ^ TESTS
 
 ;;; FIXME: MOVE DEFPACKGE DECLARATIONS INTO INDIVIDUAL SYSTEMS
 ;;
