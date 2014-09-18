@@ -343,7 +343,7 @@ With SBCL:
                                                      :prefer-source t)))
     (with-compilation-unit
         (:policy cl-user::*default-garnet-proclaim*)
-      (load system-compiler-file))))
+      (cl-user:garnet-load system-compiler-file))))
 
 ;; FIXME: ensure that COMPILE-OP calls LOAD-OP on same component
 ;;        after compiling
@@ -352,10 +352,8 @@ With SBCL:
                     &key)
   (let* ((name (component-name component))
          (loader-file-name (format nil "~a-src:~:*~a-loader.lisp" name))
-         (system-loader-file (or (cl-user:garnet-probe loader-file-name )
-                                 (error "File not found: ~s"
-                                        loader-file-name))))
-    (load system-loader-file)))
+         (system-loader-file (cl-user:garnet-probe loader-file-name )))
+    (cl-user:garnet-load system-loader-file)))
 
 
 (defmethod component-depends-on ((op load-op)
