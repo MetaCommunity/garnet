@@ -227,32 +227,41 @@ With SBCL:
                                                     (compile-file-pathname "foo"))
                                                  :defaults bin-host-pathname
                                                  )
-                                  src-host-pathname))
+                                  bin-host-pathname)))))
 
-           (list "**;*.*.*"
-                 (merge-pathnames (make-pathname :directory
-                                                 '(:relative :wild-inferiors)
-                                                 :name :wild
-                                                 :type :wild
-                                                 :version :wild
-                                                 )
-                                  src-host-pathname)))))
+    (setf (logical-pathname-translations src-host-name)
+          (append lpn-translations
+                  (list (list "**;*.*.*"
+                              ;; FIXME: this should differ for src-host-name, bin-host-name
+                              (merge-pathnames (make-pathname :directory
+                                                              '(:relative :wild-inferiors)
+                                                              :name :wild
+                                                              :type :wild
+                                                              :version :wild
+                                                              )
+                                               src-host-pathname)))))
 
-    (dolist (host (list src-host-name bin-host-name))
-      ;; FROB: defining same logical pathname translations for both [FIXME]
-      (setf (logical-pathname-translations host)
-            lpn-translations))))
+    (setf (logical-pathname-translations bin-host-name)
+          (append lpn-translations
+                  (list (list "**;*.*.*"
+                              ;; FIXME: this should differ for src-host-name, bin-host-name
+                              (merge-pathnames (make-pathname :directory
+                                                              '(:relative :wild-inferiors)
+                                                              :name :wild
+                                                              :type :wild
+                                                              :version :wild
+                                                              )
+                                               bin-host-pathname)))))))
 
 
 ;;  (probe-file "kr-src:")
 ;;  (probe-file "kr:")
-;;  ^  FIXME - should evaluated to the ASDF-translated pathname
 ;;
 ;; (cl-user::garnet-probe "kr-src:kr-compiler" :prefer-source  t)
 ;; (cl-user::garnet-probe "kr:kr-compiler" )
 ;;
 
-;; ****
+;; **** FIXME NOTE : loading kr-doc
 ;;
 ;; note : src/kr/kr-doc.lisp is compiled/loaded individually
 ;; when compile-kr-doc-p / load-kr-doc-p => t / t
@@ -287,15 +296,6 @@ With SBCL:
       (unless (boundp foo-src-var)
         (setf (symbol-value foo-src-var)
               (translate-logical-pathname dir))))))
-
-#|
-
- (let ((*default-pathname-defaults*
-       (translate-logical-pathname "kr-src:"))
-      )
-  )
-
-|#
 
 
 ;; --
