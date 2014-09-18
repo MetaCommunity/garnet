@@ -143,6 +143,14 @@
 (defun garnet-mkdir-if-needed (path)
   (ensure-directories-exist path))
 
+(defun garnet-copy-files (src-dir bin-dir files)
+  (let (result)
+    (dolist (f files result)
+      (let ((src (merge-pathnames f src-dir))
+            (dst (merge-pathnames f bin-dir)))
+        (uiop/stream:copy-file src dst)
+        (setf result (cons dst result))))))
+
 #+sbcl
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (setf sb-ext:*muffled-warnings* 'sb-kernel::style-warning))
