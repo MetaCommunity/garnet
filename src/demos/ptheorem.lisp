@@ -35,14 +35,15 @@
  (:c (o-formula (geom-sum (gvl :a) (gvl :b))
                 5)))
 
-;; SHOULD call G-VALUE first, on the slot :a,
-;; before S-VALUE on slot :a, given that
-;; :a has a slot value derived from formula
+;; Should call G-VALUE first, on the slot :A,
+;; before S-VALUE on slot :A, given that :A
+;; has a slot value derived from a formula
 (g-value right-triangle :a)
 ;; => 3.0
-;; ^ that value is not derived from the slot's initform
+;; ^ notice that that value is not derived
+;;   from the slot's initform, here
 
-(s-value right-triangle :a 4)
+(s-value right-triangle :a 4.0)
 ;; => 4, nil
 
 (g-value right-triangle :a)
@@ -70,6 +71,48 @@
 ;; ^ may vary, depending on how many times s-value ... :a,:b is called (??)
 (g-value right-triangle :b)
 (g-value right-triangle :c)
+
+
+;; Subsequently, [re]defining :a, :b, and :c
+;; using initial values of type FLOAT
+
+(create-instance 'right-triangle triangle
+ (:docstring "c^2 = a^2 + b^2")
+
+ (:a (o-formula (geom-diff (gvl :b) (gvl :c))
+                3.0))
+ (:b (o-formula (geom-diff (gvl :a) (gvl :c))
+                4.0))
+ (:c (o-formula (geom-sum (gvl :a) (gvl :b))
+                5.0)))
+
+;; verify:
+(g-value right-triangle :a)
+;; => 3.0
+(g-value right-triangle :b)
+;; => 4.0
+(g-value right-triangle :c)
+;; => 5.0
+
+;; set :A to a new FLOAT value
+(s-value right-triangle :a 4.0)
+;; check :B, :C
+(g-value right-triangle :b)
+;; => 3.9999998
+(g-value right-triangle :c)
+;; => 5.656854
+
+;; ...then set :B to a new FLOAT value
+(s-value right-triangle :b 3.0)
+;; check :A, :C
+(g-value right-triangle :a)
+;; => 4.0
+(g-value right-triangle :c)
+;; => 5.0
+
+;; After A and B are both set,
+;; the value computed for :C is "OK"
+
 
 
 ;; To do: "Floating point accuracy" + utilities
