@@ -92,23 +92,24 @@
                              :defaults (if prefer-source
                                            garnet-src-pathname
                                            garnet-binary-pathname))))
-           (compute-dest (path psp)
+           (compute-dest (path prefer-source)
              (cond
-               (psp
-                (make-pathname :type source-type :defaults (xl path psp)))
+               (prefer-source
+                (make-pathname :type source-type :defaults (xl path prefer-source)))
                (t
                 (make-pathname
                  :type #.(pathname-type  (compile-file-pathname "foo"))
                  :defaults
-                 (asdf:apply-output-translations (xl path psp)))))))
-
-    (let ((pref-dest (compute-dest pathname prefer-source)))
-      (or (probe-file pref-dest)
-          (let ((alt-dest (compute-dest pathname (not prefer-source))))
-            (or (probe-file alt-dest)
-                (when errorp
-                  (error "Cannot locate file ~s (tried paths ~s and ~s)"
-                         pathname pref-dest alt-dest))))))))
+                 (asdf:apply-output-translations (xl path prefer-source)))))))
+    (let ((p (translate-logical-pathname pathname)))
+      (or (probe-file p)
+          (let ((pref-dest (compute-dest pathname prefer-source)))
+            (or (probe-file pref-dest)
+                (let ((alt-dest (compute-dest pathname (not prefer-source))))
+                  (or (probe-file alt-dest)
+                      (when errorp
+                        (error "Cannot locate file ~s (tried paths ~s and ~s and ~s)"
+                               pathname p pref-dest alt-dest))))))))))
 
 
 
@@ -121,6 +122,11 @@
 ;; (garnet-probe "kr:kr-macros"  :prefer-source t)
 ;; (garnet-probe "kr:kr-macros")
 
+;; (garnet-probe "gadgets:GAD-scroll-parts")
+;; ^ FIXME. failing only due to pathname case
+
+;; (translate-logical-pathname  "gadgets:GAD-scroll-parts.lisp")
+;; ^ NOTE that that "reconverts" the pathname case
 
 ;; Legacy Garnet System Functions
 
@@ -214,6 +220,24 @@ With SBCL:
             garnet-probe ;; new feature in the garnet API
             )))
 
+;; System-specific ports of Garnet <forms>
+
+;; CL-USER::LAUNCH-PROCESS-P : needed by inter/i-windows.lisp
+
+;; "launch-process-p controls whether Garnet will launch
+;;  a separate process to detect keyboard and mouse events."
+;; -- garnet-loader.lisp
+(defvar launch-process-p T)
+
+;; "update-locking-p controls whether process locks will be activated
+;;  around the update method (this keeps two processes from calling update
+;;  at the same time).
+;; -- garnet-loader.lisp
+(defvar update-locking-p T
+  "If T, uses process locks to keep Update in a process from interrupting
+   itself in a different process.")
+
+
 
 ;; --------
 
@@ -221,7 +245,12 @@ With SBCL:
 
 (dolist (sys %garnet-systems%)
   ;; define logical pathnames
-  ;;   for <foo>-src: LPN hosts
+  ;;   for <foo>-src: and <foo>: LPN hosts
+  ;;
+  ;; FIXME: also define variables
+  ;;   garnet-<FOO>-pathname (bin)
+  ;;   garnet-<FOO>-src (src)
+  ;;
   (let* ((src-host-name (format nil "~a-src" sys))
          (src-host-pathname
           (merge-pathnames
@@ -307,28 +336,32 @@ With SBCL:
 ;;
 ;; garnet-<FOO>-pathname [var] : <FOO> system binary directory
 ;; garnet-<FOO>-src [var] : <FOO> system source directory
-(labels ((frob-symbol (name)
-           (let ((s (read-from-string name)))
-             (prog1 (intern (symbol-name s) '#:cl-user)
-               (unintern s))))
-         (frob-bin-sym (name)
-           (frob-symbol (format nil "garnet-~a-pathname" name)))
-         (frob-src-sym (name)
-           (frob-symbol (format nil "garnet-~a-src" name)))
-         (frob-bin-path (path)
-           (apply-output-translations
-            (translate-logical-pathname path))))
+(macrolet
+    ((frob-path-config (s)
+       (labels ((frob-symbol (name)
+                  (let ((s (read-from-string (format nil "#:~a" name))))
+                    (intern (symbol-name s) '#:cl-user)))
+                (frob-bin-sym (name)
+                  (frob-symbol (format nil "garnet-~a-pathname" name)))
+                (frob-src-sym (name)
+                  (frob-symbol (format nil "garnet-~a-src" name)))
+                (frob-bin-path (path)
+                  (apply-output-translations
+                   (translate-logical-pathname path))))
+         (let ((foo-bin-var (frob-bin-sym s))
+               (foo-src-var (frob-src-sym s))
+               (src-dir (format nil "~a-src:" s)))
+           `(progn
+              (defvar ,foo-bin-var
+                ,(frob-bin-path src-dir))
+              (defvar ,foo-src-var
+                ,(translate-logical-pathname src-dir)))))))
   (dolist (s %garnet-systems%)
-    (let ((foo-bin-var (frob-bin-sym s))
-          (foo-src-var (frob-src-sym s))
-          (dir (format nil "~a-src:" s)))
-      (unless (boundp foo-bin-var)
-        (setf (symbol-value foo-bin-var)
-              (frob-bin-path dir)))
-      (unless (boundp foo-src-var)
-        (setf (symbol-value foo-src-var)
-              (translate-logical-pathname dir))))))
+    (frob-path-config s)))
 
+;; ^ NB: in SBCL (1.2.3) a (SET NAME VALUE) call does not in itself
+;;   register the value of NAME as a defined variable. So, that form
+;;   was revised to use a macro definition and DEFVAR instead of SET.
 
 ;; --
 
@@ -377,6 +410,15 @@ With SBCL:
 ;; (asdf:operate 'asdf:compile-op '#:kr)
 ;; (asdf:operate 'asdf:load-op '#:kr)
 ;; ^ TESTS
+
+;; (require '#:clx)
+;; (dolist (s %garnet-systems%) (asdf:operate 'asdf:compile-op s))
+;; ^ NOTE: The truetype <thing> loads additional system definitions
+
+;; FIXME: gadgets:GAD-scroll-parts.lisp is NOT missing
+;; but gadgets-compiler.lisp isn't finding it
+;;     during garnet-load
+;;         during load of gadgets-compiler.lisp (within COMPILE-OP)
 
 ;;; FIXME: MOVE DEFPACKGE DECLARATIONS INTO INDIVIDUAL SYSTEMS
 ;;
