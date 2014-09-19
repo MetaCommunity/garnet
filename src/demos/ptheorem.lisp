@@ -119,3 +119,8 @@
 
 ;; To Do: Also model interior angles in RIGHT-TRIANGLE
 ;;        using the standard trigonometric formulae
+;;        as well as the Law of Sines and related
+;;        mathematical axioms[1] and proofs[2]
+;;
+;;  [1] http://mathworld.wolfram.com/LawofSines.html
+;;  [2] http://en.wikipedia.org/wiki/Law_of_sines
