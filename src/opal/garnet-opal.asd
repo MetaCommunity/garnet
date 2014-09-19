@@ -11,6 +11,13 @@
   :default-component-class garnet-source-file
   :serial t
   :depends-on (#:garnet-shared #:garnet-gem)
+  :perform (load-op :after (o c)
+             (let ((s (find-symbol  #.(symbol-name '#:init-device)
+                                    '#:gem)))
+               ;; FIXME: if the same device is already initialized,
+               ;; do not reinitialize
+               (funcall (fdefinition s)
+                        :X nil)))
   :components
   ((:file "package") ;; defines garnet-gadgets package
    (:file "types")
