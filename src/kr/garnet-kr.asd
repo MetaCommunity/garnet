@@ -1,4 +1,4 @@
-;; garnet-kr.asd			-*-lisp-*-
+k; garnet-kr.asd			-*-lisp-*-
 
 (in-package #:cl-user)
 
@@ -8,6 +8,7 @@
 (in-package #:garnet-systems)
 
 (defsystem #:garnet-kr
+  :version "2.3.4"
   :default-component-class garnet-source-file
   :serial t
   :depends-on (#:garnet-shared #:garnet-utils)

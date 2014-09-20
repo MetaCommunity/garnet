@@ -8,6 +8,7 @@
 (in-package #:garnet-systems)
 
 (defsystem #:garnet-gadgets
+  :version "1.0"
   :default-component-class garnet-source-file
   :serial nil
   :depends-on (#:garnet-shared #:garnet-aggregadgets)
