@@ -10,7 +10,7 @@
 (defsystem #:garnet-gadgets
   :default-component-class garnet-source-file
   :serial nil
-  :depends-on (#:garnet-shared #:garnet-gem)
+  :depends-on (#:garnet-shared #:garnet-aggregadgets)
   :components
   (; (:file "package") ;; package defined in garnet-opal
    ;;
