@@ -8,6 +8,7 @@
 (in-package #:garnet-systems)
 
 (defsystem #:garnet-inter
+  :version "1.0"
   :default-component-class garnet-source-file
   :serial t
   :depends-on (#:garnet-shared #:garnet-opal)
