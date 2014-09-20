@@ -54,6 +54,16 @@ With SBCL:
       (:policy cl-user::*default-garnet-proclaim*)
     (call-next-method)))
 
+(defun default-directory ()
+  (let ((base-path (or *load-truename*
+                       *default-pathname-defaults*)))
+    (make-pathname :name nil :type nil
+                   :version :newest
+                   :defaults base-path)))
+
+;; (default-directory)
+
+
 
 (defvar %garnet-systems%
   ;; must be compiled/loaded in this serial order
