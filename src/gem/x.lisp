@@ -2667,4 +2667,5 @@ the X drawable."
 
 ;;; Make the initializer function available to the outside world.
 ;;;
+#-ASDF
 (push (cons :X #'X-TOP-LEVEL-INITIALIZE) *device-initializers*)
