@@ -10,16 +10,14 @@
 (defsystem #:garnet-gem
   :default-component-class garnet-source-file
   :serial t
+  :version "1.0"
   :depends-on (#:garnet-shared #:clx #:garnet-kr)
-  ;; :perform (compile-op :before (o c)
-  ;;           (let ((gem-p (find-package '#:gem)))
-  ;;             ;; reset GEM::*DEVICE-INITIALIZERS*
-  ;;             (when gem-p
-  ;;               (let ((s (find-symbol
-  ;;                         #.(symbol-name '#:*device-initializers*)
-  ;;                         gem-p)))
-  ;;                 (when (boundp s)
-  ;;                   (set s nil))))))
+  :perform (load-op :after (o c)
+	       (with-safe-frefs ((ensure #:ensure-device-initializer
+					 #:gem)
+				 (xtli #:x-top-level-initialize
+				       #:gem))
+		 (funcall ensure :x xtli)))
   :components ((:file "package")
                (:file "gem")
                (:file "define-methods")

@@ -39,6 +39,72 @@
     "An a-list which associates device types with the function to be called
      to initialize them."))
 
+(defun ensure-device-initializer (device fspec)
+  (declare (type symbol device)
+	   (type (or symbol function) fspec)
+	   (values function))
+  "Ensure function FSPEC will be registered as a device initializer.
+
+This function operates on the list, GEM::*DEVICE-INITIALIZERS*
+
+If the FDEFINITION for FSPEC denotes a function already registered in
+the list, but the FDEFINITION registered in the list differs from
+that denoted by FSPEC at the time of this functin's evaluation,
+then this function will ensure that the function is registered with
+the updated FDEFINITIONS, as unique to the DEVICE designator."
+  (flet ((ensure-fn (o) (coerce o 'function)))
+    (let ((fn (ensure-fn fspec))
+	  (existing (assoc device *device-initializers*)))
+    (cond
+      ((and existing
+	    (eq (ensure-fn (cdr existing))
+		fn))
+       (values fn))
+      (existing
+       (setf (cdr existing) fn)
+       (values fn))
+      (t 
+       ;; FIXME: Thread safety for *DEVICE-INITIALIZERS*
+       ;; r/w locks and symbol macros?
+       (setf *device-initializers* 
+	     (nconc 
+	      (list (cons device fn))))
+       (values fn))))))
+
+(defun find-device-initializer (device &optional (errorp t))
+  (declare (type symbol device)
+	   (values (or function null)))
+  (let ((spec (assoc device *device-initializers* 
+		     :test #'eq)))
+    (cond
+      (spec (cdr spec))
+      (errorp
+       (error "Device initializer not defined for device ~s"
+	      device))
+      (t nil))))
+
+(defun delete-device-initializer (device &optional (errorp t))
+  (declare (type symbol device)
+	   (values (or function null)))
+  (let ((spec (assoc device *device-initializers* 
+		     :test #'eq)))
+    (cond
+      (spec (setf *device-initializers*
+		  (delete spec *device-initializers*
+			  :test #'eq))
+	    (prog1 (cdr spec)
+	      (rplacd spec nil)))
+      (errorp
+       (error "Device initializer not defined for device ~s"
+	      device))
+      (t nil))))
+
+;; (delete-device-initializer :x)
+;; (find-device-initializer :x)
+;; (find-device-initializer :x nil)
+;; (ensure-device-initializer :x #'X-TOP-LEVEL-INITIALIZE)
+;; (ensure-device-initializer :x #'X-TOP-LEVEL-INITIALIZE)
+;; (find-device-initializer :x)
 
 
 ;;; Methods mechanism
