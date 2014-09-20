@@ -64,6 +64,13 @@ With SBCL:
 ;; (default-directory)
 
 
+(defun append-default-directory (&rest directory)
+  (let ((deflt (default-directory)))
+    (merge-pathnames (make-pathname :directory (cons :relative directory)
+                                    :defaults deflt)
+                     deflt)))
+
+;; (append-default-directory "agg")
 
 (defvar %garnet-systems%
   ;; must be compiled/loaded in this serial order
