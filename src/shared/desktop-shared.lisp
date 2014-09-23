@@ -1,8 +1,10 @@
 ;; desktop-shared.lisp - shared resources for Garnet desktop applications
 
+;; FIXME: SIDEBAR : What feature GARNET-PROCESSES ?
+
 ;; FIXME: Parse source code for each of:
-;;  Garnet-Bitmap-Pathname
-;;  Garnet-Pixmap-Pathname
+;;  Garnet-Bitmap-Pathname 
+;;  Garnet-Pixmap-Pathname [X] [used in gilt and demos systems][X]
 ;;  Garnet-Gilt-Bitmap-Pathname
 ;;  Garnet-C32-Bitmap-Pathname  
 ;;  Garnet-DataFile-Pathname
@@ -93,11 +95,11 @@
   ;; resources within the filesystem.
   ((cursor-bitmap
     :initarg :cursor-bitmap
-    :type file-name
+    :type component
     :accessor cursor-cursor-bitmap)
    (mask-bitmap
     :initarg :mask-bitmap
-    :type file-name
+    :type component
     :accessor cursor-mask-bitmap)
    ))
 
@@ -404,10 +406,10 @@
   ;;  2) [X] Add a keyword arg :SYSTEM
   ;;  3) Use for all of the systems:
   ;;       [X] garnet-bitmaps
-  ;;       garnet-pixmaps [TO DO]
-  ;;       c32-resources [TO DO]
-  ;;       gesture-resources [TO DO] (*.classifier ?)
-  ;;       gilt-resources [TO DO]
+  ;;       [X] garnet-pixmaps
+  ;;       [x] garnet-c32-resources
+  ;;       garnet-gesture-resources [TO DO] (*.classifier ?)
+  ;;       garnet-gilt-resources [TO DO]
   ;;       ?? ../data/cirles.data used in demo-virtual-agg [TO DO]
   (declare (type string name)
 	   (type (or null string) submodule)
