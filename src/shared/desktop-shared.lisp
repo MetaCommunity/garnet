@@ -29,8 +29,7 @@
   ())
 
 (defmethod source-file-type ((component bitmap) (context parent-component))
-  (let ((type (when (next-method-p)
-                (call-next-method))))
+  (let ((type (call-next-method*)))
     (or type "bm")))
 
 
