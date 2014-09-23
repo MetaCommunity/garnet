@@ -23,6 +23,16 @@
 	  ))
 
 
+;;; PIXMAP component class
+
+(defclass pixmap (resource-file)
+  ())
+
+(defmethod source-file-type ((component pixmap) (context parent-component))
+  (let ((type (call-next-method*)))
+    (or type "xpm")))
+
+
 ;;; BITMAP Component Class
 
 (defclass bitmap (resource-file)
