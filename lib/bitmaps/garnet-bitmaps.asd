@@ -5,8 +5,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (asdf:find-system '#:garnet-shared)
 
-  (dolist (s '(#:info.metacommunity.cltl.utils
-	       #:garnet-desktop-shared))
+  (dolist (s '(#:garnet-desktop-shared))
     (asdf:operate 'asdf:load-op s)))
 
 
@@ -16,8 +15,7 @@
 
   :class resource-system
   :serial t
-  :defsystem-depends-on (#:info.metacommunity.cltl.utils
-			 #:garnet-desktop-shared
+  :defsystem-depends-on (#:garnet-desktop-shared
                          #:garnet-shared)
   :description "System for Garnet bitmaps and cursor resource files"
 
