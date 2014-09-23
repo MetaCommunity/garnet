@@ -25,10 +25,24 @@
   (opal:read-image (merge-pathnames bitmapname common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
 (defparameter HourGlassCursor
+  ;; DUPLICTE CODE!!!! SEE ALSO: custom.lisp
+  ;; NOTE: custom.lisp was originally created after this file,
+  ;;       probably was derived from this file
+  #+Garnet.ASDF
+  (let ((cursor (find-component* "hourglass" "garnet-bitmaps"))
+	(cursor-ident (gensym "hourglass-cursor-bitmap-"))
+	(mask-ident (gensym "hourglass-cursor-mask-")))
+    (macrolet ((frob (ident accessor)
+		 `(create-instance ,ident opal:bitmap 
+		    (:image (,accessor cursor)))))
+      (cons (frob cursor-ident garnet-systems:cursor-cursor-bitmap)
+	    (frob mask-ident garnet-systems:cursor-mask-bitmap))))
+  #-Garnet.ASDF
   (cons (create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.cursor")))
 	(create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.mask")))))
+
 (defparameter RegularCursor (g-value opal::window :cursor))
 
 (defvar *Last-Filename* "") ; last file name used to read or save a file
@@ -352,6 +366,54 @@ one that appears on a window's title-bar or on a window's icon"
       (s-value win :cursor previous-cursor))))
 
 
+#+Garnet.ASDF
+(defun init-cursors ()
+  (macrolet ((frob (name)
+	       (with-gensym (%name cursor-bm-sym mask-bm-sym 
+				   component bm-c mask-c)
+		 `(labels ((img-do (component)
+			     (opal:read-image 
+			      (asdf:component-pathname component))))
+		    (let* ((,%name ,name)
+
+			   (,cursor-bm-sym
+			    (intern-formatted "#:~A-cursor-bitmap" ,%name))
+			   (,mask-bm-sym
+			    (intern-formatted "#:~A-mask-bitmap" ,%name))
+
+			   (,component
+			    (garnet-systems:find-bitmap-pathname
+			     (format* "lapidary-~A" ,%name)))
+
+			   (,bm-c 
+			    (garnet-systems:cursor-cursor-bitmap ,component))
+			   (,mask-c 
+			    (garnet-systems:cursor-maske-bitmap ,component))
+			   
+			   (,pair-sym (intern-formatted "#:~A-cursor-pair"
+							,%name)))
+
+		      (create-instance ,cursor-bm-sym
+			  (:image (img-do ,bm-c)))
+
+		      (create-instance ,mask-bm-sym
+			  (:image (img-do ,mask-c)))
+		      
+		      (set ,pair-sym 
+			   (cons ,cursor-bm-sym ,mask-bm-sym)))))))
+			     
+    ;; copy cursor
+    (frob "copy")
+    ;; instance cursor    
+    (frob "instance")
+    ;; load cursor
+    (frob "load")
+    ;; move cursor
+    (frob "move")
+    ;; delete cursor
+    (frob "delete")))
+
+#-Garnet.ASDF
 (defun init-cursors ()
   ;;; copy cursor
   (create-instance 'copy-cursor-bitmap opal:bitmap
