@@ -70,8 +70,8 @@ With SBCL:
 
 
 (defmethod asdf:operate :around ((op compile-op) (c garnet-source-file) &key)
-  (with-compilation-unit
-      (:policy cl-user::*default-garnet-proclaim*)
+  (with-compilation-unit ()
+    (proclaim cl-user::*default-garnet-proclaim*)
     (call-next-method)))
 
 #+NIL 
