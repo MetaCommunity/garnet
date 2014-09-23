@@ -8,7 +8,14 @@
 
   (setf *features*
 	(pushnew ':garnet.asdf *features*
-		 :test #'eq)))
+		 :test #'eq))
+
+  (in-package #:garnet-systems)  
+
+  (asdf:operate 'asdf:load-op 
+		'#:info.metacommunity.cltl.utils)
+		
+  )
 
 
 (in-package #:garnet-systems)
@@ -95,5 +102,6 @@
     "lapidary"))
 
 (defsystem #:garnet-shared
+  :defsystem-depends-on (#:info.metacommunity.cltl.utils)
   :default-component-class garnet-source-file
   :components ((:file "shared")))
