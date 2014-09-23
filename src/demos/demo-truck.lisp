@@ -47,8 +47,7 @@ Change log:
    (:x1 33)(:x2 47)(:y2 (o-formula (gvl :y1))))
 
 (defparameter image
-  (opal:read-image (merge-pathnames "indicator.bm" common-lisp-user::Garnet-Bitmap-PathName)))
-
+  (opal:get-garnet-bitmap "indicator"))
 
 (defun do-go (&key dont-enter-main-event-loop double-buffered-p)
 
