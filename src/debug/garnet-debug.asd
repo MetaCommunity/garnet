@@ -46,8 +46,6 @@
 ;;       garnet-gilt
 ;;       garnet-debug (this system)
 
-(defvar Garnet-Bitmap-Pathname
-  (append-directory Garnet-Lib-Pathname "bitmaps"))
 (defvar Garnet-Pixmap-Pathname
   (append-directory Garnet-Lib-Pathname "pixmaps"))
 

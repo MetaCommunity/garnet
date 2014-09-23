@@ -259,7 +259,13 @@ Please consult your lisp's user manual for instructions.~%")
   ))
 
 (defun Get-Garnet-Bitmap (bitmapname)
-  (opal:read-image (merge-pathnames bitmapname cl-user::Garnet-Bitmap-PathName)))
+  (opal:read-image 
+   #-Garnet.ASDF
+   (merge-pathnames bitmapname  cl-user::Garnet-Bitmap-PathName)
+   #+Garnet.ASDF
+   (garnet-systems:find-bitmap-pathname bitmapname)))
+
+
 
 ;; If the -d test is true, shell-exec returns "1".  Otherwise, it returns "".
 ;; This syntax works for all kinds of Unix shells: sh, csh, ksh, tcsh, ...

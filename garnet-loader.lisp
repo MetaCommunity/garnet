@@ -580,6 +580,7 @@ directory."
 (defvar Garnet-Protected-Eval-Pathname
   (append-directory Garnet-Binary-Pathname "protected-eval"))
 
+#-Garnet.ASDF
 (defvar Garnet-Bitmap-Pathname
   (append-directory Garnet-Lib-Pathname "bitmaps"))
 (defvar Garnet-Pixmap-Pathname
