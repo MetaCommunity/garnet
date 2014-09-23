@@ -777,6 +777,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "line"  :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "line.bm"
 				   (merge-pathnames "garnetdraw/" 
 						    common-lisp-user::garnet-bitmap-pathname))))))))
@@ -791,6 +795,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "rectangle" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "rectangle.bm"
 				   (merge-pathnames "garnetdraw/"
 						    common-lisp-user::garnet-bitmap-pathname))))))))
@@ -804,6 +812,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "roundrect" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "roundrect.bm"
 				   (merge-pathnames "garnetdraw/"
 						    common-lisp-user::garnet-bitmap-pathname))))))))
@@ -817,6 +829,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "oval" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "oval.bm"
 				   (merge-pathnames "garnetdraw/"
 						    common-lisp-user::garnet-bitmap-pathname))))))))
@@ -847,6 +863,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "polygon" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "polygon.bm"
 				   (merge-pathnames
 				    "garnetdraw/"
@@ -862,6 +882,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "linearrow" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "linearrow.bm"
 		    (merge-pathnames 
 		     "garnetdraw/"
@@ -876,6 +900,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
+		  #+Garnet.ASDF
+		  (garnet-systems:find-bitmap-pathname 
+		   "doublelinearrow" :submodule "garnetdraw")
+		  #-Garnet.ASDF
 		  (merge-pathnames "doublelinearrow.bm"
 				   (merge-pathnames 
 				    "garnetdraw/"
