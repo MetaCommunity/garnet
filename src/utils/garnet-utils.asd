@@ -10,6 +10,6 @@
 (defsystem #:garnet-utils
   :default-component-class garnet-source-file
   :serial t
-  :depends-on (#:garnet-shared)
+  :defsystem-depends-on (#:garnet-shared)
   :components ((:file "package")
                (:file "general")))
