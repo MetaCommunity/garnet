@@ -590,8 +590,14 @@ Change log:
 	    ;; want this to be a string, not a pathname.  *** PROBABLY NEED
 	    ;; something different for Apple.
 	    (:image-name
-	     (namestring (merge-pathnames "garnetlogo.xpm"
-					  common-lisp-user::Garnet-Pixmap-Pathname)))
+	     (namestring
+	      #+Garnet.ASDF
+	      (garnet-systems:find-bitmap-pathname 
+	       "garnetlogo"  
+	       :system "garnet-pixmaps")
+	      #-Garnet.ASDF
+	      (merge-pathnames "garnetlogo.xpm"
+			       common-lisp-user::Garnet-Pixmap-Pathname)))
 	    (:maker '((create-instance NIL opal:pixmap
 			:declare ((:parameters T :known-as :image-name)
 				  (:Type (known-as-type :known-as)
@@ -602,9 +608,15 @@ Change log:
 			(:image (o-formula (opal:read-xpm-file
 					    (gvl :image-name))))
 			(:image-name
-			 (namestring (merge-pathnames
-				      "garnetlogo.xpm"
-				      common-lisp-user::Garnet-Pixmap-Pathname)))))))
+			 (namestring 
+			  #+Garnet.ASDF
+			  (garnet-systems:find-bitmap-pathname
+			   "garnetlogo" 
+			   :system "garnet-pixmaps")
+			  #-Garnet.ASDF
+			  (merge-pathnames
+			   "garnetlogo.xpm"
+			   common-lisp-user::Garnet-Pixmap-Pathname)))))))
 
        (create-instance NIL opal:text
 	  (:constant T)

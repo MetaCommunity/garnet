@@ -535,8 +535,13 @@ Change log:
 	    (:loaded T)
 	    ;; want this to be a string, not a pathname.
 	    (:image-name
-	     (namestring (merge-pathnames "garnetlogo.xpm"
-					  common-lisp-user::Garnet-Pixmap-Pathname)))
+	     (namestring 
+	      #+Garnet.ASDF
+	      (garnet-systems:find-bitmap-pathname "garnetlogo" 
+						   :system "garnet-pixmaps")
+	      #-Garnet.ASDF
+	      (merge-pathnames "garnetlogo.xpm"
+			       common-lisp-user::Garnet-Pixmap-Pathname)))
 	    (:maker '((create-instance NIL opal:pixmap
 			:declare ((:parameters T :known-as :image-name)
 				  (:Type (known-as-type :known-as)
@@ -547,9 +552,14 @@ Change log:
 			(:image (o-formula (opal:read-xpm-file
 					    (gvl :image-name))))
 			(:image-name
-			 (namestring (merge-pathnames
-				      "garnetlogo.xpm"
-				      common-lisp-user::Garnet-Pixmap-Pathname)))))))
+			 (namestring 
+			  #+Garnet.ASDF
+			  (garnet-systems:find-bitmap-pathname 
+			   "garnetlogo"  :system "garnet-pixmaps")
+			  #-Garnet.ASDF
+			  (merge-pathnames
+			   "garnetlogo.xpm"
+			   common-lisp-user::Garnet-Pixmap-Pathname)))))))
        )
     (s-value (g-value scroll-box :field-text :string) :first-vis-char 4)
     ))

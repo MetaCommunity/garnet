@@ -315,7 +315,14 @@
       (:left 10)
       (:top 150)
       (:width 250)
-      (:value (namestring (merge-pathnames "eye.xpm" common-lisp-user::Garnet-Pixmap-Pathname)))
+      (:value (namestring 
+	       #+Garnet.ASDF
+	       (garnet-systems:find-bitmap-pathname
+		"eye" 
+		:system "garnet-pixmaps")
+	      #-Garnet.ASDF
+	       (merge-pathnames "eye.xpm" 
+				common-lisp-user::Garnet-Pixmap-Pathname)))
       (:label-string "Input file:")))
   (setq *output-file-name-box*
     (create-instance NIL garnet-gadgets:scrolling-labeled-box
