@@ -19,9 +19,8 @@
   ;; see also: debug-loader.lisp
   :serial t
   :version "2.0"
-  :depends-on (#:garnet-shared #:garnet-gadgets
-			       #:garnet-bitmaps
-			       #:garnet-pixmaps)
+  :defsystem-depends-on (#:garnet-shared)
+  :depends-on (#:garnet-gadgets)
   :components ((:file "debug-fns")
 	       (:file "objsize")
 	       (:file "inspector")
