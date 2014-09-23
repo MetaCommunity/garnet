@@ -380,7 +380,8 @@
   ;;       ?? ../data/cirles.data used in demo-virtual-agg [TO DO]
   (declare (type string name)
 	   (type (or null string) submodule)
-           (values (or pathname null)))
+           (values (or pathname null)
+		   (or pathname null)))
   (let* ((%name (asdf:coerce-name name))
          (sys (utils:find-component* system nil))
          (c (cond
