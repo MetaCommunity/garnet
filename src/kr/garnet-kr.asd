@@ -1,4 +1,4 @@
-k; garnet-kr.asd			-*-lisp-*-
+; garnet-kr.asd			-*-lisp-*-
 
 (in-package #:cl-user)
 
