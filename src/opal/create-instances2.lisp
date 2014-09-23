@@ -437,7 +437,7 @@
 
 (defparameter HourGlass-Pair (cons HOURGLASS-CURSOR HOURGLASS-CURSOR-MASK))
 
-#+cmu
+#+(or :cmu :ccl)
 (progn
 
   (create-instance 'opal::garbage-CURSOR opal:bitmap
@@ -455,9 +455,12 @@
 
   (defun unset-gc-cursor ()
     (opal:restore-cursors))
-
-  (pushnew #'set-gc-cursor ext:*before-gc-hooks*)
-  (pushnew #'unset-gc-cursor ext:*after-gc-hooks*)
+  
+  #+cmu (pushnew #'set-gc-cursor ext:*before-gc-hooks*)
+  #+cmu (pushnew #'unset-gc-cursor ext:*after-gc-hooks*)
+  
+  #+ccl (add-gc-hook #'set-gc-cursor :pre-gc)
+  #+ccl (add-gc-hook #'unset-gc-cursor :post-gc)
   )
 
 
