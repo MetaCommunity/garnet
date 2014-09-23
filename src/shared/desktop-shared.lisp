@@ -1,5 +1,33 @@
 ;; desktop-shared.lisp - shared resources for Garnet desktop applications
 
+;; FIXME: Parse source code for each of:
+;;  Garnet-Bitmap-Pathname
+;;  Garnet-Pixmap-Pathname
+;;  Garnet-Gilt-Bitmap-Pathname
+;;  Garnet-C32-Bitmap-Pathname  
+;;  Garnet-DataFile-Pathname
+;;  Garnet-Gesture-Data-Pathname
+;;
+;; ensuring:
+;;  #+Garnet.ASDF
+;;    (find-bitmap-pathname <name> :system <system>)
+
+;; FIXME: Sysem deps
+;;
+;;    
+;;  A. Depending on garnet-bitmaps :
+;;       garnet-demos (incl. stand-alone garnetdraw system)
+;;       garnet-gadgets (various specific gadgets)
+;;       garnet-opal
+;;       garnet-lapidary
+;;       garnet-debug
+;;  B. Depending on garnet-pixmaps :
+;;       garnet-demos (...)
+;;       garnet-gilt
+;;       garnet-debug
+
+
+
 ;; FIXME: cf. cl-user::Garnet-Bitmap-Pathname in legacy Garnet system definitions
 ;; e.g systems using definition of that var:
 ;;  garnet-demos [FIXME: use GET-GARNET-BITMAP]
@@ -9,12 +37,15 @@
 
 (in-package #:garnet-systems)
 
-;; for a Garnet cursor file <name>,
-;; files: <name>.cursor <name>.mask
-;; both files being in bitmap format
+;; for a Garnet bitmap named <name>
+;; one file exists: <name>.bm
 ;;
-;; for a Garnet bitmap file <name>
-;; file: <name>.bm
+;; for a Garnet cursor named <name>,
+;; two files exist: 
+;;    <name>.cursor 
+;;    <name>.mask
+;; both files, in bitmap format
+
 
 
 (export '(bitmap cursor cursor-cursor-bitmap cursor-mask-bitmap
