@@ -348,14 +348,20 @@
 
 (export 'find-bitmap-pathname)
 
-(defun find-bitmap-pathname (name &key (errorp t))
+(defun find-bitmap-pathname (name &key (errorp t)
+				    submodule)
   (declare (type string name)
+	   (type (or null string) submodule)
            (values (or pathname null)))
   (let* ((%name (asdf:coerce-name name))
          (sys (utils:find-component* #.+garnet-bitmaps-system-name+
-                                     nil
-                                     t))
-         (c (utils:find-component* %name sys nil)))
+                                     nil))
+         (c (cond
+	      (submodule
+	       (let* ((%mname (asdf:coerce-name submodule))
+		      (module (utils:find-component* %mname sys)))
+		 (utils:find-component* %name module)))
+	      (t (utils:find-component* %name sys nil)))))
     (cond
       (c 
        (typecase c
@@ -376,6 +382,7 @@
 ;; (find-bitmap-pathname "downarrow")
 ;; (find-bitmap-pathname "garnet")
 
+;; (find-bitmap-pathname "line" :submodule "garnetdraw")
 
 (defsystem #:garnet-bitmaps
 
