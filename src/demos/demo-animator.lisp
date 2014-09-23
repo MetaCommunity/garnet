@@ -51,6 +51,10 @@ Change log:
 			  (merge-pathnames
 			   (format NIL "~a~a.xpm" pixmapfilename
 					   (1+ i))
+			   #+Garnet.ASDF
+			   (asdf:component-pathname
+			    (asdf:find-system "garnet-pixmaps"))
+			   #-Garnet.ASDF
 			   common-lisp-user::Garnet-Pixmap-Pathname))
 		    (push (opal:read-xpm-file filename) pics)
 		    (if (= i 5)
