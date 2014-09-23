@@ -15,6 +15,9 @@
 ;; explicitly to different versions of lisp."
 ;; -- garnet-loader.lisp
 (pushnew :GARNET-PROCESSES *features*)
+;; FIXME: garnet-loader.lisp always adds that feature to *FEATURES*
+;; but does not verify if the implementation supports multiprocessing.
+;; See also: Bordeaux Threads [System]
 
 ;; "launch-process-p controls whether Garnet will launch
 ;;  a separate process to detect keyboard and mouse events."
