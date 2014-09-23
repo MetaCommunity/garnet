@@ -11,7 +11,8 @@
   :version "1.3"
   :default-component-class garnet-source-file
   :serial t
-  :depends-on (#:garnet-shared #:garnet-gem)
+  :defsystem-depends-on (#:garnet-shared)
+  :depends-on (#:garnet-gem #:garnet-bitmaps)
   :perform (load-op :after (o c)
              (let ((s (find-symbol  #.(symbol-name '#:init-device)
                                     '#:gem)))
