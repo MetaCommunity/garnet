@@ -15,9 +15,6 @@
 
 (in-package "GEM")
 
-(eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(init-device)))
-
 (declaim (special *root-window*))
 
 ;;; This file defines gem-method, which is used to declare, create, and
