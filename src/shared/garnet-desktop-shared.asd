@@ -14,6 +14,7 @@
   :defsystem-depends-on (#:info.metacommunity.cltl.utils
 			 #:garnet-shared)
   :default-component-class garnet-source-file
+  :depends-on (#:info.metacommunity.cltl.utils)
   :serial t
   :version "1.0"
   :components 
