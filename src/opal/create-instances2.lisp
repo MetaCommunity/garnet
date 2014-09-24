@@ -459,8 +459,8 @@
   #+cmu (pushnew #'set-gc-cursor ext:*before-gc-hooks*)
   #+cmu (pushnew #'unset-gc-cursor ext:*after-gc-hooks*)
   
-  #+ccl (ccl:add-gc-hook #'set-gc-cursor :pre-gc)
-  #+ccl (ccl:add-gc-hook #'unset-gc-cursor :post-gc)
+  #+ccl (ccl::add-gc-hook #'set-gc-cursor :pre-gc)
+  #+ccl (ccl::add-gc-hook #'unset-gc-cursor :post-gc)
   )
 
 
