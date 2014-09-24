@@ -11,7 +11,10 @@
   :default-component-class garnet-source-file
   :serial t
   :version "1.0"
-  :depends-on (#:garnet-shared #:clx #:garnet-kr)
+  :depends-on (#:garnet-shared 
+	       #:clx 
+	       #:garnet-kr
+	       #:info.metacommunity.cltl.utils)
   :perform (load-op :after (o c)
 	       (with-safe-frefs ((ensure #:ensure-device-initializer
 					 #:gem)

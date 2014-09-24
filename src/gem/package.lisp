@@ -3,13 +3,16 @@
 (in-package #:cl-user)
 
 (defpackage #:gem
-  (:use #:common-lisp #:kr #:kr-debug)
+  (:use #:common-lisp
+	#:kr #:kr-debug)
   (:export #:active-devices
-	   #:init-device
-	   ))
+	   #:init-device))
 
 (defpackage #:opal
-  (:use #:common-lisp #:kr))
+  (:use #:common-lisp
+	#:kr
+	#+Garnet.ASDF
+	#:info.metacommunity.cltl.utils))
 
 (defpackage #:interactors
   (:use #:common-lisp #:kr)
