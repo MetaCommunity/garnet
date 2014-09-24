@@ -101,9 +101,7 @@
     :initarg :mask-bitmap
     :type component
     :accessor cursor-mask-bitmap)
-   )
-  #+NIL (:default-initargs #:pathname #p"")
-  )
+   ))
 
 #+NIL ;; may be redundant, or overriden by other code in ASDF
 (defmethod component-pathname :around ((component cursor))
@@ -149,14 +147,13 @@
                                       &key pathname
                                         parent
                                         &allow-other-keys)
-
-   (warn "FOO ~s ~s ~s" (class-of instance) slot-names initargs)
-
-
-
   (when (and (or (eq slot-names t)
                  (find 'asdf::relative-pathname slot-names :test #'eq))
              (not pathname))
+    ;; Cannot (SETF COMPONENT-PATHNAME) [ASDF 3.1.3.8]
+    ;;
+    ;; So, to set the component's pathname to a custom value,
+    ;; simply a "hack" onto the initargs...
     (setf (getf initargs :pathname)	  
 	  (cond
 	    (parent (component-pathname parent))
@@ -164,18 +161,6 @@
 
   (when (next-method-p)
     (apply #'call-next-method instance slot-names initargs))
-
-
-  #+NIL
-  (when (and (null pathname)
-             (or (eq slot-names t)
-                 (find 'asdf::absolute-pathname slot-names
-                       :test #'eq)
-                 (find 'asdf::relative-pathname slot-names
-                       :test #'eq)))
-    ;; no SETF for pathname FOO in COMPONENT - quite awkward!
-    (setf (component-pathname instance)
-          (component-pathname (component-parent instance))))
 
 
   (macrolet ((default (arg value)
@@ -217,30 +202,7 @@
 ~<Component pathname not avaialble for ~0@*~S~>"
                          instance slot))))
                (check 'cursor-bitmap)
-               (check 'mask-bitmap))))))
-
-    #+NIL
-    (when (or (eq slot-names t)
-              (member 'asdf::children slot-names
-                      :test #'eq))
-      (let ((cursor (cursor-cursor-bitmap instance))
-            (mask (cursor-mask-bitmap instance))
-            #+NIL
-            (table (component-children-by-name instance)))
-
-        #+NIL
-        (setf (gethash (component-name cursor) table)
-              cursor)
-        #+NIL
-        (setf (gethash (component-name mask) table)
-              mask)
-
-        ;; FIXME: COMPONENT-CHILDREN is being blanked by
-        ;; PARSE-COMPONENT-FORM
-        (setf (component-children instance)
-              (list* cursor
-                     mask
-                     (component-children instance)))))))
+               (check 'mask-bitmap))))))))
 
 
 
