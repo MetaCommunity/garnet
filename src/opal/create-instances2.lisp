@@ -412,6 +412,7 @@
 		       (:green (second MOTIF-LIGHT-GREEN-VALUES))
 		       (:blue (third MOTIF-LIGHT-GREEN-VALUES)))))
 
+;; FIXME: Updated Get-Garnet-Bitmap doesn't work correctly with filename types
 
 
 (create-instance 'opal::ARROW-CURSOR opal:bitmap
@@ -451,10 +452,12 @@
   (defparameter garbage-Pair (cons garbage-CURSOR garbage-CURSOR-MASK))
 
   (defun set-gc-cursor ()
-    (opal:change-cursors garbage-pair))
+    (when (gem:active-devices)
+      (opal:change-cursors garbage-pair)))
 
   (defun unset-gc-cursor ()
-    (opal:restore-cursors))
+    (when (gem:active-devices)
+      (opal:restore-cursors)))
   
   #+cmu (pushnew #'set-gc-cursor ext:*before-gc-hooks*)
   #+cmu (pushnew #'unset-gc-cursor ext:*after-gc-hooks*)
