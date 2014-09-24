@@ -24,9 +24,6 @@
 
 (in-package "GEM")
 
-(eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(init-device)))
-
 (declaim (special *root-window*))
 
 (eval-when (:execute :compile-toplevel :load-toplevel)
@@ -269,6 +266,10 @@ the updated FDEFINITIONS, as unique to the DEVICE designator."
       (funcall (cdr entry) display-name)
       (error "gem::init-device: the specified device ~S does not exist."
              device-type))))
+
+(defun active-devices ()
+  (when (boundp 'opal::device-info)
+    (g-value opal::DEVICE-INFO :active-devices)))
 
 ;;; --------------------------------------------------
 
