@@ -3,7 +3,10 @@
 (in-package #:cl-user)
 
 (defpackage #:gem
-  (:use #:common-lisp #:kr #:kr-debug))
+  (:use #:common-lisp #:kr #:kr-debug)
+  (:export #:active-devices
+	   #:init-device
+	   ))
 
 (defpackage #:opal
   (:use #:common-lisp #:kr))

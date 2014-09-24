@@ -24,9 +24,6 @@
 
 (in-package "GEM")
 
-(eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(init-device)))
-
 (declaim (special *root-window*))
 
 (eval-when (:execute :compile-toplevel :load-toplevel)
