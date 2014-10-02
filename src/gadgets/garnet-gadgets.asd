@@ -173,7 +173,8 @@
 
    (:file "standard-edit"
           :depends-on ("multi-selection"))
-   (:file "text-buttons")
+   (:file "text-buttons"
+	  :depends-on ("GAD-button-parts"))
    (:file "trill-device"
           :depends-on ("GAD-scroll-parts"
                        "GAD-slider-parts"
