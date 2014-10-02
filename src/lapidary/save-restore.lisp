@@ -21,9 +21,13 @@
 (in-package "LAPIDARY")
 
 (defparameter HourGlassCursor
-  ;; DUPLICTE CODE!!!! SEE ALSO: custom.lisp
+  ;; FIXME: This us duplicate code. See Also: custom.lisp
+  ;;
   ;; NOTE: custom.lisp was originally created after this file,
   ;;       probably was derived from this file
+  ;;
+  ;; NOTE: custom.lisp is NOT used from either
+  ;;       lapidary-loader.lisp OR lapidary-compiler.lisp
   #+Garnet.ASDF
   (let ((cursor (find-component* "hourglass" "garnet-bitmaps"))
 	(cursor-ident (gensym "hourglass-cursor-bitmap-"))
