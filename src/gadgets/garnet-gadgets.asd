@@ -111,7 +111,10 @@
                        "motif-menu"))
    (:file "motif-radio-buttons"
           :depends-on ("motif-parts"))
-   (:file "motif-load-gadget")
+   (:file "motif-load-gadget"
+	  :depends-on ("motif-scrolling-labeled-box"
+		       "motif-scrolling-menu"
+		       "save-load-functions"))
    (:file "motif-save-gadget"
           :depends-on ("motif-scrolling-labeled-box"
                        "motif-error-gadget"
@@ -147,14 +150,14 @@
           :depends-on ("GAD-button-parts"))
 
    (:file "save-load-functions")
-   (:file "load-gadget")
+   (:file "load-gadget"
+	  :depends-on ("text-buttons"
+		       "save-load-functions"
+		       "scrolling-labeled-box"
+		       "scrolling-menu"))
    (:file "save-gadget"
-          :depends-on ("text-buttons"
-                       "scrolling-menu"
-                       "scrolling-labeled-box"
-                       "error-gadget"
-                       "save-load-functions"
-                       "load-gadget"))
+          :depends-on ("load-gadget" 
+		       "error-gadget"))
 
    (:file "scrolling-input-string")
    (:file "scrolling-labeled-box"
