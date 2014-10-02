@@ -259,11 +259,32 @@ Please consult your lisp's user manual for instructions.~%")
   ))
 
 (defun Get-Garnet-Bitmap (bitmapname)
+  (declare (type string bitmapname))
   (opal:read-image 
    #-Garnet.ASDF
    (merge-pathnames bitmapname  cl-user::Garnet-Bitmap-PathName)
    #+Garnet.ASDF
-   (garnet-systems:find-bitmap-pathname bitmapname)))
+   (let* ((name (pathname-name bitmapname))
+	  (type (pathname-type bitmapname))
+	  (component
+	   ;; FIXME: rename FIND-BITMAP-PATHHNAME
+	   ;; to FIND-RESOURCE-COMPONENT
+	   (find-component* name "garnet-bitmaps")))
+
+     (when type
+       (cond
+	 ((string= type "cursor")
+	  (setq component
+		(garnet-systems:cursor-cursor-bitmap component)))
+	  ((string= type "mask")
+	   (setq component
+		 (garnet-systems:cursor-mask-bitmap component)))
+	  (t (simple-program-error
+	      "Unkonown bitmap file type ~s" type))))
+     
+     (asdf:component-pathname component))))
+
+;; (get-garnet-bitmap "garnet.cursor")
 
 
 
