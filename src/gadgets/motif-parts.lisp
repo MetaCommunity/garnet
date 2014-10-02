@@ -61,6 +61,7 @@
   (proclaim '(special MOTIF-TAB-PRIORITY-LEVEL MOTIF-SCROLLING-LABELED-BOX)))
 
 
+#-Garnet.ASDF
 (defvar MOTIF-GADGETS-INIT
   (dolist (pair '((:GAD-scroll-parts "GAD-scroll-parts")))
     (unless (get :garnet-modules (car pair))
