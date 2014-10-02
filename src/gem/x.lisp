@@ -1604,16 +1604,19 @@ pixmap format in the list of valid formats."
 		  (format t "WARNING: X did not add ~A to font-path!!~%"
 			  font-path)))))
 	  ;;; Open the font only if it's on the font-path
-	  (if (xlib:list-font-names display font-name)
-	    (let ((xfont (xlib:open-font display font-name)))
-		(s-value font-from-file :display-xfont-plist
-			 (cons display (cons xfont dx-plist)))
-		xfont)
-	      (progn
-		(format t "WARNING: Font '~A' not on font path!~%"
+	  (cond
+	    ((xlib:list-font-names display font-name)
+	     (let ((xfont (xlib:open-font display font-name)))
+	       (s-value font-from-file :display-xfont-plist
+			(cons display (cons xfont dx-plist)))
+	       xfont))
+	    ((eq font-from-file default-font-from-file)
+	     (error "Unable to load font ~S on display ~S" 
+		    default-font-from-file display))
+	    (t (format t "WARNING: Font '~A' not on font path!~%"
 			font-name)
-		(format t "  ****   Resorting to Default Font!~%")
-		(x-font-to-internal root-window default-font-from-file)))))))
+	       (format t "  ****   Resorting to Default Font!~%")
+	       (x-font-to-internal root-window default-font-from-file)))))))
 
 
 
