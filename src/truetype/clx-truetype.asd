@@ -13,9 +13,12 @@
                #:cl-aa
                #:cl-fad
                #:cl-store
-               #:trivial-features)
-  :components ((:file "package")
-               (:file "clx-utils")
+               #:trivial-features
+	       ;; FIXME: Dep onto #:GARNET-OPAL
+	       ;; i.e OPAL::GRAPHIC-QUALITY
+	       )
+  :components ((:file "package-truetype")
+               (:file "clx-truetype-utils")
                (:file "font-cache")
                (:file "clx-truetype")))
 
