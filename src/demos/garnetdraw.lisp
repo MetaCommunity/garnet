@@ -62,8 +62,12 @@
 
 (in-package :GARNETDRAW)
 
-#-Garnet.ASDF
-(defparameter GarnetDraw-Version "2.0")
+
+(defparameter GarnetDraw-Version 
+  #-Garnet.ASDF "2.0"
+  #+Garnet.ASDF (asdf:component-version (asdf:find-system "garnetdraw"))
+  )
+
 
 ;; Load necessary files
 ;;
