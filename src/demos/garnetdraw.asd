@@ -9,7 +9,17 @@
 
 (defsystem #:garnetdraw
   :default-component-class garnet-source-file
+  :version "2.0"
   :serial t
-  :depends-on (#:garnet-gadgets)
-  :defsystem-depends-on (#:garnet-gadgets)
+  ;; specific gadgets that garnetdraw depends on
+  ;; (see garnetdraw.lisp)
+  #+NIL ("multi-selection-loader" "polyline-creator-loader"
+		    "arrow-line-loader"
+		    "motif-menubar-loader"
+		    "motif-trill-device-loader"
+		    "motif-error-gadget-loader"
+		    "motif-save-gadget-loader"
+		    "standard-edit-loader")
+  :depends-on (#:garnet-gadgets #:garnet-ps)
+  :defsystem-depends-on (#:garnet-shared)
   :components ((:file "garnetdraw")))
