@@ -62,10 +62,12 @@
 
 (in-package :GARNETDRAW)
 
+#-Garnet.ASDF
 (defparameter GarnetDraw-Version "2.0")
 
 ;; Load necessary files
 ;;
+#-Garnet.ASDF
 (defvar GARNETDRAW-INIT
   (progn
     ;;;  Load ps-loader.
