@@ -52,5 +52,4 @@
    (:file "virtual-aggregates")
    (:file "pixmaps")
    (:file "open-and-close")
-   #+NIL (:file "x")
    ))
