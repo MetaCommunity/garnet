@@ -87,7 +87,8 @@
    (:file "menubar"
           :depends-on ("menubar-functions"))
 
-   (:file "motif-parts")
+   (:file "motif-parts"
+	  :depends-on ("GAD-scroll-parts"))
    (:file "motif-text-buttons"
           :depends-on ("motif-parts"))
    (:file "motif-check-buttons"
