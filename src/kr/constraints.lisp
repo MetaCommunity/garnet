@@ -49,7 +49,6 @@
 ;;
 
 ;; Reuses one of the destroyed formulas, or allocates one if none exist.
-;; FMG Note: *reuse-formulas* is set to nil to defeat this.
 (defun make-new-formula ()
   (let ((f (formula-pop)))
     (if f
