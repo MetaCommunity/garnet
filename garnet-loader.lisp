@@ -789,9 +789,11 @@ Example:
 
 (defun verify-display-can-be-opened ()
   (let* ((full-display-name (get-full-display-name))
+	 #+allegro
          (d-name (if full-display-name
                      (get-display-name full-display-name)
                      (machine-instance)))
+	 #+allegro
          (d-number (get-display-number full-display-name))
          (val nil)
          (errorp nil))
