@@ -20,20 +20,24 @@
 
 (in-package :DEMOS-CONTROLLER)
 
+(defvar *demos-controller-color* opal:motif-blue)
+
 (declaim (special WIN1 AGG1 BT QBT DEMOS-MOUSELINE WIN2 TEXT))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
 ;; Load multifont stuff.
 (unless (get :garnet-modules :multifont)
-   (load (merge-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)
-         :verbose T))
+   (cl-user::garnet-load "multifont-loader"))
 
-(dolist (file '("x-buttons-loader"
-		"text-buttons-loader"
-		"scrolling-window-loader"
+(dolist (file '("motif-check-buttons-loader"
+		"motif-text-buttons-loader"
+		"motif-scrolling-window-loader"
 		"mouseline-loader"))
-  (common-lisp-user::garnet-load (concatenate 'string "gadgets:" file)))
+  (cl-user::garnet-load (concatenate 'string "gadgets:" file)))
+)
 
-(common-lisp-user::garnet-load "demos:demo-logo")
+(cl-user::garnet-load "demos:demo-logo")
+
 
 (defparameter *package-list*
    '(("3d" DEMO-3D)
@@ -43,7 +47,7 @@
      ("virtual-agg" DEMO-VIRTUAL-AGG)
      ("editor" DEMO-EDITOR)
      ("file-browser" DEMO-FILE-BROWSER)
-     ("gadgets" DEMO-GADGETS)
+     ("old-style gadgets" DEMO-GADGETS)
      ("garnetdraw" GARNETDRAW)
      ("gesture" DEMO-GESTURE)
      ("grow" DEMO-GROW)
@@ -66,7 +70,7 @@
 
 (defparameter *unloaded*
     '("3d" "angle" "animator" "arith" "calculator" "editor"
-      "file-browser" "gadgets" "garnetdraw" "othello" "grow" "manyobjs" "menu"
+      "file-browser" "old-style gadgets" "garnetdraw" "othello" "grow" "manyobjs" "menu"
       "multifont" "multiwin" "pixmap" "schema-browser" "scrollbar"
       "text" "xasperate" "motif" "graph" "gesture" "unistrokes" "virtual-agg"))
 
@@ -84,8 +88,8 @@ Demonstrates constraints, postscript and gestures.")
     ("editor" "The editor used as a sample program in the manual.
 Demonstrates the graphics selection widget.")
     ("file-browser" "Demonstrates the browser gadget using files.")
-    ("gadgets" "Demonstrates some of the widgets
-that have the Garnet look-and-feel.")
+    ("old-style gadgets" "Demonstrates some of the widgets
+that have the old-style Garnet look-and-feel.")
     ("garnetdraw" "A comprehensive drawing program.  More than a demo.
 Almost a fully-functioned drawing program.
 Has gridding, printing, etc.")
@@ -125,30 +129,33 @@ devised by David Goldberg at Xerox PARC.")
   (demo-logo:do-go :dont-enter-main-event-loop T)
 
   (create-instance 'win1 inter:interactor-window
-    (:left 0)(:top 240)(:width 270)(:height 430)
+    (:left 2)(:top 250)(:width 300)(:height 350)
+    (:background-color *demos-controller-color*)
     (:title "Demos Controller")
     (:aggregate (create-instance 'agg1 opal:aggregate)))
 
-  (create-instance 'bt garnet-gadgets:x-button-panel
+  (create-instance 'bt garnet-gadgets:motif-check-button-panel
     (:constant T)
     (:left 2)(:top 40)
     (:selection-function 'dispatcher)
+    (:foreground-color *demos-controller-color*)
     (:rank-margin (o-formula (ceiling (length (gvl :items)) 2)))
     (:items
         '("3d" "angle" "animator" "arith" "calculator" "editor"
-          "file-browser" "gadgets" "garnetdraw" "gesture" "graph" "grow"
+          "file-browser" "old-style gadgets" "garnetdraw" "gesture" "graph" "grow"
 	  "logo" "manyobjs" "menu" "motif" "multifont" "multiwin" "othello"
 	  "pixmap" "schema-browser" "scrollbar" "text" "xasperate"
 	  "unistrokes" "virtual-agg")))
 
   ;; set up help strings for the mouseline gadget.
-  (dolist (button (g-value bt :X-BUTTON-LIST :components))
+  (dolist (button (g-value bt :BUTTON-LIST :components))
     (s-value button :help-string (cadr (assoc (g-value button :string)
 					      DOCUMENTATION-STRINGS
 					      :test #'string=))))
 
-  (create-instance 'qbt garnet-gadgets:text-button
+  (create-instance 'qbt garnet-gadgets:motif-text-button
     (:constant T)
+    (:foreground-color *demos-controller-color*)
     (:left 2)(:top 2)(:shadow-offset 3)
     (:font (create-instance NIL opal:font (:size :medium)(:face :bold)))
     (:string "Quit")
@@ -162,9 +169,10 @@ devised by David Goldberg at Xerox PARC.")
 
   (opal:add-components agg1 bt qbt demos-mouseline)
 
-  (create-instance 'win2 garnet-gadgets:scrolling-window-with-bars
-    (:constant T :except :top :left :width :height :title :total-height)
-    (:left 0) (:top 720)
+  (create-instance 'win2 garnet-gadgets:motif-scrolling-window-with-bars
+    (:constant T :except :background-color :top :left :width :height :title :total-height)
+    (:foreground-color *demos-controller-color*)
+    (:left 0) (:top 620)
     (:width 700)(:height 180)
     (:title "Instructions for Demos")
     (:h-scroll-bar-p NIL)
@@ -187,8 +195,8 @@ Click the button to start the demo."))
   (opal:update win2)
 
   ;; We want the scroll wheel to operate anywhere in the text.
-  (s-value win2 :v-scroll :wheel-up :start-where (list :element-of-or-none (g-value text :parent)))
-  (s-value win2 :v-scroll :wheel-down :start-where (list :element-of-or-none (g-value win2 :parent)))
+;;  (s-value win2 :v-scroll :wheel-up :start-where (list :element-of-or-none (g-value text :parent)))
+;;  (s-value win2 :v-scroll :wheel-down :start-where (list :element-of-or-none (g-value win2 :parent)))
   (opal:update win2)
   
   ;;if not CMU CommonLisp, then start the main event loop to look for events
