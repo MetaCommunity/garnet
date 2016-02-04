@@ -32,6 +32,8 @@ Change log:
 
 (in-package :DEMO-LOGO)
 
+(defvar *logo-background-color* opal:motif-blue)
+
 (declaim (special PANTONE192 PANTONE193 PANTONE194 PANTONE196
 		  MYCOLOR1 MYCOLOR2 MYCOLOR3 MYCOLOR4 MYCOLOR5
 		  PANTONE192-FILL PANTONE193-FILL PANTONE194-FILL
@@ -283,7 +285,8 @@ Change log:
 			     (:top cur-y)
 			     (:font font)
 			     (:visible NIL)
-                             (:fast-redraw-p :redraw)
+;;;                          (:fast-redraw-p :redraw)
+			     (:fast-redraw-p nil)
                              (:fast-redraw-line-style opal:white-line)))
       (opal:add-component agg obj)
       (push obj objs-list)
@@ -384,11 +387,12 @@ Change log:
 
 (defun Go-To-Next-Status ()
   (case status
-    (:beginning (shrink-logo 2 5 win)
-		(dolist (obj FirstLetterObjs)
-		  (s-value obj :visible T))
-		(opal:update win)
-		(setf status :little))
+    (:beginning 
+     (shrink-logo 2 5 win)
+     (dolist (obj FirstLetterObjs)
+       (s-value obj :visible T))
+     (opal:update win)
+     (setf status :little))
     (:little 
      (Circle-Down 30)
      (if (g-value opal:color :color-p)
@@ -415,6 +419,7 @@ Change log:
 		      (:title "Garnet Logo")
 		      (:left 0)(:top 0)
                       (:width 270)(:height 235)
+		      (:background-color *logo-background-color*)
 		      (:double-buffered-p double-buffered-p)
 		      (:aggregate (setq top-agg
 					(create-instance NIL opal:aggregate)))))
