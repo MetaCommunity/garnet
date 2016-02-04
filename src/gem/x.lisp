@@ -2084,7 +2084,7 @@ returns the HOST name, stripping off the display number."
   (setq *default-x-display-name*
         (if full-display-name
             (get-display-name full-display-name)
-            #-allegro "" #-(and)(machine-instance)
+            #-allegro ""
             #+allegro (short-site-name)))
 
   (setq *default-x-screen-number* (get-screen-number full-display-name))
