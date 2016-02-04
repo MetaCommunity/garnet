@@ -17,7 +17,7 @@
 (defpackage "PORTABLE-MOP"
   (:nicknames "PMOP")
   (:use)
-  (:import-from #+cmu "PCL" #-cmu "CLOS"
+  (:import-from #+cmu "PCL" #+ccl "CCL" #-(or cmu ccl) "CLOS"
 		class-of class-name find-class 
 		class-direct-superclasses class-direct-subclasses
 		#-clisp
