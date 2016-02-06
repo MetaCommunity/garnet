@@ -19,7 +19,7 @@
 
 ;;;  Functions to deal with transcripts
 ;;
-(defvar *Garnet-Toggle-Record-Key* :F10)
+(defvar *Garnet-Toggle-Transcript-Key* :F10)
 (defvar *Garnet-Default-Transcript-Filename* "transcript.txt")
 
 (defparameter *trans-from-file* NIL) ; file to read from
@@ -56,7 +56,9 @@
 (defun Transcribe-Session ()
   (let ((transcript-pathname (merge-pathnames *Garnet-Default-Transcript-Filename*))
 	(window-list opal:*garnet-windows*))
-    (Transcript-Events-To-File transcript-pathname window-list)))
+    (format t "Transcribing session to ~A~%" transcript-pathname)
+    (Transcript-Events-To-File transcript-pathname window-list)
+    (format t "Transcription session finished at ~A~%" (time-to-string))))
 
 (defun Transcript-Events-To-File (filename window-list &key (motion T)
 					   (if-exists :supersede))
@@ -71,8 +73,8 @@
   (setf *transcript-window-list* window-list)
   (unless (eq if-exists :append)
     (Format *trans-to-file*
-	    "Transcript of Garnet session from ~a.  Garnet Version = ~a~%"
-	    (Time-To-String) Common-Lisp-User::Garnet-Version-Number)
+	    "Transcript of Garnet session from ~a.  Garnet Version = ~a, ~a~%"
+	    (Time-To-String) (lisp-implementation-type) Common-Lisp-User::Garnet-Version-Number)
     (format *trans-to-file*
 	    "Form for events: CHAR CODE MOUSEP DOWNP X Y TIME WIN-INDEX~%")
     (Format *trans-to-file* "Windows are:~%")
@@ -137,10 +139,10 @@
 (defun Transcript-Events-From-File (filename window-list &key
 					     (wait-elapsed-time T)
 					     (verbose T))
-  (when *trans-from-file* (error "Already reading from transcript file ~s"
-				 *trans-from-file*))
-  (when *trans-to-file* (error "Can't read from a file when events to a file: ~s"
-			       *trans-to-file*))
+  (when *trans-from-file* 
+    (error "Already reading from transcript file ~s" *trans-from-file*))
+  (when *trans-to-file*
+    (error "Can't read from a file when writing events to a file: ~s" *trans-to-file*))
   (setf *transcript-verbose* verbose)
   (setf *trans-from-file* (open filename :direction :input))
   (setf *trans-wait-elapsed-time* wait-elapsed-time)
@@ -154,6 +156,8 @@
   (read-line *trans-from-file*)
   ;; read the old window list
   (let ((old-wins (read *trans-from-file*)))
+;;    #+ccl
+;;    (peek-char t *trans-from-file* nil nil) ; May need to skip left-over whitespace (ccl).
     (if (/= (length old-wins)(length window-list))
 	(error "Number of windows in transcript ~s is not the same as supplied ~s
 	Execute (inter:close-transcript) to recover."
@@ -186,6 +190,9 @@
 	new-ev cur-wait-interval)
     (unwind-protect
 	 (block eventloop
+	   ;; Need to kill off the process that is reading X events to
+	   ;; avoid blocking on the event lock.
+	   (opal:kill-main-event-loop-process)
 	   (loop
 	      (setf new-ev (Read-Transcript-Event))
 	      (if new-ev 
@@ -226,7 +233,9 @@
 			(format T "~%Transcript Complete~%"))
 		    (return)))))
       ;; unwind-protect exit
-      (setq opal::*inside-main-event-loop* NIL))
+      (setq opal::*inside-main-event-loop* NIL)
+      ;; Re-start the multi-process event handler.
+      (opal:launch-main-event-loop-process))
     (setq opal::*inside-main-event-loop* NIL)
     (beep)
     (close-transcript)))
@@ -383,11 +392,11 @@
 		 "Exiting main event loop because of *garnet-break-key*"))
 	(exit-main-event-loop))
 
-      (when (eq c *garnet-toggle-record-key*)
+      (when (eq c *Garnet-Toggle-Transcript-Key*)
 	(if-debug
 	 :event
 	 (format t
-		 "Toggling transcript recording because of *garnet-toggle-record-key*"))
+		 "Toggling transcript recording because of *garnet-toggle-transcript-key*"))
 	(if *trans-to-file*
 	    (Close-Transcript)
 	    (Transcribe-Session)))
