@@ -19,6 +19,8 @@
 
 ;;;  Functions to deal with transcripts
 ;;
+(defvar *Garnet-Toggle-Record-Key* :F10)
+(defvar *Garnet-Default-Transcript-Filename* "transcript.txt")
 
 (defparameter *trans-from-file* NIL) ; file to read from
 (defparameter *trans-to-file* NIL) ; file to save to
@@ -48,6 +50,13 @@
                ":"
                (if (< minute 10) "0" "")
                (princ-to-string minute) savingsp)))
+
+
+;; Just a wrapper around Transcript-Events-To-File to supply defaults.
+(defun Transcribe-Session ()
+  (let ((transcript-pathname (merge-pathnames *Garnet-Default-Transcript-Filename*))
+	(window-list opal:*garnet-windows*))
+    (Transcript-Events-To-File transcript-pathname window-list)))
 
 (defun Transcript-Events-To-File (filename window-list &key (motion T)
 					   (if-exists :supersede))
@@ -88,13 +97,14 @@
 		 (position (event-window event) *transcript-window-list*))))
     (when win
       (format *trans-to-file*
-	  "> ~s ~s ~s ~s ~s ~s ~s~%"
+	  "> ~s ~s ~s ~s ~s ~s ~s ~s~%"
 	  (event-char event) (event-code event) (event-mousep event)
 	  (event-downp event) (event-x event) (event-y event)
-	  (- (get-internal-real-time) *trans-time*)) ; store time difference
-						    ; from start time
+	  (- (get-internal-real-time) *trans-time*) ; store time difference
+					            ; from start time
+	  win)
       (force-output *trans-to-file*)
-      win)))
+      )))
 
 ;; recursively add all the subwindows of the windows in win-list 
 (defun Add-All-Subwindows (win-list)
@@ -156,7 +166,8 @@
 	         (c window-list (cdr c)))
 	        ((null o))
 	      (format T "  old=~a => current ~s~%" (car o) (car c)))
-	    (format T "------------------- starting ----------------------~%"))
+	    (format T "------------------- starting ----------------------~%")
+	    (force-output))
 	  ;; now start reading the events
 	  (Read-All-Transcript-Events)))))
 
@@ -371,6 +382,15 @@
 	 (format t
 		 "Exiting main event loop because of *garnet-break-key*"))
 	(exit-main-event-loop))
+
+      (when (eq c *garnet-toggle-record-key*)
+	(if-debug
+	 :event
+	 (format t
+		 "Toggling transcript recording because of *garnet-toggle-record-key*"))
+	(if *trans-to-file*
+	    (Close-Transcript)
+	    (Transcribe-Session)))
  
       (setf (event-char *Current-Event*) c
 	    (event-mousep *Current-Event*) nil
