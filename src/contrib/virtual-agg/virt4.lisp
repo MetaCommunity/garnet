@@ -5,7 +5,7 @@
 (declaim (fixnum *ysize*))
 (defvar *ysize* 900)
 
-(defparameter *point-count* 500000)
+(defparameter *point-count* 50000)
 (defvar *win*)
 (defvar *win-virt-agg*)
 

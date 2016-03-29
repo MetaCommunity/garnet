@@ -129,7 +129,8 @@ devised by David Goldberg at Xerox PARC.")
   (demo-logo:do-go :dont-enter-main-event-loop T)
 
   (create-instance 'win1 inter:interactor-window
-    (:left 2)(:top 250)(:width 300)(:height 350)
+    ;; XXX Should calculate top, width and height
+    (:left 5)(:top 320)(:width 375)(:height 380)
     (:background-color *demos-controller-color*)
     (:title "Demos Controller")
     (:aggregate (create-instance 'agg1 opal:aggregate)))
@@ -172,7 +173,7 @@ devised by David Goldberg at Xerox PARC.")
   (create-instance 'win2 garnet-gadgets:motif-scrolling-window-with-bars
     (:constant T :except :background-color :top :left :width :height :title :total-height)
     (:foreground-color *demos-controller-color*)
-    (:left 0) (:top 620)
+    (:left 5) (:top (o-formula (+ (g-value win1 :top) (g-value win1 :height) 30)))
     (:width 700)(:height 180)
     (:title "Instructions for Demos")
     (:h-scroll-bar-p NIL)

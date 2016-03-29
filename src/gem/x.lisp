@@ -102,6 +102,11 @@ being a string display designator.")
 (defvar *default-x-colormap*)
 (defvar *screen-width*)
 (defvar *screen-height*)
+
+;; For font handling.
+(defvar *screen-x-resolution*)
+(defvar *screen-y-resolution*)
+
 (defvar *white*)
 (defvar *black*)
 (defvar *function-alist*)
@@ -1172,10 +1177,6 @@ pixmap format in the list of valid formats."
 ;;; Taken from windows.lisp
 ;;;
 
-
-
-
-
 ;;; Returns list of drawable, parent, grandparent, ... , root.
 ;;;
 (defun lineage-of-drawable (drawable)
@@ -1439,19 +1440,22 @@ pixmap format in the list of valid formats."
   (stringp arg))
 
 
-(defvar *Fixed-Font-Family*      "courier")
-(defvar *Serif-Font-Family*      "times")
-(defvar *Sans-Serif-Font-Family* "helvetica")
+(defparameter *Fixed-Font-Family*      "courier")
+(defparameter *Serif-Font-Family*      "times")
+(defparameter *Sans-Serif-Font-Family* "helvetica")
 
-(defvar *Small-Font-Size*      10)
-(defvar *Medium-Font-Size*     12)
-(defvar *Large-Font-Size*      18)
-(defvar *Very-Large-Font-Size* 24)
+(defparameter *Small-Font-Size*      10)
+(defparameter *Medium-Font-Size*     12)
+(defparameter *Large-Font-Size*      18)
+(defparameter *Very-Large-Font-Size* 24)
 
-(defvar *Small-Font-Point-Size*      100)
-(defvar *Medium-Font-Point-Size*     120)
-(defvar *Large-Font-Point-Size*      180)
-(defvar *Very-Large-Font-Point-Size* 240)
+(defparameter *Small-Font-Point-Size*      100)
+(defparameter *Medium-Font-Point-Size*     120)
+(defparameter *Large-Font-Point-Size*      180)
+(defparameter *Very-Large-Font-Point-Size* 240)
+	
+(defparameter *Registry* "iso8859")
+(defparameter *Encoding* "1")
 
 
 ;; Returns either a string which describes the font using X conventions,
@@ -1500,8 +1504,13 @@ pixmap format in the list of valid formats."
                adjusted-face-part
                "-*-*-*-" 
                size-part
-               "-*-*-*-*-iso8859-1"))))))
-
+	       "-"
+	       (princ-to-string *screen-x-resolution*)
+	       "-"
+	       (princ-to-string *screen-y-resolution*)
+               "-*-*-"
+	       *Registry*
+	       "-1"))))))
 
 
 ;; This exists expressly to convert paths using CMU's
@@ -2102,8 +2111,25 @@ returns the HOST name, stripping off the display number."
              (xlib:display-roots *default-x-display*)))
   (setq *screen-width* (xlib:screen-width *default-x-screen*))
   (setq *screen-height* (xlib:screen-height *default-x-screen*))
-  (setq *default-x-root* (xlib:screen-root *default-x-screen*))
 
+  ;; XXX For now we only allow 75x75 DPI and 100x100 DPI.
+  (setq *screen-x-resolution*
+	(let ((screen-x-res
+	       (* 25 (ceiling (xlib:screen-width *default-x-screen*)
+			      (xlib:screen-width-in-millimeters *default-x-screen*)))))
+	  (if (> screen-x-res 80)
+	      100
+	      75)))
+  (setq *screen-y-resolution*
+	(let ((screen-y-res
+	       (* 25 (ceiling (xlib:screen-height *default-x-screen*)
+			      (xlib:screen-height-in-millimeters *default-x-screen*)))))
+	  (if (> screen-y-res 80)
+	      100
+	      75)))
+
+  (setq *default-x-root* (xlib:screen-root *default-x-screen*))
+  
   ;;; We must call xlib:open-display a second time to get to the colormap,
   ;;; because it turns out that if we simply used the *default-x-display*
   ;;; to get at the colormap, then every time xlib:alloc-color was called

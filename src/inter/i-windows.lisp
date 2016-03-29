@@ -74,7 +74,7 @@
   (unless (eq if-exists :append)
     (Format *trans-to-file*
 	    "Transcript of Garnet session from ~a.  Garnet Version = ~a, ~a~%"
-	    (Time-To-String) (lisp-implementation-type) Common-Lisp-User::Garnet-Version-Number)
+	    (Time-To-String) Common-Lisp-User::Garnet-Version-Number (lisp-implementation-type))
     (format *trans-to-file*
 	    "Form for events: CHAR CODE MOUSEP DOWNP X Y TIME WIN-INDEX~%")
     (Format *trans-to-file* "Windows are:~%")

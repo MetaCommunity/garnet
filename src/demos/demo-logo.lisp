@@ -417,8 +417,9 @@ Change log:
   (Create-Lists strings) ; convert string list into appropriate form
   (setq win (create-instance NIL inter:interactor-window
 		      (:title "Garnet Logo")
-		      (:left 0)(:top 0)
-                      (:width 270)(:height 235)
+		      (:left 5)(:top 5)
+		      ;; XXX these dimensions should be calculated.
+                      (:width 325)(:height 275)
 		      (:background-color *logo-background-color*)
 		      (:double-buffered-p double-buffered-p)
 		      (:aggregate (setq top-agg
