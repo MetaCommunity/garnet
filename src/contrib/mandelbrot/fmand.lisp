@@ -608,7 +608,7 @@ Radius --- the radius of the plot around the center.")
      
   (setf *prop*
 	(create-instance 'PROP gg:prop-sheet
-	   (:left 75)
+	   (:left (o-formula (ceiling (gvl :parent :window :width) 4)))
 	   (:width (o-formula (- (gvl :parent :window :width) 150)))
 	   (:top (o-formula (+ (opal:gv-bottom iteration-text) 15)))
 	   (:items
