@@ -1,14 +1,13 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-DEBUG; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id$
 
 
 (in-package "GARNET-DEBUG")
@@ -22,34 +21,43 @@
 
 
 (defvar flash-object)
+#-(and)
 (defvar blink-gc nil)
 
 
-;;; blink-rectangle -- used by flash
-;;;
+;; blink-rectangle -- used by flash
+;;
 (defun blink-rectangle (number-of-blinks win agg left top width height)
+  "Used to flash objects."
   (declare (ignore agg))
   (let ((window (g-value win :drawable)))
-    (cond ((null window)
-	   (format t "No :drawable for ~A~%" win)
-	   (return-from blink-rectangle)))
-#| 
-    ;;; this is the opal-based blinking code
-    ;; if flash-object does not exist yet, then create it
-    (create-flash-object)
-    
-    (s-value flash-object :left left)
-    (s-value flash-object :top top)
-    (s-value flash-object :width width)
-    (s-value flash-object :height height)
-    (dotimes (n number-of-blinks)
-      (add-component agg  flash-object)
-      (update win)
-      (sleep 0.1)
-      (remove-component agg flash-object)
-      (update win))
-|#
+    (unless window
+      (format t "No :drawable for ~A~%" win)
+      (return-from blink-rectangle))
 
+    ;;; this is the opal-based blinking code
+
+    ;; XXX FMG This code seems really expensive but it also seems to
+    ;; work.
+    #+(and)
+    (progn
+      ;; if flash-object does not exist yet, then create it
+      (create-flash-object)
+    
+      (s-value flash-object :left left)
+      (s-value flash-object :top top)
+      (s-value flash-object :width width)
+      (s-value flash-object :height height)
+      (dotimes (n number-of-blinks)
+	(add-component agg  flash-object)
+	(update win)
+	(sleep 0.1)
+	(remove-component agg flash-object)
+	(update win)))
+
+    ;; XXX FMG This is old code but it seems broken. And what's with
+    ;; BLINK-GC? I can't find anywhere that sets it.
+    #-(and)
     (dotimes (n number-of-blinks)
       #+apple
       (ccl:without-interrupts
@@ -59,52 +67,61 @@
       (gem:draw-rectangle win left top width height :xor NIL opal:black-fill)
       (gem:flush-output win)
       (sleep 0.1))
+    #-(and)
     (setf blink-gc nil) ))
 
 
-;;; create-flash-object -- create xor object unless it exists already
-;;;
+;; create-flash-object -- create xor object unless it exists already
+;;
 (defun create-flash-object ()
+  "Create XOR object (unless it already exists)."
   (let (agg win)
-    (cond ((or (null (boundp 'flash-object))
-	       (null (schema-p flash-object)))
-	   (create-instance 'flash-object opal:rectangle
-			    (:draw-function :xor)
-			    (:name "debug-opal's flash object")
-			    (:filling-style opal:black-fill))))
+    (when (or (null (boundp 'flash-object))
+	      (null (schema-p flash-object)))
+      (create-instance 'flash-object opal:rectangle
+	(:draw-function :xor)
+	(:name "debug-opal's flash object")
+	(:filling-style opal:black-fill)))
 
     ;; if flash-object is already in use, remove it from parent
     (setf agg (g-value flash-object :parent))
     (setf win (g-value flash-object :window))
-    (cond (agg
-	   (remove-component agg flash-object)))
-    (cond (win
-	   (update win)))))
+    (when agg
+      (remove-component agg flash-object))
+    (when win
+      (update win))))
 
 
 
-;;; EXPLAIN-SHORT -- tell what a slot depends upon
-;;;
-(defun explain-short (object slot) (explain-slot object slot 0 nil 2))
+;; EXPLAIN-SHORT -- tell what a slot depends upon
+;;
+(defun explain-short (object slot)
+  "Explains the dependencies of a slot."
+  (explain-slot object slot 0 nil 2))
 
 ;; use this to avoid circularities and printing shared dependencies
 (defvar explain-visited)
 
 
 
-;;; EXPLAIN-SLOT -- tell why a slot has a value
-;;;
-(defun explain-slot (object slot &optional (indent 0) (use-inverse-method nil) 
-			    (n-levels 0))
+;; EXPLAIN-SLOT -- tell why a slot has a value
+;;
+(defun explain-slot (object slot
+		     &optional
+		       (indent 0)
+		       (use-inverse-method nil) 
+		       (n-levels 0))
+  "Explain why a slot has a particular value."
   (setf explain-visited nil)  ;start with an empty list
   (explain-2 object slot indent use-inverse-method n-levels)
   (setf explain-visited nil)  ;free storage for gc
   )
 
 
-;;; explain-2 -- look for dependents, avoid circularities
-;;;
+;; explain-2 -- look for dependents, avoid circularities
+;;
 (defun explain-2 (object slot indent use-inverse-method n-levels)
+  "Look for slot dependencies while avoiding circularities."
   (let ((pair (cons object slot)))
     (cond ((member pair explain-visited :test #'equal)
 	   (indent-by indent)
@@ -121,10 +138,10 @@
 	     (format t "~S's ~S is " object slot)
 	     (print-a-slot object slot)
 	     (format t ",~%")
-	     (cond ((not (kr::cache-is-valid value))
-		    (indent-by indent)
-		    (format t 
- "(warning: this formula is invalid, so dependencies may be incorrect)~%"))))
+	     (unless (kr::cache-is-valid value)
+	       (indent-by indent)
+	       (format t 
+ "(warning: this formula is invalid, so dependencies may be incorrect)~%")))
 	   (setf indent (+ indent 1))
 	   (cond ((/= indent n-levels)   ;; stop recursion when ident = n-levels
 		  (indent-by (1- indent))
@@ -160,9 +177,10 @@
 
 
 
-;;; EXPLAIN-NIL -- why did the update fail?
-;;;
+;; EXPLAIN-NIL -- why did the update fail?
+;;
 (defun explain-nil ()
+  "Explain why an update failed."
   (let (schema
 	slot)
     (cond ((formula-p kr::*last-formula*)
@@ -188,34 +206,37 @@
 	   (format t "No errors in formula evaluation detected~%")))))
 
 
-;;; find-depended -- search window for back-links
-;;;
+;; find-depended -- search window for back-links
+;;
 (defun find-depended (aggregate formula indent)
+  "Search a window for back links."
   (doslots (slot aggregate T)
     (let ((depended-slots (kr::get-dependents aggregate slot)))
-      (if (member formula depended-slots)
+      (when (member formula depended-slots)
 	(explain-2 aggregate slot indent t 0))))
   (dolist (child (g-local-value aggregate :components))
     (find-depended child formula indent)))
 
 
-;;; find-dependencies -- search objects for back-links
-;;;
+;; find-dependencies -- search objects for back-links
+;;
 (defun find-dependencies (obj-list formula indent level)
+  "Search an object for back links."
   (kr::do-one-or-list (obj obj-list)
     (doslots (slot obj T)
       (let ((dependents (kr::get-dependents obj slot)))
-	(if (if (listp dependents)
-	      (member formula dependents)
-	      (eq formula dependents))
+	(when (if (listp dependents)
+		  (member formula dependents)
+		  (eq formula dependents))
 	  (explain-2 obj slot indent nil level))))))
 
 
 (defvar there-is-a-problem NIL)
 
-;;; fix-up-aggregate -- recursive function to implement fix-up-window
-;;;
+;; fix-up-aggregate -- recursive function to implement fix-up-window
+;;
 (defun fix-up-aggregate (agg)
+  "Recursive function to 'fix up' a window."
   (let ((comps (g-local-value agg :components)))
     (dolist (comp comps)
       (cond ((null comp)
@@ -236,9 +257,10 @@
 
 
 		       
-;;; FIX-UP-WINDOW -- help user fix a window that won't update
-;;;
+;; FIX-UP-WINDOW -- help user fix a window that won't update
+;;
 (defun fix-up-window (win)
+  "Help the user 'fix' a window that won't update."
   (let ((agg (g-value win :aggregate))
 	(invalid-objects
 	 (opal::win-update-info-invalid-objects
@@ -248,17 +270,17 @@
 
     ;; check for null invalid objects
     (dolist (object invalid-objects)
-      (cond ((and (null (get-local-value object :update-info))
-		  (progn
-		    (format t "~A has no :update-info. " object)
-		    (y-or-n-p "Remove from invalid-objects? ")))
-	     (pushnew object bad-objects))))
-    (cond (bad-objects
-	   (dolist (object bad-objects)
-	     (setf invalid-objects (delete object invalid-objects)))
-	   (setf (opal::win-update-info-invalid-objects 
-		  (g-value win :win-update-info)) 
-		 invalid-objects)))
+      (when (and (null (get-local-value object :update-info))
+		 (progn
+		   (format t "~A has no :update-info. " object)
+		   (y-or-n-p "Remove from invalid-objects? ")))
+	(pushnew object bad-objects)))
+    (when bad-objects
+      (dolist (object bad-objects)
+	(setf invalid-objects (delete object invalid-objects)))
+      (setf (opal::win-update-info-invalid-objects 
+	     (g-value win :win-update-info)) 
+	    invalid-objects))
 
     ;; check aggregate tree
     (cond ((null agg));; null agg is ok
@@ -269,14 +291,14 @@
 		   agg)
 	   (cond ((y-or-n-p "Do you want me to remove it? ")
 		  (s-value win :aggregate nil)))))
-    (cond ((null there-is-a-problem)
-	   (opal:update win t)))))
+    (unless there-is-a-problem
+      (opal:update win t))))
 
 
-
-;;; FLASH -- blink where an object is located
-;;;
+;; FLASH -- blink where an object is located
+;;
 (defun flash (obj &optional (num-blinks 10))
+  "Create a flash effect where the object is."
   (let ((win (g-value obj :window))
 	(left (g-value obj :left))
 	(top (g-value obj :top))
@@ -287,15 +309,15 @@
 	aggleft aggtop aggwidth aggheight
 	invisible-agg)
     
-    (cond (win
-	   (setf agg (g-value win :aggregate))
-	   (setf winwidth (g-value win :width))
-	   (setf winheight(g-value win :height))))
-    (cond (agg
-	   (setf aggleft (g-value agg :left))
-	   (setf aggtop (g-value agg :top))
-	   (setf aggwidth (g-value agg :width))
-	   (setf aggheight (g-value agg :height))))
+    (when win
+      (setf agg (g-value win :aggregate))
+      (setf winwidth (g-value win :width))
+      (setf winheight(g-value win :height)))
+    (when agg
+      (setf aggleft (g-value agg :left))
+      (setf aggtop (g-value agg :top))
+      (setf aggwidth (g-value agg :width))
+      (setf aggheight (g-value agg :height)))
     (cond ((null win)
 	   (format t "~S does not have a window~%" obj))
 	  ((null agg)
@@ -303,13 +325,13 @@
 	  ((not (and left top width height))
 	   (format t "~S does not have a left, top, width, and height:~%" obj)
 	   (where obj))
-	  ((and (not (eq win obj));; this is not a window
+	  ((and (not (eq win obj))         ; this is not a window
 		(or
-		 (< (+ top height) 0);; above the window
-		 (< (+ left width) 0);; left of the window
-		 (> top winheight);; below the window
-		 (> left winwidth)));; right of the window
-	   (format t "~S is outside of it's window:~%" obj)
+		 (< (+ top height) 0)      ; above the window
+		 (< (+ left width) 0)      ; left of the window
+		 (> top winheight)         ; below the window
+		 (> left winwidth)))       ; right of the window
+	   (format t "~S is outside of its window:~%" obj)
 	   (where obj))
 	  ((null (g-value win :visible))
 	   (format t "~S's window ~S's :visible slot is NIL~%" obj win))
@@ -322,7 +344,7 @@
 		   "~S's aggregate does not have a left, top, width, and height:~%"
 		   obj)
 	   (where agg))
-	  ((and (not (eq obj win));; not flashing the window
+	  ((and (not (eq obj win))         ; not flashing the window
 		(or
 		 (< top aggtop)
 		 (< left aggleft)
@@ -333,24 +355,25 @@
 	   (where obj)
 	   (where agg))
 	  (t
-	   (cond ((eq obj win)
-		  (setf left 0)
-		  (setf top 0))) 
-	   (cond ((or (< width minsize) (< height minsize))
-		  (format 
-		   t "Enlarging feedback to ~D by ~D because ~S is small:~%" 
-		   (max width minsize) (max height minsize)
-		   obj)
-		  (where obj)))
-	   (cond ((null (g-value obj :visible))
-		  (format t "~S is not currently visible." obj)))
+	   (when (eq obj win)
+	     (setf left 0)
+	     (setf top 0))
+	   (when (or (< width minsize) (< height minsize))
+	     (format 
+	      t "Enlarging feedback to ~D by ~D because ~S is small:~%" 
+	      (max width minsize) (max height minsize)
+	      obj)
+	     (where obj))
+	   (when (null (g-value obj :visible))
+	     (format t "~S is not currently visible." obj))
 	   (blink-rectangle num-blinks win agg left top
 			    (max width minsize) (max height minsize))))))
 
 
-;;; get-an-opal-window -- find any opal window and return it
-;;;
+;; get-an-opal-window -- find any opal window and return it
+;;
 (defun get-an-opal-window ()
+  "Return some random window."
   (car opal::*garnet-windows*)
   #|
   (maphash #'(lambda (x-window opal-window)
@@ -361,29 +384,30 @@
   )
 
 
-;;; has-component-p -- see if aggregate has a component
-;;;
+;; has-component-p -- see if aggregate has a component
+;;
 (defun has-component-p (agg obj)
+  "See if an aggregate has a particular component."
   (let ((comps (g-local-value agg :components)))
     (dolist (comp comps)
-      (cond ((eq obj comp) (return t))))))
+      (when (eq obj comp)
+	(return t)))))
 
 
-;;; has-leaf-p -- see if aggregate tree has a component
-;;;
+;; has-leaf-p -- see if aggregate tree has a component
+;;
 (defun has-leaf-p (agg obj)
-  (let (comps)
-    (setf comps (g-local-value agg :components))
+  "See if an aggregate tree has a particular component."
+  (let ((comps (g-local-value agg :components)))
     (dolist (comp comps)
-      (cond ((eq obj comp) (return t))
-	    ((and (is-a-p comp opal:aggregate)
-		  (has-leaf-p comp obj))
-	     (return t))))))
+      (when (or (eq obj comp)
+		(and (is-a-p comp opal:aggregate)
+		     (has-leaf-p comp obj)))
+	(return t)))))
 
 
-
-;;; IDENT -- identify an object by pointing
-;;;
+;; IDENT -- identify an object by pointing
+;;
 (defvar ident)  ;; ident gets the value you point to
 
 #|
@@ -402,9 +426,10 @@
   (format t "Click or Type on any object or window...~%"))
 |#
 
-;;; create-identify-interactor -- create interactor for IDENT function
-;;;
+;; create-identify-interactor -- create interactor for IDENT function
+;;
 (defun create-identify-interactor ()
+  "Create an interactor to identifiy objects."
   (format t "making identify-interactor~%")
   (create-instance 
       'identify-interactor
@@ -422,9 +447,10 @@
     (:stop-action 'identify-stop-action)))
 
 
-;;; Identify-stop-action -- called by interactor to tell user about object
-;;;
+;; Identify-stop-action -- called by interactor to tell user about object
+;;
 (defun identify-stop-action (interactor obj)
+  "Stop action for identify. Tells the user about the object."
   (declare (ignore interactor))
   (let ((x (inter:event-x inter:*Current-Event*))
 	(y (inter:event-y inter:*Current-Event*))
@@ -433,15 +459,15 @@
         (indent 0) last-obj)
     (format t "in Window ~A, ~S at x=~D, y=~D:~%" win ch x y)
     (setf ident obj)
-    (cond ((eq ident :none)
-	   (setf ident win)))
+    (when (eq ident :none)
+      (setf ident win))
     (setf obj ident)
     (format t "~S~%" obj)
     (do ()
 	((null obj))
-      (cond ((> indent 0)
-	     (indent-by indent)
-	     (format t "in ")))
+      (when (> indent 0)
+	(indent-by indent)
+	(format t "in "))
       (what obj)
       (setf last-obj obj)
       (setf obj (g-value obj :parent))
@@ -490,43 +516,43 @@
   (let ((a-window (get-an-opal-window))
         suspend-process
 	opal-display display-info obj window loc-x loc-y garnet-code)
-    (cond (a-window
-	   (if verbose
-	     (format t "Click or Type on any object or window...~%"))
-           (when (opal:main-event-loop-process-running-p)
-	     (setf suspend-process T)
-	     (opal:kill-main-event-loop-process))
-	   (setf opal-display (the gem:DISPLAY-INFO
-				   (g-value a-window :display-info)))
-	   (setf display-info (gem:display-info-display
-			       opal-display))
-         #+apple
-         (unwind-protect
+    (when a-window
+      (when verbose
+	(format t "Click or Type on any object or window...~%"))
+      (when (opal:main-event-loop-process-running-p)
+	(setf suspend-process T)
+	(opal:kill-main-event-loop-process))
+      (setf opal-display (the gem:DISPLAY-INFO
+			      (g-value a-window :display-info)))
+      (setf display-info (gem:display-info-display
+			  opal-display))
+      #+apple
+      (unwind-protect
            (setf ident-info ())
-           (gu:while (eq ident-info ())
-             (setf ccl:*eventhook* 'mac-ident-event-handler))
-           (setf ccl:*eventhook* NIL)
-           (let* ((view (first ident-info))
-                  (what (second ident-info))
-                  (time (third ident-info))
-                  (code (case what
-                          (1 inter::*left-button*)
-                          (3 (logand (ccl:rref ccl:*current-event*
-                                               :EventRecord.message)
-                                     #xFFFF))))
-                  (state (gem::get-event-bits))
-                  (x (fourth ident-info))
-                  (y (fifth ident-info)))
-             (setf window (gem:window-from-drawable gem::*root-window* view))
-             (setf garnet-code
-                   (case what
-                     (1 (gem:translate-mouse-character
-                         gem::*root-window* code state :BUTTON-PRESS))
-                     (3 (gem:translate-character gem::*root-window*
-                                                 x y state code time))))
-             (setf loc-x x) (setf loc-y y)
-             (setf obj (identify window x y garnet-code verbose)))
-           )
+	(gu:while (eq ident-info ())
+		  (setf ccl:*eventhook* 'mac-ident-event-handler))
+	(setf ccl:*eventhook* NIL)
+	(let* ((view (first ident-info))
+	       (what (second ident-info))
+	       (time (third ident-info))
+	       (code (case what
+		       (1 inter::*left-button*)
+		       (3 (logand (ccl:rref ccl:*current-event*
+					    :EventRecord.message)
+				  #xFFFF))))
+	       (state (gem::get-event-bits))
+	       (x (fourth ident-info))
+	       (y (fifth ident-info)))
+	  (setf window (gem:window-from-drawable gem::*root-window* view))
+	  (setf garnet-code
+		(case what
+		  (1 (gem:translate-mouse-character
+		      gem::*root-window* code state :BUTTON-PRESS))
+		  (3 (gem:translate-character gem::*root-window*
+					      x y state code time))))
+	  (setf loc-x x) (setf loc-y y)
+	  (setf obj (identify window x y garnet-code verbose)))
+	)
 
          #-apple
          (progn
@@ -553,54 +579,57 @@
 	     (setf garnet-code (gem::translate-character event-window x y state code time))
 	     (cond (garnet-code
 		    (setf obj (identify window x y garnet-code verbose))
-		    t);; exit the event loop
-		   (t nil);; must have been shift key, etc.  Loop for more.
+		    t)          ; exit the event loop
+		   (t nil)      ; must have been shift key, etc.  Loop for more.
 		   ))))
 	   (when suspend-process
 	     (opal:launch-main-event-loop-process))
-	   ))
+	   )
     (list obj window loc-x loc-y garnet-code)))
 
 
 
-;;; identify -- find where an event is and print event code and x,y
-;;;
+;; identify -- find where an event is and print event code and x,y
+;;
 (defun identify (window x y code verbose)
+  "Identify the window where an event took place."
   (let (elem agg (indent 0) ident)
     (if verbose
       (format t "in Window ~A, ~S at x=~D, y=~D:~%" window code x y))
     (if (schema-p window) (setf agg (g-value window :aggregate)))
-    (cond ((schema-p agg)
-	   (setf elem
-		 (if (opal:point-in-gob agg x y)
-		   (kr-send agg :point-to-leaf agg x y)
-		   nil))
-	   (setf ident elem)
-	   (cond ((and verbose elem)
-		  (do ()
-		      ((null elem))
-		    (cond ((> indent 0)
-			   (indent-by indent)
-			   (format t "in ")))
-		    (what elem)
-		    (setf elem (g-value elem :parent))
-		    (setf indent (1+ indent)))
-		  (indent-by indent)
-		  (format t "in ")
-		  (what window)))))
+    (when (schema-p agg)
+      (setf elem
+	    (if (opal:point-in-gob agg x y)
+		(kr-send agg :point-to-leaf agg x y)
+		nil))
+      (setf ident elem)
+      (when (and verbose elem)
+	(do ()
+	    ((null elem))
+	  (when (> indent 0)
+	    (indent-by indent)
+	    (format t "in "))
+	  (what elem)
+	  (setf elem (g-value elem :parent))
+	  (setf indent (1+ indent)))
+	(indent-by indent)
+	(format t "in ")
+	(what window)))
     ident))
 
 
-;;; indent-by -- indentation function used for printing trees
-;;;
+;; indent-by -- indentation function used for printing trees
+;;
 (defun indent-by (indent)
+  "Indent tree printout."
   (dotimes (i indent) (format t "   "))
   (* indent 3))
 
 
-;;; INVERT -- invert a selected object using xor
-;;;
+;; INVERT -- invert a selected object using xor
+;;
 (defun invert (obj)
+  "Invert the object using XOR."
   (let ((win (g-value obj :window))
 	(left (g-value obj :left))
 	(top (g-value obj :top))
@@ -610,23 +639,23 @@
     (create-flash-object)
 
     (setf agg (g-value win :aggregate))
-    (cond ((and agg left top width height)
-	   (s-value flash-object :left left)
-	   (s-value flash-object :top top)
-	   (s-value flash-object :width width)
-	   (s-value flash-object :height height)
-	   (add-component agg flash-object)
-	   (update win)))))
+    (when (and agg left top width height)
+      (s-value flash-object :left left)
+      (s-value flash-object :top top)
+      (s-value flash-object :width width)
+      (s-value flash-object :height height)
+      (add-component agg flash-object)
+      (update win))))
 
 
 
-;;; IS-A-TREE -- print the is-a links recursively
-;;;
+;; IS-A-TREE -- print the is-a links recursively
+;;
 (defun is-a-tree (obj &optional (indent 0))
-  (let (isa)
+  "Recursively follow and print IS-A links."
+  (let ((isa (car (g-value obj :is-a))))
     (indent-by indent)
     (format t "~S" obj)
-    (setf isa (car (g-value obj :is-a)))
     (cond (isa
 	   (format t " is-a~%")
 	   (is-a-tree isa (1+ indent)))
@@ -635,106 +664,112 @@
 
 
 
-;;; just-remove-component -- remove component without graphical fixup
-;;;
+;; just-remove-component -- remove component without graphical fixup
+;;
 (defun just-remove-component (agg obj)
+  "Remove a component without otherwise affecting the graphics."
   (s-value agg :components
-	   (delete obj (g-local-value agg :components) :from-end t :count
-		   1))
-  (if (and obj (schema-p obj))
-      (s-value obj :parent nil))
+	   (delete obj (g-local-value agg :components) :from-end t :count 1))
+  (when (and obj (schema-p obj))
+    (s-value obj :parent nil))
   (mark-as-changed agg :components))
 
 
+;;;********************************************************
+;; Types and type checking.
 
-;;; KIDS -- tell the opal type of an object and children
-;;;
+;; KIDS -- tell the opal type of an object and children
+;;
 (defun kids (object &key (indent 0))
+  "Tell the OPAL type of an object and its children."
   (look object 1 :indent indent))
 
-
-
-;;; This is a type-checking facility, called any time an object's slot has
-;;; changed its value.  It's only invoked if *opal-debug* is non-NIL.
-;;; All boolean slots (:visible :fast-redraw-p :open-p :actual-heightp)
-;;; cannot be type-checked, since any non-NIL value is True.
-
+;; This is a type-checking facility, called any time an object's slot
+;; has changed its value. It's only invoked if *opal-debug* is
+;; non-NIL. All boolean slots (:visible :fast-redraw-p :open-p
+;; :actual-heightp) cannot be type-checked, since any non-NIL value is
+;; True.
 (defun opal::legal-type-p (object slot value)
-  (if
-   (case slot
-    ((:top :left :x1 :x2 :y1 :y2 :head-x :head-y :from-x :from-y)
+  "Check the value of a slot of an object to see if the value is a
+  legal type for that slot. Note that boolean slots such
+  as :visible, :fast-redraw-p etc. cannot be type-checked because any
+  non-NIL value is True."
+  (cond
+    ((case slot
+       ((:top :left :x1 :x2 :y1 :y2 :head-x :head-y :from-x :from-y)
 	(typep value 'integer))
-    ((:width :height :radius :draw-radius :length :diameter)
+       ((:width :height :radius :draw-radius :length :diameter)
 	(and (typep value 'integer) (>= value 0)))
-    (:line-style
+       (:line-style
 	(or (null value)
 	    (and (schema-p value)
 	         (is-a-p value opal:line-style))))
-    (:filling-style
+       (:filling-style
 	(or (null value)
 	    (and (schema-p value)
 	         (is-a-p value opal:filling-style))))
-    (:draw-function
+       (:draw-function
 	(assoc value gem:*function-alist*))
-    ((:angle1 :angle2)
+       ((:angle1 :angle2)
 	(numberp value))
-    (:point-list
+       (:point-list
 	(and (listp value)
-	     (zerop (mod (length value) 2))		;; of even length?
+	     (zerop (mod (length value) 2)) ;; of even length?
 	     (not (dolist (coord value)
 		    (unless (typep coord 'integer) (return T))))))
-    ((:string :title :icon-title)
+       ((:string :title :icon-title)
 	(or (null value) (stringp value)))
-    (:font
+       (:font
 	(and (schema-p value)
 	     (or (is-a-p value opal:font)
 		 (is-a-p value opal:font-from-file))))
-    (:xfont
-     #-apple (xlib:font-p value)
-     #+apple (listp value))
-    (:text-extents
+       (:xfont
+	#-apple (xlib:font-p value)
+	#+apple (listp value))
+       (:text-extents
 	(listp value))
-    (:cursor-index
+       (:cursor-index
 	(or (null value)
 	    (and (typep value 'integer) (>= value 0))))
-    (:justification
+       (:justification
 	(member value '(:left :center :right)))
-    (:cut-strings
+       (:cut-strings
 	(and (listp value)
 	     (not (dolist (cut-string-member value)
 		    (unless (opal::cut-string-p cut-string-member) (return T))))))
-    (:image			;; bitmap
-     #-apple (typep value 'xlib:image) ;; was (xlib::image-p value)
-     #+apple (eq gem::*MAC-BUFFER* (class-of value)))
-    (:aggregate
+       (:image			       ;; bitmap
+	#-apple (typep value 'xlib:image) ;; was (xlib::image-p value)
+	#+apple (eq gem::*MAC-BUFFER* (class-of value)))
+       (:aggregate
 	(or (null value)
 	    (is-a-p value opal:aggregate)))
-    (:parent			;; window's can only have window's!
+       (:parent	;; window's can only have window's!
 	(or (null value)
 	    (and (schema-p value)
 		 (if (is-a-p object opal::window)
 		     (is-a-p value opal::window)
 		     T))))
-    (:cursor
+       (:cursor
 	(and (listp value)
 	     (is-a-p (car value) opal:bitmap)
 	     (is-a-p (cdr value) opal:bitmap)))
-    (:display
+       (:display
 	(stringp value))
-    (otherwise
-	T)
-   )
-  T
-  (format t "*** Warning:  Object ~A, Slot ~A, Value ~A is illegal!~%"
-	object slot value))
+       (otherwise T)
+       )
+     T)
+    (t 
+     (format t "*** Warning:  Object ~A, Slot ~A, Value ~A is illegal!~%"
+	     object slot value)
+     nil))
 )
 
 
 
-;;; LOOK -- describes opal objects, level specifies how much detail
-;;;
+;; LOOK -- describes opal objects, level specifies how much detail
+;;
 (defun look (object &optional (detail 2) &key (indent 0))
-  "Describe a graphical object, detail is one of:
+  "Describe a graphical object. The DETAIL argument is one of:
   0 outputs one line, same as (what schema)
   1 also shows children, same as (kids schema)
   2 prints all children (default)
@@ -801,8 +836,8 @@
 
 
 
-;;; LOOK-INTER -- print out the interactors
-;;;
+;; LOOK-INTER -- print out the interactors
+;;
 (defun look-inter (&optional inter)
   "Looks for interactors relevant to the parameters.
   inter can be:
@@ -847,16 +882,19 @@
     * a window, to describe all interactors on that window
     * an opal object, to try to find all interactors that affect that object
     * the special keyword :next to wait and describe the next interactor to
-      be executed.
-  detail can be
-      0 just prints active interactors (default) or
-      1 shows where they start
-  Either or both args may be omitted.~%"))))
+      be executed.~%"))))
+;; XXX FMG The following seems to be obsolete.
+;;  detail can be
+;;      0 just prints active interactors (default) or
+;;      1 shows where they start
+;;  Either or both args may be omitted.~%"))))
 
 
-;;; print-inter-details -- print class, start-event and start-where
-;;;
+;; print-inter-details -- print class, start-event and start-where
+;;
 (defun print-inter-details (inter)
+  "Print the details of an interactor: class, start-event and
+start-where."
   (let (class where ev)
     (format t "~s" inter)
     (setf class (std-proto inter))
@@ -866,9 +904,10 @@
     (format t "   starts when ~S ~S~%" ev where)))
   
 
-;;; print-a-slot -- prints value (and cache if value is formula)
-;;;
+;; print-a-slot -- prints value (and cache if value is formula)
+;;
 (defun print-a-slot (obj slot)
+  "Print a slot's value (and its cached value if it is formula.)"
   (let ((value (get-value obj slot))
 	actual-cached-value cached-value-to-print validity)
     (cond ((formula-p value)
@@ -878,25 +917,24 @@
 		  (setf cached-value-to-print "...")))
 	   (setf validity (kr::cache-is-valid value))
 	   (format t "~S (~S . ~A #~A)" value cached-value-to-print 
-		   validity (kr::cache-mark value))
-	   
-	   )
+		   validity (kr::cache-mark value)))
 	  (t
 	   (format t "~S" value)))))
 
-;;; search-for-inter -- find interactor that might change object
-;;;
+;; search-for-inter -- find interactor that might change object
+;;
 (defun search-for-inter (obj)
+  "Find an interactor that might affect a particular object."
   (inter:Do-All-Interactors
       #'(lambda (inter)
 	  (when (and (g-value inter :active)
 		     (g-value inter :window))
 	  (let (where)
-	    ;; first check :start-where's
+	    ;; first check :START-WHEREs
 	    (setf where (g-local-value inter :start-where))
 	    (cond ((eq t where)
 		   (format t "~S has a :start-where of T~%" inter))
-		  ((null where));; won't match
+		  ((null where))     ; won't match
 		  ((listp where)
 		   (let ((control (first where))
 			 (agg (second where))
@@ -911,16 +949,14 @@
 				inter where agg obj))))
 		       ((:list-element-of :list-element-of-or-none)
 			(setf slot (third where))
-			(cond 
-			  ((and agg (schema-p agg))
-			   (setf lst (g-value agg slot))
-			   (cond
-			     ((listp lst)
-			      (dolist (i lst)
-				(cond ((eq i obj)
-				       (format
-					t "~S's :start-where is ~S,~%   ~S's ~S is ~S,~%"
-					inter where agg slot lst)))))))))
+			(when (and agg (schema-p agg))
+			  (setf lst (g-value agg slot))
+			  (when (listp lst)
+			    (dolist (i lst)
+			      (when (eq i obj)
+				(format t
+					"~S's :start-where is ~S,~%   ~S's ~S is ~S,~%"
+					inter where agg slot lst))))))
 		       ((:list-leaf-element-of
 			 :list-check-leaf-but-return-element
 			 :list-leaf-element-of-or-none
@@ -929,49 +965,46 @@
 			 :check-leaf-but-return-element-or-none
 			 )
 			(setf slot (third where))
-			(cond
-			  ((and agg (schema-p agg))
-			   (setf lst (g-value agg slot))
-			   (cond
-			     ((listp lst)
-			      (dolist (i lst)
-				(cond ((has-leaf-p i obj)
-				       (format t
-					       "~S's :start-where is ~S,~%   ~S's ~S is ~S, and~%   ~S contains ~S"
-					       inter where agg slot lst i obj)))))))))
+			(when (and agg (schema-p agg))
+			  (setf lst (g-value agg slot))
+			  (when (listp lst)
+			    (dolist (i lst)
+			      (when (has-leaf-p i obj)
+				(format t 
+"~S's :start-where is ~S,~%   ~S's ~S is ~S, and~%   ~S contains ~S"
+					inter where agg slot lst i obj))))))
 		       ((:leaf-element-of
 			 :leaf-element-of-or-none)
-			(cond ((and agg (schema-p agg) (has-leaf-p agg obj))
-			       (format
-				t "~S's :start-where is ~S,~% and ~S contains ~S~%"
-				inter where agg obj))))
+			(when (and agg (schema-p agg) (has-leaf-p agg obj))
+			  (format
+			   t "~S's :start-where is ~S,~% and ~S contains ~S~%"
+			   inter where agg obj)))
 		       ((:in-box :in :in-but-not-on)
-			(cond ((eq agg obj)
-			       (format t "~S's :start-where is ~S~%"
-				       inter where))))
+			(when (eq agg obj)
+			  (format t "~S's :start-where is ~S~%" inter where)))
 		       (t (format t "~S has a bad :start-where : ~S~%" inter where)))))
-		  (t (format t "~S has a bad :start-where : ~S~%"
-			     inter where)))
+		  (t (format t "~S has a bad :start-where : ~S~%" inter where)))
 
 	    ;; end of :start-where search, now look at :feedback-obj...
-	    (cond ((eq obj (g-local-value inter :feedback-obj))
-		   (format t "~S's :feedback-obj is ~S~%" inter obj)))
+	    (when (eq obj (g-local-value inter :feedback-obj))
+	      (format t "~S's :feedback-obj is ~S~%" inter obj))
 
 	    ;; look at final-feed-avail, final-feed-inuse, final-feedback-obj
 	    (cond ((eq obj (g-local-value inter :final-feedback-obj))
-	       (format t "~S's :final-feedback-obj is ~S~%" inter obj))
-	      ((member obj (get-local-value inter :final-feed-inuse))
-	       (format t "~S's :final-feed-inuse contains ~S~%" inter obj))
-	      ((member obj (get-local-value inter :final-feed-avail))
-	       (format t "~S's :final-feed-avail contains ~S~%" inter obj)))
+		   (format t "~S's :final-feedback-obj is ~S~%" inter obj))
+		  ((member obj (get-local-value inter :final-feed-inuse))
+		   (format t "~S's :final-feed-inuse contains ~S~%" inter obj))
+		  ((member obj (get-local-value inter :final-feed-avail))
+		   (format t "~S's :final-feed-avail contains ~S~%" inter obj)))
 
 	    ;; check :obj-to-change as well...
-	    (cond ((eq obj (g-local-value inter :obj-to-change))
-		   (format t "~S's :obj-to-change is ~S~%" inter obj))))))))
+	    (when (eq obj (g-local-value inter :obj-to-change))
+	      (format t "~S's :obj-to-change is ~S~%" inter obj)))))))
 	
-;;; search-invisible-agg -- look up parent tree for :visible nil
-;;;
+;; search-invisible-agg -- look up parent tree for :visible nil
+;;
 (defun search-invisible-agg (agg)
+  "Find the parent tree for an aggregate that is not visible."
   (let (parent)
     (cond ((null (g-value agg :visible)) agg)
 	  ((setf parent (g-value agg :parent))
@@ -1031,11 +1064,13 @@
 	   (t nil))))
 |#
 
-;;; std-proto -- go up :is-a links to find non-KR-DEBUG package
-;;;
+;; std-proto -- go up :is-a links to find non-KR-DEBUG package
+;;
 (defun std-proto (object)
+  "Go up :IS-A links to find non-KR-DEBUG package."
   (let (start)
-    (if object (setf start (car (g-value object :is-a))))
+    (when object
+      (setf start (car (g-value object :is-a))))
     (do ((ancestor start (car (g-value ancestor :is-a))))
 	((or (null ancestor)
              (not (symbolp (kr::schema-name ancestor)))
@@ -1046,32 +1081,36 @@
 
 
 
-;;; test-display-slots -- type-check the update slots of an object
-;;;
+;; test-display-slots -- type-check the update slots of an object
+;;
 (defun test-display-slots (obj)
+  "Type-check the update slots of an object." 
   (dolist (slot (g-value obj :update-slots))
     (cond ((opal::legal-type-p obj slot (g-value obj slot)))
-	  (t  ;; bad type
+	  (t                                       ; bad type
 	   (return-from test-display-slots nil))))
   t)
 
 
-;;; UNIVERT -- remove inverted region
-;;;
-(defun uninvert () 
+;; UNIVERT -- remove inverted region
+;;
+(defun uninvert ()
+  "Remove inverted region (This is a hack)."
   ;; create-flash-object will remove flash-object and redisplay
   (create-flash-object))
 
 
-;;; what -- tell the opal type of an object
-;;;
+;; what -- tell the opal type of an object
+;;
 (defun what (object &key (indent 0))
+  "Tell the opal type of an object."
   (look object 0 :indent indent))
 
 
-;;; where -- tell where an opal object is
-;;;
+;; where -- tell where an opal object is
+;;
 (defun where (object)
+  "Tell where an object is."
   (format t "~S :TOP ~S :LEFT ~S :WIDTH ~S :HEIGHT ~S"
 	  object
 	  (g-value object :top)
@@ -1083,9 +1122,10 @@
 	(t
 	 (format t " :WINDOW ~S~%" (g-value object :window)))))
 
-;;; WINDOWS -- tell me where windows are
-;;;
+;; WINDOWS -- tell me where windows are
+;;
 (defun windows ()
+  "Currently just returns the global list of windows."
   opal::*garnet-windows*
   #|
   (let (result)
@@ -1098,15 +1138,16 @@
   |#
   )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Stuff to break or notify when slots are set
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;********************************************
+;; Stuff to break or notify when slots are set
+;;;********************************************
 
 (declaim (special kr::*slot-setter-debug*))
 (defparameter *object-slot-val-fnc-list* NIL)
 
-;;; returns T if matches
+;; returns T if matches
 (defun Matches? (schema slot new-value ctrl)
+  "Returns T if matches (?)."
   (let ((o (first ctrl)))
     (if (or (eq o :*any*) (eq o schema))
 	(let ((s (second ctrl)))
@@ -1118,9 +1159,10 @@
 	      NIL))
 	NIL)))
 
-;;; Called on every slot set, reason will be one of :S-VALUE,
-;;; :FORMULA-EVALUATION, :INHERITANCE-PROPAGATION, :DESTROY-SLOT
+;; Called on every slot set, reason will be one of :S-VALUE,
+;; :FORMULA-EVALUATION, :INHERITANCE-PROPAGATION, :DESTROY-SLOT
 (defun Debug-Check-Object-Slot-Val-Set (schema slot new-value reason)
+  "Debug to notify when a slot is set."
   (let (fnc extra)
     (dolist (ctrl *object-slot-val-fnc-list*)
       (when (matches? schema slot new-value ctrl)
@@ -1131,18 +1173,21 @@
       (funcall fnc schema slot new-value reason extra))))
 
 (defun Do-Break (schema slot new-value reason extra)
+  "Break if a slot is set."
   (declare (ignore extra))
   (fresh-line)
   (break (format NIL "Because ~s slot ~s set with ~s due to ~a"
 		 schema slot new-value reason)))
 
 (defun Do-Notify (schema slot new-value reason extra)
+  "Notify user if a slot is set."
   (declare (ignore extra))
   (fresh-line)
   (format T "#### ~s slot ~s set with ~s due to ~a~%"
 	  schema slot new-value reason))
 
 (defun Print-Current-Status ()
+  "List BREAKs or NOTIFYs (if any)."
   (if *object-slot-val-fnc-list*
       (dolist (ctrl *object-slot-val-fnc-list*)
 	(format T "~a when object ~s slot ~s is set with ~s~%"
