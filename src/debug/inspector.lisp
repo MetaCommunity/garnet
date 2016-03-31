@@ -18,8 +18,8 @@
 
 (in-package "GARNET-DEBUG")
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(inspector inspect-next-inter Find-Slot-Starting-With
-	    *INSPECTOR-KEY* *SHOW-OBJECT-KEY* *INSPECTOR-NEXT-INTER-KEY*)))
+  (export '(INSPECTOR Inspect-Next-Inter Find-Slot-Starting-With
+	    *Inspector-Key* *Show-Object-Key* *Inspector-Next-Inter-Key*)))
 
 (defparameter big-font (opal:get-standard-font NIL :bold :large))
 (defparameter regular-font (opal:get-standard-font NIL NIL NIL))
@@ -45,10 +45,10 @@
 
 
 (defun beep-print (str)
-  (fresh-line)
+  (fresh-line *debug-io*)
   (inter:beep)
-  (princ str)
-  (terpri))
+  (princ str *debug-io*)
+  (terpri *debug-io*))
 
 
 ;;;*******************************************************************
@@ -56,8 +56,8 @@
 (defparameter debug-started-main-event-loop NIL)
 
 ;; This function returns T if we are in the debugger from inside the
-;; main-event-loop-process or if we are not using the m-e-l-p then
-;; returns T if inside debugger
+;; main-event-loop-process.
+;; If we are not using the m-e-l-p then returns T if inside debugger.
 (defun broken-inside-main-event-loop ()
   (if opal::*main-event-loop-process*
       ;; if the current process is the same as the m-e-l process
@@ -126,7 +126,7 @@
   (beep-print (format NIL "Debug: INSPECTOR of interactor ~s" inter))
   (inspector inter))
 
-(defun inspect-next-inter ()
+(defun Inspect-Next-Inter ()
   (setq inter:*debug-next-inter* #'inspect-inter))
 		   
 (defun int-inspect-next-inter (ev)
@@ -162,7 +162,7 @@
 		 (format NIL "INSPECTOR: No window in event ~s" ev)))))
 	    
 ;; This is set as a global accelerator to just print out the object's name
-(defun Show-Object-On-event (ev)
+(defun show-object-on-event (ev)
   (let ((win (inter:event-window ev))
 	 agg obj)
     (fresh-line)
@@ -171,34 +171,34 @@
 		 (setq obj (opal:point-to-leaf agg (inter:event-x ev)
 					       (inter:event-y ev))))
 	    (progn
-	      (format T "--> (~s,~s) = ~s in window ~s~%"
+	      (format *debug-io* "--> (~s,~s) = ~s in window ~s~%"
 		    (inter:event-x ev) (inter:event-y ev) obj win)
 	      (opal:set-x-cut-buffer win (format NIL "~s" obj)))
 	    ;; else no object
-	    (format T "--> No object at (~s,~s) in window ~s~%"
+	    (format *debug-io* "--> No object at (~s,~s) in window ~s~%"
 		    (inter:event-x ev) (inter:event-y ev) win))
 	;; else no window
-	(format T "--> No window in event ~s~%" ev))))
+	(format *debug-io* "--> No window in event ~s~%" ev))))
 	    
 
 ;;;	(defvar *INSPECTOR-KEY* :help)
 ;;;	(defvar *INSPECTOR-NEXT-INTER-KEY* :control-help)
 ;;;	(defvar *SHOW-OBJECT-KEY* :shift-help)
-(defvar *INSPECTOR-KEY* :f1)
+(defvar *Inspector-Key* :f1)
 (defvar *INSPECTOR-NEXT-INTER-KEY* :control-f1)
 (defvar *SHOW-OBJECT-KEY* :shift-f1)
 
-(inter:add-global-accelerator *INSPECTOR-KEY* 'Pop-Up-ps-for-event :first? T)
-(inter:add-global-accelerator *INSPECTOR-NEXT-INTER-KEY*
+(inter:add-global-accelerator *Inspector-Key* 'pop-up-ps-for-event :first? T)
+(inter:add-global-accelerator *Inspector-Next-Inter-Key*
 			      'int-inspect-next-inter :first? T)
-(inter:add-global-accelerator *SHOW-OBJECT-KEY*
-			      'Show-Object-On-event :first? T)
+(inter:add-global-accelerator *Show-Object-Key*
+			      'show-object-on-event :first? T)
 
-(format T "~%==> Garnet-Debug: hit ~A key for INSPECTOR on object under mouse~%"
+(format *debug-io* "~%==> Garnet-Debug: hit ~A key for INSPECTOR on object under mouse~%"
         *inspector-key*)
-(format T "==> Garnet-Debug: hit ~A for INSPECTOR on next Interactor~%"
+(format *debug-io* "==> Garnet-Debug: hit ~A for INSPECTOR on next Interactor~%"
         *inspector-next-inter-key*)
-(format T "==> Garnet-Debug: hit ~A to list obj under mouse~%~%"
+(format *debug-io* "==> Garnet-Debug: hit ~A to list obj under mouse~%~%"
         *show-object-key*)
 
 
@@ -671,7 +671,7 @@
      (:string-obj ,opal:multifont-text
       (:left 5)
       (:word-wrap-p t)
-      (:text-width ,(o-formula (gvl :window :width) 460))
+      (:text-width ,(o-formula (gvl :window :width) 500))
       (:top ,(o-formula (+ 2 (gvl :parent :error-string :top)
 		   (max (* 2 (opal:string-height opal:default-font "]"))
 			(opal:string-height big-font "]"))))))))
@@ -914,7 +914,7 @@
 (defun show-inspector-break (schema slot new-value reason window break?)
   (let ((s (format NIL "~s slot ~s set with ~s due to ~a"
 		   schema slot new-value reason)))
-    (format T "#### ~a~%" s)
+    (format *debug-io* "#### ~a~%" s)
     (when (schema-p window)
       (db-show-error window
 		     (if break?
@@ -1081,7 +1081,7 @@
       (setq win (create-instance NIL inter:interactor-window
 		  (:title "Inspector")
 		  (:aggregate (create-instance NIL ps-pop-agg))
-		  (:width 460))))
+		  (:width 500))))
     (s-value win :left left)
     (s-value win :top top)
     (s-value win :visible T)
@@ -1194,6 +1194,9 @@
       ;; in the above. Re-setting it after update corrects this.
       (s-value window :height (+ (g-value string-obj :top)
 				 (g-value string-obj :height)
+				 5))
+      (s-value window :width (+ (g-value string-obj :left)
+				 (g-value string-obj :width)
 				 5))
       (opal:update window)
 
