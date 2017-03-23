@@ -24,12 +24,12 @@
 (defun Get-Gilt-Bitmap (bitmapname)
   (opal:read-image (merge-pathnames bitmapname common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
-(defparameter HourGlassCursor
+(defparameter *hourglass-cursor*
   (cons (create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.cursor")))
 	(create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.mask")))))
-(defparameter RegularCursor (g-value opal::window :cursor))
+(defparameter *regular-cursor* (g-value opal::window :cursor))
 
 (defvar *Last-Filename* "") ; last file name used to read or save a file
 (defvar *Last-WindowName* "") ; last window name used to read a file
@@ -58,31 +58,31 @@
 (defvar point-at-window-inter nil
   "indicates the window a user wants an object loaded into")
 
-(defun SetHourGlassCursor (&optional extrawindows)
+(defun set-hourglass-cursor (&optional extra-windows)
   (declare (special editor-win shape-win))
   (dolist (win (g-value *selection-info* :window))
-     (s-value win :cursor HourGlassCursor)
+     (s-value win :cursor *hourglass-cursor*)
      (opal:update win))
-  (s-value editor-win :cursor HourGlassCursor)
-  (s-value shape-win :cursor HourGlassCursor)
+  (s-value editor-win :cursor *hourglass-cursor*)
+  (s-value shape-win :cursor *hourglass-cursor*)
   (opal:update editor-win)
   (opal:update shape-win)
-  (dolist (win extrawindows)
-    (s-value win :cursor HourGlassCursor)
+  (dolist (win extra-windows)
+    (s-value win :cursor *hourglass-cursor*)
     (opal:update win)))
 
 
-(defun RestoreRegularCursor (&optional extrawindows)
+(defun restore-regular-cursor (&optional extra-windows)
   (declare (special editor-win shape-win))
   (dolist (win (g-value *selection-info* :window))
-     (s-value win :cursor RegularCursor)
+     (s-value win :cursor *regular-cursor*)
      (opal:update win))
-  (s-value editor-win :cursor RegularCursor)
-  (s-value shape-win :cursor RegularCursor)
+  (s-value editor-win :cursor *regular-cursor*)
+  (s-value shape-win :cursor *regular-cursor*)
   (opal:update editor-win)
   (opal:update shape-win)
-  (dolist (win extrawindows)
-    (s-value win :cursor RegularCursor)
+  (dolist (win extra-windows)
+    (s-value win :cursor *regular-cursor*)
     (opal:update win)))
  
 ;;; compare the given string with the :title slot in each of Lapidary's
@@ -231,19 +231,19 @@ are used."
 	(export-p (if (car (value-of :export-p values))
 		      T NIL)) ;use T instead of string name
 	window)
-  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied"))
+  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied."))
 	((and window-p (string= "" gadget-name))
-	 (Lapidary-Error "Gadget name must be supplied"))
+	 (Lapidary-Error "Gadget name must be supplied."))
 	((and window-p (string= "" window-title))
 	 (Lapidary-Error "Window name must be supplied--A valid window title is
-one that appears on a window's title-bar or on a window's icon"))
+one that appears on a window's title-bar or on a window's icon."))
 	((and window-p 
 	      (null (setf window (get-window-from-string window-title))))
 	 (lapidary-error 
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon." 
 		  window-title)))
-	((string= "" package) (Lapidary-Error "Package name must be supplied"))
+	((string= "" package) (Lapidary-Error "Package name must be supplied."))
 	(T 
 	 ;; find objects to be saved
 	 (setf *original-save-objs*
@@ -434,11 +434,11 @@ one that appears on a window's title-bar or on a window's icon"
 	 (check-value most-positive-fixnum)
 	 new-obj editor-agg)
 
-  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied"))
+  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied."))
 	((null window)
 	 (lapidary-error 
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon." 
 		  window-name)))
 	(T (format T "Loading bitmap from file ~s...~%" filename)
 	   (setq *Last-WindowName* window-name)
@@ -527,14 +527,14 @@ one that appears on a window's title-bar or on a window's icon"
 				 "Add to existing objects")))
 	(readdialogwindow (list (g-value gadget :window)))
 	new-obj-list)
-  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied"))
+  (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied."))
 	((null window)
 	 (lapidary-error 
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon." 
 		  window-name)))
 	(T (format T "Loading gadgets from file ~s...~%" filename)
-	   (SetHourGlassCursor readdialogwindow)
+	   (set-hourglass-cursor readdialogwindow)
 	   (setf common-lisp-user::*Garnet-Objects-Just-Created* nil)
 	   ;; even if the load fails, we want to restore the regular cursor
 	   (unwind-protect

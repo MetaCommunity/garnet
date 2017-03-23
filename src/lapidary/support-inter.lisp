@@ -79,7 +79,7 @@
   (declare (special *inter-queue* *selection-info*))
   (setf *inter-queue* queue)
   (s-value *selection-info* :feedback-info feedback-info)
-  (gg:c32 obj slot :c32-custom-function 'feedback-formula-enqueue)
+  (lapidary-dialogs:c32 obj slot :c32-custom-function 'feedback-formula-enqueue)
   (lapidary-error "Please enter a formula that will
 determine when to use each of the feedback objects."))
 
@@ -105,7 +105,7 @@ determine when to use each of the feedback objects."))
 (defun create-custom-inter-constraint (obj slot queue &key (prompt-msg nil))
   (declare (special *inter-queue*))
   (setf *inter-queue* queue)
-  (gg:c32 obj slot :c32-custom-function 'formula-enqueue)
+  (lapidary-dialogs:c32 obj slot :c32-custom-function 'formula-enqueue)
   (when prompt-msg
 	(lapidary-error prompt-msg)))
 
@@ -192,26 +192,26 @@ determine when to use each of the feedback objects."))
 		 (set-db-type-restriction agg :start-where nil)))))))
 
 ;;; set the interactor menu to the values of the interactor
-(defun reset-inter-menu (inter)
+(defun reset-inter-dialog (inter)
   (cond ((or (eq inter lapidary-button-interactor)
 	     (eq inter lapidary-menu-interactor)
 	     (is-a-p inter lapidary-button-interactor)
 	     (is-a-p inter lapidary-menu-interactor))
-	 (init-choice-inter-menu inter))
+	 (init-choice-inter-dialog inter))
 	((or (eq inter lapidary-text-interactor)
 	     (is-a-p inter lapidary-text-interactor))
-	 (init-text-inter-menu inter))
+	 (init-text-inter-dialog inter))
 	((or (eq inter lapidary-two-point-interactor)
 	     (is-a-p inter lapidary-two-point-interactor))
-	 (init-two-point-inter-menu inter))
+	 (init-two-point-inter-dialog inter))
 	((or (eq inter directional-move-grow-interactor)
 	     (is-a-p inter directional-move-grow-interactor))
-	 (init-move-grow-inter-menu inter))
+	 (init-move-grow-inter-dialog inter))
 	((or (eq inter lapidary-angle-interactor)
 	     (is-a-p inter lapidary-angle-interactor))
-	 (init-angle-inter-menu inter))))
+	 (init-angle-inter-dialog inter))))
 
-(defun init-text-inter-menu (inter)
+(defun init-text-inter-dialog (inter)
   (declare (special text-interactor-win))
   ;; call text-inter-do-go the first time the text interactor menu is
   ;; requested
@@ -242,7 +242,7 @@ determine when to use each of the feedback objects."))
 		  (set-db-value agg :obj-to-change "result of start-where")))))))
     (s-value text-interactor-win :inter inter)))
 
-(defun init-choice-inter-menu (inter)
+(defun init-choice-inter-dialog (inter)
   (declare (special choice-interactor-win))
 
   ;; call choice-inter-do-go the first time the choice interactor menu is
@@ -283,14 +283,14 @@ determine when to use each of the feedback objects."))
 	       (set-db-value agg :inter-type "Menu")))))
     (s-value choice-interactor-win :inter inter)))
 
-(defun init-move-grow-inter-menu (inter)
-  (declare (special move-grow-inter-menu move-grow-inter-win))
+(defun init-move-grow-inter-dialog (inter)
+  (declare (special move-grow-inter-dialog move-grow-inter-win))
   ;; call move-grow-inter-do-go the first time the text interactor menu is
   ;; requested
   (when (or (not (boundp 'move-grow-inter-win)) 
 	    (null move-grow-inter-win))
     (move-grow-inter-do-go))
-  (let ((agg move-grow-inter-menu))
+  (let ((agg move-grow-inter-dialog))
     (dolist (slot '(:known-as :start-where :final-function
 		    :min-length :min-width :min-height :grow-p :line-p
 		    :feedback-obj :attach-point :obj-to-change :start-event
@@ -308,7 +308,7 @@ determine when to use each of the feedback objects."))
 	   (s-value (move-grow-feedback-prototypes) :field-string nil))
 	  (:line-p
 	   (let ((line-p (get-value inter :line-p))
-		 (line-p-agg (g-value move-grow-inter-menu :line-p)))
+		 (line-p-agg (g-value move-grow-inter-dialog :line-p)))
 	     (cond ((formula-p line-p)
 		    (s-value line-p-agg :value "<Formula>"))
 		   (line-p
@@ -317,7 +317,7 @@ determine when to use each of the feedback objects."))
 		    (s-value line-p-agg :value "Box")))))
 	  (:grow-p
 	   (let ((grow-p (get-value inter :grow-p))
-		 (grow-p-agg (g-value move-grow-inter-menu :grow-p)))
+		 (grow-p-agg (g-value move-grow-inter-dialog :grow-p)))
 	     (cond ((formula-p grow-p)
 		    (s-value grow-p-agg :value "<Formula>"))
 		   (grow-p
@@ -407,10 +407,10 @@ determine when to use each of the feedback objects."))
 		  (set-db-value agg :obj-to-change "Change this object"))
 		 (t
 		  (set-db-value agg :obj-to-change "Result of :start-where"))))))
-    (s-value (g-value move-grow-inter-menu :window) :inter inter)))
+    (s-value (g-value move-grow-inter-dialog :window) :inter inter)))
 
-(defun init-two-point-inter-menu (inter)
-  (declare (special two-point-inter-win two-point-inter-menu))
+(defun init-two-point-inter-dialog (inter)
+  (declare (special two-point-inter-win two-point-inter-dialog))
   ;; call two-point-inter-do-go the first time the two point interactor menu is
   ;; requested
   (when (or (not (boundp 'two-point-inter-win)) 
@@ -428,7 +428,7 @@ determine when to use each of the feedback objects."))
 				   :in-box "Start in Box"))
 	  (:line-p
 	   (let ((line-p (get-value inter :line-p))
-		 (line-p-agg (g-value two-point-inter-menu :line-p)))
+		 (line-p-agg (g-value two-point-inter-dialog :line-p)))
 	     (cond ((formula-p line-p)
 		    (s-value line-p-agg :value "<Formula>"))
 		   (line-p
@@ -471,15 +471,15 @@ determine when to use each of the feedback objects."))
 			:value
 			"May Flip Over")))
 	  (:abort-if-too-small
-	   (let ((abort-agg (g-value two-point-inter-menu :abort-if-too-small)))
+	   (let ((abort-agg (g-value two-point-inter-dialog :abort-if-too-small)))
 	     (if (g-value inter :abort-if-too-small)
 		 (s-value abort-agg :value "Abort if Too Small")
 	         (s-value abort-agg :value "or Increase to Min Size"))))))
     (s-value two-point-inter-win :inter inter)))
 
 
-(defun init-angle-inter-menu (inter)
-  (declare (special angle-inter-win angle-inter-menu))
+(defun init-angle-inter-dialog (inter)
+  (declare (special angle-inter-win angle-inter-dialog))
   ;; call angle-inter-do-go the first time the text interactor menu is
   ;; requested
   (when (or (not (boundp 'angle-inter-win)) 

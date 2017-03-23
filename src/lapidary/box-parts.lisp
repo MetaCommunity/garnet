@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -18,7 +18,7 @@
 ;;; 5/10/93 bvz Created
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 
 (create-instance 'SLOT-BOX garnet-gadgets:labeled-box
@@ -26,13 +26,13 @@
    (:top (o-formula (gvl :parent :top)))
    (:label-font *slot-font*)
    (:slot nil)
-   (:value (o-formula (let ((selected (gv *constraint-gadget* :obj-to-constrain))
+   (:value (o-formula (let ((selected (gv *constraint-dialog* :obj-to-constrain))
 			    (slot (gvl :slot)))
 			(if (and selected (not (is-a-line-p selected)))
 			    (princ-to-string (gv selected slot))
 			    "0"))))
    (:interactors `((:text-inter :modify
-		     (:active ,(o-formula (eq (gv *constraint-gadget*
+		     (:active ,(o-formula (eq (gv *constraint-dialog*
 						  :selection-type)
 					      'one-zero))))))
    (:min-frame-width 30))
@@ -44,27 +44,26 @@
    (:left (o-formula (opal:gv-center-x-is-center-of (gvl :parent))))
    (:top (o-formula (+ 5 (opal:gv-bottom (gvl :parent :slot-box)))))
    (:label-string "offset")
-   (:label-font opal:default-font)
+   (:label-font *labeled-box-label-font*)
    (:old-value "0")
    (:value "0")
    (:min-frame-width 30))
 
 
-(create-instance 'CON-PANEL garnet-gadgets:text-button-panel
-   (:width (o-formula (+ (gvl :shadow-offset) (gvl :fixed-width-size))))
-   (:height (o-formula (+ (* 2 (+ (gvl :fixed-height-size)
-				  (gvl :shadow-offset)))
+(create-instance 'CON-PANEL garnet-gadgets:motif-text-button-panel
+   (:width (o-formula (gvl :fixed-width-size)))
+   (:height (o-formula (+ (* 2 (gvl :fixed-height-size))
 			  (gvl :v-spacing))))
-   (:shadow-offset 5) (:gray-width 3) (:text-offset 3)
    (:value (o-formula (progn 
-			(or (gv *constraint-gadget* :obj-to-constrain)
-			    (gv *constraint-gadget* :obj-to-reference))
+			(or (gv *constraint-dialog* :obj-to-constrain)
+			    (gv *constraint-dialog* :obj-to-reference))
 			nil)))
    (:final-feedback-p t)
+   (:font *text-button-font*)
    (:items `(("unconstrain" remove-constraint)
 	     ("customize" create-custom-constraint)))
    (:interactors `(
-     (:text-button-press :modify
+     (:press :modify
    	(:final-function
 	 ,#'(lambda (interactor final-obj-over)
 	      (let* ((action (g-value final-obj-over :action))
@@ -90,18 +89,18 @@
 
 (create-instance 'SCALE-BOX garnet-gadgets:labeled-box
    (:label-string "Scale")
-   (:label-font opal:default-font)
+   (:label-font *labeled-box-label-font*)
    (:value "1")
    (:old-value "1")
    (:min-frame-width 30))
 
 
 (create-instance 'DIFFERENCE-BOX garnet-gadgets:labeled-box
-   (:left (o-formula (opal:gv-center-x-is-center-of (gvl :parent))))
+  ;;   (:left (o-formula (opal:gv-center-x-is-center-of (gvl :parent))))
+  (:left (o-formula (+ (gvl :parent :left) 10)))
    (:top (o-formula (+ 5 (opal:gv-bottom (gvl :parent :scale-box)))))
-   (:label-string "Difference
-in pixels")
-   (:label-font opal:default-font)
+   (:label-string "Difference in pixels")
+   (:label-font *labeled-box-label-font*)
    (:old-value "0")
    (:value "0")
    (:min-frame-width 30)
@@ -116,8 +115,8 @@ in pixels")
    (:floating-top (o-formula (+ (gvl :top)
 				(if (gvl :interim-selected) 4 0))))
    (:width 23) (:height 23)
-   (:selected (o-formula (progn (or (gv *constraint-gadget* :obj-to-constrain)
-				    (gv *constraint-gadget* :obj-to-reference))
+   (:selected (o-formula (progn (or (gv *constraint-dialog* :obj-to-constrain)
+				    (gv *constraint-dialog* :obj-to-reference))
 				nil)))
    (:where-attach (o-formula (nth (gvl :rank)
 				  (gvl :parent :parent :where-attach))))

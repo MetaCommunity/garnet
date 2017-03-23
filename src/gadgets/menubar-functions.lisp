@@ -206,12 +206,16 @@
 ;;; Works for both motif and regular menubars
       
 (defun Put-Down-MenuBar-Popups (gadget)
-  (let (obj)
+  (let (obj
+	(time (get-universal-time)))
     (when (schema-p gadget)
-    (s-value gadget :*bar-item-popped-up NIL)
-    (when (and (setq obj (g-value gadget :menubar-select))
-	       (schema-p obj))
-      (s-value obj :prev-baritem NIL))
+      (when (eq time (g-value gadget :time-revealed))
+	(return-from put-down-menubar-popups))
+
+      (s-value gadget :*bar-item-popped-up NIL)
+      (when (and (setq obj (g-value gadget :menubar-select))
+		 (schema-p obj))
+	(s-value obj :prev-baritem NIL))
       (dolist (bar-item (Menubar-Components gadget))
 	(when (and (schema-p bar-item)
 		   (setq obj (g-value bar-item :submenu-window))

@@ -56,7 +56,7 @@
       (:name1 :left)
       (:name2 (o-formula (gvl :string-val :value)))
       (:active T)
-      (:parts `((:enabler ,GARNET-GADGETS:X-BUTTON
+      (:parts `((:enabler ,GARNET-GADGETS:MOTIF-CHECK-BUTTON
 		 (:string "")
 		 (:LEFT ,(o-formula (gvl :parent :left)))
 		 (:TOP ,(o-formula (gvl :parent :top)))
@@ -83,11 +83,21 @@
 		 (:HEIGHT ,(o-formula (gvl :parent :string-val :height)))))))
        
 (create-instance 'c32-bold-font OPAL:FONT
-		 (:FACE :BOLD))
+  (:FAMILY :SANS-SERIF)
+  (:FACE :BOLD))
+
+(create-instance 'c32-button-font OPAL:FONT
+  (:FAMILY :SANS-SERIF)
+  (:FACE :BOLD)
+  (:SIZE :small))
+
+(create-instance 'c32-font OPAL:FONT
+  (:FAMILY :SANS-SERIF))
 
 (create-instance 'c32-title-font OPAL:FONT
-		 (:SIZE :LARGE)
-		 (:FACE :BOLD-ITALIC))
+  (:FAMILY :SANS-SERIF)
+  (:SIZE :LARGE)
+  (:FACE :BOLD-ITALIC))
 
 
 (defun Init-Value (obj val)

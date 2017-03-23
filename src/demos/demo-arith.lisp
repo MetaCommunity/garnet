@@ -23,26 +23,28 @@
 ;;;  Load text-buttons-loader, graphics-loader, and arrow-line-loader
 ;;;  unless already loaded
 ;;;
-(defvar DEMO-ARITH-INIT
-  (progn
-    ;;;  Load ps-loader.
-    (common-lisp-user::garnet-load "ps:ps-loader")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar DEMO-ARITH-INIT
+    (progn
+;;;  Load ps-loader.
+      (common-lisp-user::garnet-load "ps:ps-loader")
 
-    (dolist (gadget '("text-buttons-loader" "arrow-line-loader"
-		      "scrolling-window-loader"))
-      (common-lisp-user::garnet-load (concatenate 'string "gadgets:" gadget)))
+      (dolist (gadget '("text-buttons-loader" "arrow-line-loader"
+			"scrolling-window-loader"))
+	(common-lisp-user::garnet-load (concatenate 'string "gadgets:" gadget)))
 
-    ;;; Load gesture-loader
-    (common-lisp-user::garnet-load "gestures:gesture-loader")))
+;;; Load gesture-loader
+      (common-lisp-user::garnet-load "gestures:gesture-loader"))))
 
 
 ;;;------------------------------------------------------------------------
 ;;;Global variables
 ;;;------------------------------------------------------------------------
 
-(defparameter *Mode-Menu* NIL) ; menu of object types to create
+(defparameter *Mode-Menu* NIL)     ; menu of object types to create
+(defparameter *Op-Menu* NIL)       ; Operation to perform
 (defparameter *Selection-Obj* NIL) ; the object that holds the selection
-(defparameter *Objs-Agg* NIL) ; aggregate to hold the created objects
+(defparameter *Objs-Agg* NIL)      ; aggregate to hold the created objects
 
 (declaim (special TEXT-EDIT NUMBER-BOX ARITH-BOX PLUS-BOX MINUS-BOX
 		  TIMES-BOX DIVIDE-BOX TOP-WIN SCROLL-WIN TOP-AGG
@@ -202,72 +204,73 @@
 ;; interactor and feedback object to show which is selected.  
 ;; Agg is the top level aggregate to put the menu in, and window is the window.
 (defun create-mode-menu (agg window)
-    (setq *Mode-Menu*
-      (create-instance NIL opal:aggregadget
-         (:selected (o-formula (gvl :items :selected)))
-         (:line-p (o-formula (gvl :selected :line-p)))
-         (:parts
-          `((:items ,opal:aggregadget
-	     (:parts
-	      ((:plus ,plus-box (:box (20 10 NIL NIL))
-		      (:constant T))
-	       (:minus ,minus-box (:box (55 10 NIL NIL))
-		       (:constant T))
-	       (:times ,times-box (:box (90 10 NIL NIL))
-		       (:constant T))
-	       (:divide ,divide-box (:box (125 10 NIL NIL))
-			(:constant T))
-	       (:number ,number-box (:box (20 60 NIL NIL))
-			(:constant T))
-	       (:arrow ,garnet-gadgets:arrow-line
-		       (:constant T)
-		       (:x1 20)(:y1 130)(:x2 140)(:y2 130)
-		       (:line-p T)
-		       (:open-p NIL)
-		       (:point-in-gob
-			,(g-value opal:aggregate :point-in-gob))))))
-	    (:feedback ,opal:rectangle
-	     (:line-style NIL)
-	     (:obj-over NIL)
-	     (:filling-style ,opal:black-fill)
-	     (:left ,(o-formula (- (gvl :obj-over :left) 4)))
-	     (:top ,(o-formula (- (gvl :obj-over :top) 4)))
-	     (:width ,(o-formula (+ (gvl :obj-over :width) 8)))
-	     (:height ,(o-formula (+ (gvl :obj-over :height) 8)))
-	     (:visible ,(o-formula (gvl :obj-over)))
-	     (:draw-function :xor)
-	     (:fast-redraw-p T))))
-         (:interactors
-          `((:select-it ,inter:button-interactor
-	     (:continuous NIL)
-	     (:window ,window)
-	     (:how-set :set)
-	     (:start-where ,(o-formula (list :element-of
-					     (gvl :operates-on :items))))
-	     (:start-event :any-mousedown)
-	     (:final-feedback-obj
-	      ,(o-formula (gvl :operates-on :feedback))))))))
-    (opal:add-component agg *Mode-Menu*)
-    (let ((init-val (g-value *Mode-Menu* :items :number)))
-      (Init-Slot *Mode-Menu* :selected init-val) 
-      (Init-Slot (g-value *Mode-Menu* :feedback) :obj-over init-val)))
+  (setq *Mode-Menu*
+	(create-instance *Mode-Menu* opal:aggregadget
+	  (:selected (o-formula (gvl :items :selected)))
+	  (:line-p (o-formula (gvl :selected :line-p)))
+	  (:parts
+	   `((:items ,opal:aggregadget
+		     (:parts
+		      ((:plus ,plus-box (:box (20 10 NIL NIL))
+			      (:constant T))
+		       (:minus ,minus-box (:box (55 10 NIL NIL))
+			       (:constant T))
+		       (:times ,times-box (:box (90 10 NIL NIL))
+			       (:constant T))
+		       (:divide ,divide-box (:box (125 10 NIL NIL))
+				(:constant T))
+		       (:number ,number-box (:box (20 60 NIL NIL))
+				(:constant T))
+		       (:arrow ,garnet-gadgets:arrow-line
+			       (:constant T)
+			       (:x1 20)(:y1 130)(:x2 140)(:y2 130)
+			       (:line-p T)
+			       (:open-p NIL)
+			       (:point-in-gob
+				,(g-value opal:aggregate :point-in-gob))))))
+	     (:feedback ,opal:rectangle
+			(:line-style NIL)
+			(:obj-over NIL)
+			(:filling-style ,opal:black-fill)
+			(:left ,(o-formula (- (gvl :obj-over :left) 4)))
+			(:top ,(o-formula (- (gvl :obj-over :top) 4)))
+			(:width ,(o-formula (+ (gvl :obj-over :width) 8)))
+			(:height ,(o-formula (+ (gvl :obj-over :height) 8)))
+			(:visible ,(o-formula (gvl :obj-over)))
+			(:draw-function :xor)
+			(:fast-redraw-p T))))
+	  (:interactors
+	   `((:select-it ,inter:button-interactor
+			 (:continuous NIL)
+			 (:window ,window)
+			 (:how-set :set)
+			 (:start-where ,(o-formula (list :element-of
+							 (gvl :operates-on :items))))
+			 (:start-event :any-mousedown)
+			 (:final-feedback-obj
+			  ,(o-formula (gvl :operates-on :feedback))))))))
+  (opal:add-component agg *Mode-Menu*)
+  (let ((init-val (g-value *Mode-Menu* :items :number)))
+    (Init-Slot *Mode-Menu* :selected init-val) 
+    (Init-Slot (g-value *Mode-Menu* :feedback) :obj-over init-val)))
 
 ;;This creates the menu of commands.  
 ;;The menu is stored into the aggregate agg.  Returns the menu created.
 (defun create-menu (agg)
-  (let ((menu (create-instance NIL Garnet-gadgets:Text-Button-Panel
-		(:constant T)
-		(:items '(("Delete" Delete-Object)
-			  ("Clear Workspace" Delete-All)
-			  ("PostScript Contents" PostScript-Contents)
-			  ("PostScript Window" PostScript-Window)
-			  ("Quit" Do-Quit)))
-		(:left 10) (:top 175)
-		(:font opal:default-font)
-		(:shadow-offset 5)
-		(:final-feedback-p NIL))))
-    (opal:add-components agg menu)
-    menu))
+  (setq *Op-Menu* 
+	(create-instance *Op-Menu* Garnet-gadgets:Text-Button-Panel
+	  (:constant T)
+	  (:items '(("Delete" Delete-Object)
+		    ("Clear Workspace" Delete-All)
+		    ("PostScript Contents" PostScript-Contents)
+		    ("PostScript Window" PostScript-Window)
+		    ("Quit" Do-Quit)))
+	  (:left 10) (:top 175)
+	  (:font opal:default-font)
+	  (:shadow-offset 5)
+	  (:final-feedback-p NIL)))
+  (opal:add-components agg *Op-Menu*)
+  *Op-Menu*)
                  
 ;;;********************************************************************
 ;;;Create a selection object and the interactors to manipulate it.
@@ -688,7 +691,7 @@
     (create-instance 'TOP-WIN inter:interactor-window
        (:double-buffered-p double-buffered-p)
        (:left 280) (:top 120)
-       (:width 700) (:height 400)
+       (:width 700) (:height 420)
        (:title "GARNET Arithmetic Editor")
        (:icon-title "Arith"))
 
@@ -710,10 +713,16 @@
 	   (common-lisp-user::Garnet-Note-Quitted "DEMO-ARITH"))
        (g-value top-win :destroy-hooks)))
 
-
+    ;;;create menus
+    (create-mode-menu TOP-AGG TOP-WIN)
+    (create-menu TOP-AGG)
+    (opal:update TOP-WIN)
+    
     ;; Create window for the work area
     (create-instance 'SCROLL-WIN garnet-gadgets:scrolling-window-with-bars
-       (:left 175) (:top -2) ;no extra border at the top
+       (:left (o-formula (+ (gv *Op-Menu* :width)
+			    20))) ;; Center the menu, account for shadow.
+       (:top -2) ;no extra border at the top
        (:width (o-formula (- (gvl :window :parent :width) (gvl :left))))
        (:height (o-formula (gvl :window :parent :height) 150))
        (:total-width 1000) (:total-height 1000)
@@ -733,9 +742,6 @@
             (:height (o-formula (gvl :window :height)))))
     (opal:add-component work-agg *objs-agg*)
 
-    ;;;create menus
-    (create-mode-menu TOP-AGG TOP-WIN)
-    (create-menu TOP-AGG)
 
     ;;;create a graphics selection object
     (Create-Selection-Obj work-agg work-win)
@@ -786,8 +792,10 @@
        (:start-event :middledown)
        (:start-where T) 
        (:window work-win)
-       (:classifier (inter:gest-classifier-read 
-                        (merge-pathnames "demo-arith.classifier" common-lisp-user::Garnet-Gesture-Data-Pathname)))
+       (:classifier 
+	(inter:gest-classifier-read 
+	 (merge-pathnames 
+	  "demo-arith.classifier" common-lisp-user::Garnet-Gesture-Data-Pathname)))
        (:final-function #'handle-gesture)
        (:max-dist-to-mean 20)
        (:min-non-ambig-prob .4)

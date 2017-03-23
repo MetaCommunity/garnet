@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -20,7 +20,7 @@
 ;;; 5/10/93 bvz Created
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 ;;; ============================================================
 ;;; determine if the two objects have a common ancestor in the
@@ -36,10 +36,10 @@
 
 
 (defun get-root (obj)
-  (declare (special *constraint-gadget*))
+  (declare (special *constraint-dialog*))
   (let ((parent (or (g-value obj :parent)
 		    (g-value obj :operates-on)))
-	(top-agg (or (g-value *constraint-gadget* :top-level-agg)
+	(top-agg (or (g-value *constraint-dialog* :top-level-agg)
 		     (g-value obj :window :aggregate))))
     (if (is-a-p obj inter:interactor)
 	(if parent
@@ -87,15 +87,15 @@
 ;;; slots, such as link and offset slots
 ;;; ============================================================
 
-(defun cg-destroy-constraint (schema slot)
+(defun cd-destroy-constraint (schema slot)
   (when (null schema)
-	(constraint-gadget-error "You need to select an object before you can
+	(constraint-dialog-error "You need to select an object before you can
 destroy a constraint. If you have already
 selected an object, try making a different
 selection. For example, if you have made a
 secondary selection, try making a primary
 selection instead.")
-	(return-from cg-destroy-constraint))
+	(return-from cd-destroy-constraint))
   (let ((formula (get-value schema slot)))
     (when (formula-p formula)
 	  (destroy-constraint-support-slots schema formula)
@@ -108,14 +108,14 @@ selection instead.")
 
 (defun attach-constraint (menu slot link-slot offset-slot constraint
 			       &optional (scale-slot))
-  (declare (special *constraint-gadget*))
-  (let ((p-selected-item (g-value *constraint-gadget* :obj-to-constrain))
-	(s-selected-item (g-value *constraint-gadget* :obj-to-reference)))
+  (declare (special *constraint-dialog*))
+  (let ((p-selected-item (g-value *constraint-dialog* :obj-to-constrain))
+	(s-selected-item (g-value *constraint-dialog* :obj-to-reference)))
 
     ;; certain slots should not be altered. if this slot is
     ;; one of them, tell the user and do not proceed
     (when (member slot (g-value p-selected-item :do-not-alter-slots))
-	  (constraint-gadget-error
+	  (constraint-dialog-error
 	   (format nil "cannot change ~S's ~S slot" 
 		   p-selected-item slot))
 	  (return-from attach-constraint))
@@ -168,8 +168,8 @@ selection instead.")
     
     ;; call the custom function, even if the formula already existed, because
     ;; the offset or link might have changed
-    (when (g-value *constraint-gadget* :custom-function)
-	  (funcall (g-value *constraint-gadget* :custom-function) 
+    (when (g-value *constraint-dialog* :custom-function)
+	  (funcall (g-value *constraint-dialog* :custom-function) 
 		   p-selected-item slot
 		   (get-value p-selected-item slot)))))
 
@@ -180,29 +180,29 @@ selection instead.")
 ;;; ======================================
 
 (defun remove-constraint (inter obj-over)
-  (declare (special *constraint-gadget*)
+  (declare (special *constraint-dialog*)
 	   (ignore obj-over))
 
 ;; if there was a constraint button selected, deselect it
   (when (g-value inter :deselect)
 	(deselect-constraint-button (g-value inter :deselect)))
   (let ((slot (g-value inter :slot))
-        (obj (g-value *constraint-gadget* :obj-to-constrain)))
-    (cg-destroy-constraint obj slot)))
+        (obj (g-value *constraint-dialog* :obj-to-constrain)))
+    (cd-destroy-constraint obj slot)))
 
 ;;; ======================================
 ;;; create a custom constraint
 ;;; ======================================
 
 (defun create-custom-constraint (inter obj-over)
-  (declare (special *constraint-gadget*)
+  (declare (special *constraint-dialog*)
 	   (ignore obj-over))
 
 ;; if there was a constraint button selected, deselect it
   (when (g-value inter :deselect)
 	(deselect-constraint-button (g-value inter :deselect)))
-  (if (g-value *constraint-gadget* :obj-to-constrain)
-      (c32 (g-value *constraint-gadget* :obj-to-constrain)
+  (if (g-value *constraint-dialog* :obj-to-constrain)
+      (c32 (g-value *constraint-dialog* :obj-to-constrain)
 	   (g-value inter :slot))
       (c32)))
 

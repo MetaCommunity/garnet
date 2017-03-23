@@ -40,14 +40,14 @@ Change log:
       (incf sum (g-value (nth i *sorted-list*) sum-key)))))
 
 (defun space-sum (direction-key space-key)
-    (- (+ (g-value (car (last *sorted-list*)) direction-key)
-	  (g-value (car (last *sorted-list*)) space-key))
-       (g-value (first *sorted-list*) direction-key)))
+  (- (+ (g-value (car (last *sorted-list*)) direction-key)
+	(g-value (car (last *sorted-list*)) space-key))
+     (g-value (first *sorted-list*) direction-key)))
 
 
 (defun obj-sort (sort-key)
   (setq *sorted-list* (copy-list (g-value *selection-obj* :value)))
-  (let ((n       (length *sorted-list*))
+  (let ((n (length *sorted-list*))
 	(ref-obj (car (last *sorted-list*))))
     (when (< n 2) (return-from obj-sort 0))
     (dotimes (i (1- n) *sorted-list*)
@@ -55,10 +55,8 @@ Change log:
 	    buf)
 	(do ((j (1+ i) (1+ j)))
 	    ((> j (1- n)))
-	  (when 
-	      (< 
-	       (g-value (nth j *sorted-list*) sort-key)
-	       (g-value (nth minpos *sorted-list*) sort-key))
+	  (when (< (g-value (nth j *sorted-list*) sort-key)
+		   (g-value (nth minpos *sorted-list*) sort-key))
 	    (setq minpos j)))
 	(setf buf (nth i *sorted-list*))
 	(setf (nth i *sorted-list*) (nth minpos *sorted-list*))
@@ -69,13 +67,13 @@ Change log:
 
 
 (defun vertical-spacing (default-space)
-  (let ((ref-order    (obj-sort :top)))
+  (let ((ref-order (obj-sort :top)))
     (unless (< ref-order 0)
-      (let* ((n            (length *sorted-list*))
-	     (objs-height  (obj-sum :height))
+      (let* ((n (length *sorted-list*))
+	     (objs-height (obj-sum :height))
 	     (space-height (space-sum :top :height))
-	     (interval     (if (< 0 (1- n)) (1- n) 1))
-	     (space        default-space))
+	     (interval (if (< 0 (1- n)) (1- n) 1))
+	     (space default-space))
 	(when (<= (+ objs-height interval) space-height)
 	  (setq space (round (/ (- space-height objs-height) interval))))
 
@@ -83,8 +81,8 @@ Change log:
 	  ;; backward-spacing
 	  (do ((i (1- ref-order) (1- i)))
 	      ((< i 0))
-	    (let* ((obj        (nth i *sorted-list*))
-		   (prev-obj   (nth (1+ i) *sorted-list*))
+	    (let* ((obj (nth i *sorted-list*))
+		   (prev-obj (nth (1+ i) *sorted-list*))
 		   (obj-bottom (- (g-value prev-obj :top) space)))
 	      (if (g-value obj :line-p)
 		  (progn ;; Lines
@@ -112,10 +110,10 @@ Change log:
 	  ;; forward-spacing
 	  (do ((i (1+ ref-order) (1+ i)))
 	      ((> i (1- n)))
-	    (let* ((obj       (nth i *sorted-list*))
-		   (prev-obj  (nth (1- i) *sorted-list*))
-		   (obj-top   (+ (g-value prev-obj :top)
-				 (g-value prev-obj :height) space)))
+	    (let* ((obj (nth i *sorted-list*))
+		   (prev-obj (nth (1- i) *sorted-list*))
+		   (obj-top (+ (g-value prev-obj :top)
+			       (g-value prev-obj :height) space)))
 	      (if (g-value obj :line-p)
 		  (progn ;; Lines
 		    (let* ((points (g-value obj :points))
@@ -136,17 +134,17 @@ Change log:
 		  (progn ;; Objects except Lines
 		    (setf (second (g-value obj :box)) obj-top)
 		    (mark-as-changed obj :box))))))
-))))
+	))))
 
 
 (defun horizontal-spacing (default-space)
   (let ((ref-order (obj-sort :left)))
     (unless (< ref-order 0)
-      (let* ((n            (length *sorted-list*))
-	     (objs-width   (obj-sum :width))
-	     (space-width  (space-sum :left :width))
-	     (interval     (if (< 0 (1- n)) (1- n) 1))
-	     (space        default-space))
+      (let* ((n (length *sorted-list*))
+	     (objs-width (obj-sum :width))
+	     (space-width (space-sum :left :width))
+	     (interval (if (< 0 (1- n)) (1- n) 1))
+	     (space default-space))
 	(when (<= (+ objs-width interval) space-width)
 	  (setq space (round (/ (- space-width objs-width) interval))))
 
@@ -250,233 +248,233 @@ Change log:
 	 (row-p      (string= "Row" (car c-r)))
 	 (ref-obj    (car (last (g-value *selection-obj* :value)))))
 
-;;; Same Size
-  (when (or height-p width-p)
-   (let ((fixed-height-objs NIL)
-	 (fixed-width-objs  NIL))
-     (dolist (obj (g-value *selection-obj* :value))
-       (if (g-value obj :line-p)
-	    (unless both-p
-	      (let* ((points (g-value obj :points))
-		     (x1 (first points))
-		     (x2 (third points))
-		     (y1 (second points))
-		     (y2 (fourth points)))
-		(when width-p
-		  (if (>= x1 x2)
-		      (setf (first (g-value obj :points))
-			    (1- (+ (g-value ref-obj :width)
-				   (g-value obj :left))))
-		      (setf (third (g-value obj :points))
-			    (1- (+ (g-value ref-obj :width)
-				   (g-value obj :left)))))
-		  (setf (second (g-value obj :points)) (g-value obj :top))
-		  (setf (fourth (g-value obj :points)) (g-value obj :top))
-		  (mark-as-changed obj :points))
+    ;; Same Size
+    (when (or height-p width-p)
+      (let ((fixed-height-objs NIL)
+	    (fixed-width-objs  NIL))
+	(dolist (obj (g-value *selection-obj* :value))
+	  (if (g-value obj :line-p)
+	      (unless both-p
+		(let* ((points (g-value obj :points))
+		       (x1 (first points))
+		       (x2 (third points))
+		       (y1 (second points))
+		       (y2 (fourth points)))
+		  (when width-p
+		    (if (>= x1 x2)
+			(setf (first (g-value obj :points))
+			      (1- (+ (g-value ref-obj :width)
+				     (g-value obj :left))))
+			(setf (third (g-value obj :points))
+			      (1- (+ (g-value ref-obj :width)
+				     (g-value obj :left)))))
+		    (setf (second (g-value obj :points)) (g-value obj :top))
+		    (setf (fourth (g-value obj :points)) (g-value obj :top))
+		    (mark-as-changed obj :points))
+		  (when height-p
+		    (if (>= y1 y2)
+			(setf (second (g-value obj :points))
+			      (1- (+ (g-value ref-obj :height)
+				     (g-value obj :top))))
+			(setf (fourth (g-value obj :points))
+			      (1- (+ (g-value ref-obj :height)
+				     (g-value obj :top)))))
+		    (setf (first (g-value obj :points)) (g-value obj :left))
+		    (setf (third (g-value obj :points)) (g-value obj :left))
+		    (mark-as-changed obj :points))
+		  ))
+	      ;; Objects except Lines
+	      (let ((params (g-value obj :parameters)))
 		(when height-p
-		  (if (>= y1 y2)
-		      (setf (second (g-value obj :points))
-			    (1- (+ (g-value ref-obj :height)
-				   (g-value obj :top))))
-		      (setf (fourth (g-value obj :points))
-			    (1- (+ (g-value ref-obj :height)
-				   (g-value obj :top)))))
-		  (setf (first (g-value obj :points)) (g-value obj :left))
-		  (setf (third (g-value obj :points)) (g-value obj :left))
-		  (mark-as-changed obj :points))
-		    ))
-	  ;; Objects except Lines
-	    (let ((params (g-value obj :parameters)))
-	      (when height-p
-		(if (member :height params)
-		    (progn
-		      (setf (fourth (g-value obj :box)) (g-value ref-obj :height))
-		      (mark-as-changed obj :box))
-		    (push obj fixed-height-objs)))
-	      (when width-p
-		(if (member :width params)
-		    (progn
-		      (setf (third (g-value obj :box)) (g-value ref-obj :width))
-		      (mark-as-changed obj :box))
-		    (push obj fixed-width-objs))))))
+		  (if (member :height params)
+		      (progn
+			(setf (fourth (g-value obj :box)) (g-value ref-obj :height))
+			(mark-as-changed obj :box))
+		      (push obj fixed-height-objs)))
+		(when width-p
+		  (if (member :width params)
+		      (progn
+			(setf (third (g-value obj :box)) (g-value ref-obj :width))
+			(mark-as-changed obj :box))
+		      (push obj fixed-width-objs))))))
 
-     (let* ((list (g-value *selection-obj* :value))
-	    (ref-obj (car (last list)))
-	    (f-height-objs (remove ref-obj fixed-height-objs))
-	    (h-length      (length f-height-objs))
-	    (f-width-objs  (remove ref-obj fixed-width-objs))
-	    (w-length      (length f-width-objs))
-	    (str NIL))
-       (when (and width-p f-width-objs)
-	 (setq str (warning-for "width" w-length f-width-objs)))
-       (when (and height-p f-height-objs)
-	 (when str (setq str (concatenate 'string str "
+	(let* ((list (g-value *selection-obj* :value))
+	       (ref-obj (car (last list)))
+	       (f-height-objs (remove ref-obj fixed-height-objs))
+	       (h-length      (length f-height-objs))
+	       (f-width-objs  (remove ref-obj fixed-width-objs))
+	       (w-length      (length f-width-objs))
+	       (str NIL))
+	  (when (and width-p f-width-objs)
+	    (setq str (warning-for "width" w-length f-width-objs)))
+	  (when (and height-p f-height-objs)
+	    (when str (setq str (concatenate 'string str "
 
 ")))
-	 (setq str (concatenate 'string str
-				(warning-for "height" h-length f-height-objs))))
+	    (setq str (concatenate 'string str
+				   (warning-for "height" h-length f-height-objs))))
 
 
 
-       (when both-p
-	 (let ((line-objs NIL)
-	       (line-names NIL))
-	   (dolist (obj (g-value *selection-obj* :value))
-	     (when (g-value obj :line-p)
-	       (push obj line-objs)))
-	   (let ((l (length line-objs)))
-	     (unless (<= l 0)
-	       (cond ((= l 1)
-		      (setq line-names (name-for-schema (car line-objs))))
-		     ((= l 2)
-		      (setq str (concatenate 'string
-					  (name-for-schema (car line-objs))
-					  " and "
-					  (name-for-schema (cadr line-objs)))))
-		     ((>= l 3)
-		      (do ((i 1 (1+ i)))
-			  ((> i (- l 1)))
-			(setq line-names (concatenate 'string line-names
-				         (name-for-schema (nth (1- i) line-objs))
-					 ", "))
-			(when (= 0 (rem i 3))
-			  (setq line-names (concatenate 'string line-names "
+	  (when both-p
+	    (let ((line-objs NIL)
+		  (line-names NIL))
+	      (dolist (obj (g-value *selection-obj* :value))
+		(when (g-value obj :line-p)
+		  (push obj line-objs)))
+	      (let ((l (length line-objs)))
+		(unless (<= l 0)
+		  (cond ((= l 1)
+			 (setq line-names (name-for-schema (car line-objs))))
+			((= l 2)
+			 (setq str (concatenate 'string
+						(name-for-schema (car line-objs))
+						" and "
+						(name-for-schema (cadr line-objs)))))
+			((>= l 3)
+			 (do ((i 1 (1+ i)))
+			     ((> i (- l 1)))
+			   (setq line-names (concatenate 'string line-names
+							 (name-for-schema (nth (1- i) line-objs))
+							 ", "))
+			   (when (= 0 (rem i 3))
+			     (setq line-names (concatenate 'string line-names "
 "))))
-		      (setq line-names (concatenate 'string line-names "and "
-				      (name-for-schema (car (last line-objs)))))))
-	       (when str (setq str (concatenate 'string str "
+			 (setq line-names (concatenate 'string line-names "and "
+						       (name-for-schema (car (last line-objs)))))))
+		  (when str (setq str (concatenate 'string str "
 
 ")))
-	       (setq str (concatenate 'string str 
-			 "WARNING: Unable to change both width AND height of Lines:
+		  (setq str (concatenate 'string str 
+					 "WARNING: Unable to change both width AND height of Lines:
 " line-names))
-))))
+		  ))))
 
 
-       (when str
-	 (gilt-error str)))
+	  (when str
+	    (gilt-error str)))
      
-))
+	))
 
 
 ;;; Same Col/Row
-  (when col-p
-    (let* ((col-style
-	    (g-value (g-value align-prop :column :column-align-style) :value))
-	   (ref-left   (if (string= "Left" col-style)
-			   (g-value ref-obj :left)
-			   NIL))
-	   (ref-center (if (string= "Centered" col-style)
-			   (+ (g-value ref-obj :left)
-			      (round (* 0.5 (g-value ref-obj :width))))
-			   NIL))
-	   (ref-right  (if (string= "Right" col-style)
-			   (+ (g-value ref-obj :left)
-			      (g-value ref-obj :width))
-			   NIL)))
-      (dolist (obj (g-value *selection-obj* :value))
-	(let ((obj-width (g-value obj :width)))
-	  (if (g-value obj :line-p)
-	      (progn ;; Lines
-		(let* ((points (g-value obj :points))
-		       (x1 (first points))
-		       (x2 (third points)))
-		  (if (>= x1 x2)
-		      (progn
-			(when ref-left
-			  (setf (third (g-value obj :points)) ref-left))
-			(when ref-center
-			  (setf (third (g-value obj :points))
-				(- ref-center (round (* 0.5 obj-width)))))
-			(when ref-right
-			  (setf (third (g-value obj :points))
-				(- ref-right obj-width)))
-			(setf (first (g-value obj :points))
-			      (1- (+ (third points) (g-value obj :width)))))
-		      (progn
-			(when ref-left
-			  (setf (first (g-value obj :points)) ref-left))
-			(when ref-center
+    (when col-p
+      (let* ((col-style
+	      (g-value (g-value align-prop :column :column-align-style) :value))
+	     (ref-left   (if (string= "Left" col-style)
+			     (g-value ref-obj :left)
+			     NIL))
+	     (ref-center (if (string= "Centered" col-style)
+			     (+ (g-value ref-obj :left)
+				(round (* 0.5 (g-value ref-obj :width))))
+			     NIL))
+	     (ref-right  (if (string= "Right" col-style)
+			     (+ (g-value ref-obj :left)
+				(g-value ref-obj :width))
+			     NIL)))
+	(dolist (obj (g-value *selection-obj* :value))
+	  (let ((obj-width (g-value obj :width)))
+	    (if (g-value obj :line-p)
+		(progn ;; Lines
+		  (let* ((points (g-value obj :points))
+			 (x1 (first points))
+			 (x2 (third points)))
+		    (if (>= x1 x2)
+			(progn
+			  (when ref-left
+			    (setf (third (g-value obj :points)) ref-left))
+			  (when ref-center
+			    (setf (third (g-value obj :points))
+				  (- ref-center (round (* 0.5 obj-width)))))
+			  (when ref-right
+			    (setf (third (g-value obj :points))
+				  (- ref-right obj-width)))
 			  (setf (first (g-value obj :points))
-				(- ref-center (round (* 0.5 obj-width)))))
-			(when ref-right
-			  (setf (first (g-value obj :points))
-				(- ref-right obj-width)))
-			(setf (third (g-value obj :points))
-			      (+ (first points) (g-value obj :width)))))
-		  (mark-as-changed obj :points)))
-	      (progn ;; Objects except Lines
-		(when ref-left
-		  (setf (first (g-value obj :box)) ref-left))
-		(when ref-center
-		  (setf (first (g-value obj :box))
-			(- ref-center (round (* 0.5 obj-width)))))
-		(when ref-right
-		  (setf (first (g-value obj :box)) (- ref-right obj-width)))
-		(mark-as-changed obj :box)))))
+				(1- (+ (third points) (g-value obj :width)))))
+			(progn
+			  (when ref-left
+			    (setf (first (g-value obj :points)) ref-left))
+			  (when ref-center
+			    (setf (first (g-value obj :points))
+				  (- ref-center (round (* 0.5 obj-width)))))
+			  (when ref-right
+			    (setf (first (g-value obj :points))
+				  (- ref-right obj-width)))
+			  (setf (third (g-value obj :points))
+				(+ (first points) (g-value obj :width)))))
+		    (mark-as-changed obj :points)))
+		(progn ;; Objects except Lines
+		  (when ref-left
+		    (setf (first (g-value obj :box)) ref-left))
+		  (when ref-center
+		    (setf (first (g-value obj :box))
+			  (- ref-center (round (* 0.5 obj-width)))))
+		  (when ref-right
+		    (setf (first (g-value obj :box)) (- ref-right obj-width)))
+		  (mark-as-changed obj :box)))))
 
-      (vertical-spacing 5)
-))
+	(vertical-spacing 5)
+	))
 
 
-  (when row-p
-    (let* ((row-style
-	    (g-value (g-value align-prop :row :row-align-style) :value))
-	   (ref-top    (if (string= "Top" row-style)
-			   (g-value ref-obj :top)
-			   NIL))
-	   (ref-center (if (string= "Centered" row-style)
-			   (+ (g-value ref-obj :top)
-			      (round (* 0.5 (g-value ref-obj :height))))
-			   NIL))
-	   (ref-bottom  (if (string= "Bottom" row-style)
-			   (+ (g-value ref-obj :top)
-			      (g-value ref-obj :height))
-			   NIL)))
-      (dolist (obj (g-value *selection-obj* :value))
-	(let ((obj-height (g-value obj :height)))
-	  (if (g-value obj :line-p)
-	      (progn ;; Lines
-		(let* ((points (g-value obj :points))
-		       (y1 (second points))
-		       (y2 (fourth points)))
-		  (if (>= y1 y2)
-		      (progn
-			(when ref-top
-			  (setf (fourth (g-value obj :points)) ref-top))
-			(when ref-center
-			  (setf (fourth (g-value obj :points))
-				(- ref-center (round (* 0.5 obj-height)))))
-			(when ref-bottom
-			  (setf (fourth (g-value obj :points))
-				(- ref-bottom obj-height)))
-			(setf (second (g-value obj :points))
-			      (1- (+ (fourth points) (g-value obj :height)))))
-		      (progn
-			(when ref-top
-			  (setf (second (g-value obj :points)) ref-top))
-			(when ref-center
+    (when row-p
+      (let* ((row-style
+	      (g-value (g-value align-prop :row :row-align-style) :value))
+	     (ref-top    (if (string= "Top" row-style)
+			     (g-value ref-obj :top)
+			     NIL))
+	     (ref-center (if (string= "Centered" row-style)
+			     (+ (g-value ref-obj :top)
+				(round (* 0.5 (g-value ref-obj :height))))
+			     NIL))
+	     (ref-bottom  (if (string= "Bottom" row-style)
+			      (+ (g-value ref-obj :top)
+				 (g-value ref-obj :height))
+			      NIL)))
+	(dolist (obj (g-value *selection-obj* :value))
+	  (let ((obj-height (g-value obj :height)))
+	    (if (g-value obj :line-p)
+		(progn ;; Lines
+		  (let* ((points (g-value obj :points))
+			 (y1 (second points))
+			 (y2 (fourth points)))
+		    (if (>= y1 y2)
+			(progn
+			  (when ref-top
+			    (setf (fourth (g-value obj :points)) ref-top))
+			  (when ref-center
+			    (setf (fourth (g-value obj :points))
+				  (- ref-center (round (* 0.5 obj-height)))))
+			  (when ref-bottom
+			    (setf (fourth (g-value obj :points))
+				  (- ref-bottom obj-height)))
 			  (setf (second (g-value obj :points))
-				(- ref-center (round (* 0.5 obj-height)))))
-			(when ref-bottom
-			  (setf (second (g-value obj :points))
-				(- ref-bottom obj-height)))
-			(setf (fourth (g-value obj :points))
-			      (+ (second points) (g-value obj :height)))))
-		  (mark-as-changed obj :points)))
-	      (progn ;; Objects except Lines
-		(when ref-top
-		  (setf (second (g-value obj :box)) ref-top))
-		(when ref-center
-		  (setf (second (g-value obj :box))
-			(- ref-center (round (* 0.5 obj-height)))))
-		(when ref-bottom
-		  (setf (second (g-value obj :box)) (- ref-bottom obj-height)))
-		(mark-as-changed obj :box)))))
+				(1- (+ (fourth points) (g-value obj :height)))))
+			(progn
+			  (when ref-top
+			    (setf (second (g-value obj :points)) ref-top))
+			  (when ref-center
+			    (setf (second (g-value obj :points))
+				  (- ref-center (round (* 0.5 obj-height)))))
+			  (when ref-bottom
+			    (setf (second (g-value obj :points))
+				  (- ref-bottom obj-height)))
+			  (setf (fourth (g-value obj :points))
+				(+ (second points) (g-value obj :height)))))
+		    (mark-as-changed obj :points)))
+		(progn ;; Objects except Lines
+		  (when ref-top
+		    (setf (second (g-value obj :box)) ref-top))
+		  (when ref-center
+		    (setf (second (g-value obj :box))
+			  (- ref-center (round (* 0.5 obj-height)))))
+		  (when ref-bottom
+		    (setf (second (g-value obj :box)) (- ref-bottom obj-height)))
+		  (mark-as-changed obj :box)))))
 
-      (horizontal-spacing 5)
-))
-))
+	(horizontal-spacing 5)
+	))
+    ))
 
 (defun Align-Func (&rest args)
   (declare (ignore args))
@@ -500,7 +498,7 @@ Change log:
     (when (null new-value)
       (s-value col-style :active-p NIL)
       (s-value row-style :active-p NIL))
-))
+    ))
 
 
 
@@ -977,7 +975,7 @@ Change log:
       (:draw-function :and)
       (:filling-style ,opal:dark-gray-fill)
       (:left 10)(:top 255)
-      (:width 130)(:height 30)
+vv      (:width 130)(:height 30)
       (:visible T))
 |#
 

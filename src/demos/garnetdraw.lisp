@@ -29,7 +29,8 @@
     (common-lisp-user::garnet-load "ps:ps-loader")
 
     ;;;  Load gadgets.
-    (dolist (file '("multi-selection-loader" "polyline-creator-loader"
+    (dolist (file '("multi-selection-loader"
+		    "polyline-creator-loader"
 		    "arrow-line-loader"
 		    "motif-menubar-loader"
 		    "motif-trill-device-loader"
@@ -66,24 +67,21 @@ parts of the file
 
 (defparameter the-color-list NIL)
 
-(create-instance 'GRID-OBJ NIL ; use an object so constraints to values
-		 (:gridvis NIL) ; whether can see gridding or not
-		 (:gridon NIL) ; whether gridding is in use or not
-		 (:gridamt 10)) ; amount to grid by
-(defparameter *Grid-Menu-Item* NIL) ; set with menu bar item for grid on/off
-(defparameter *Grid-Vis-Item* NIL) ; set with menu bar item for grid vis on/off
+(create-instance 'GRID-OBJ NIL		; use an object so constraints to values
+  (:gridvis NIL)			; whether can see gridding or not
+  (:gridon NIL)				; whether gridding is in use or not
+  (:gridamt 10))			; amount to grid by
+(defparameter *Grid-Menu-Item* NIL)	; set with menu bar item for grid on/off
+(defparameter *Grid-Vis-Item* NIL)	; set with menu bar item for grid vis on/off
 (defparameter POLYGON-MAKER NIL)
 
 (defparameter rgbvalues
   `((1.00 0.00 0.52) (1.00 0.00 0.82) (,opal:purple-fill ,opal:purple-line)
-    (0.82 0.00 1.00)
-    (0.52 0.00 1.00) (,opal:blue-fill ,opal:blue-line)
-    (0.00 0.52 1.00) (0.00 0.82 1.00)
-    (,opal:cyan-fill ,opal:cyan-line) (0.00 1.00 0.82) (0.00 1.00 0.52)
-    (,opal:green-fill ,opal:green-line)
+    (0.82 0.00 1.00) (0.52 0.00 1.00) (,opal:blue-fill ,opal:blue-line)
+    (0.00 0.52 1.00) (0.00 0.82 1.00) (,opal:cyan-fill ,opal:cyan-line)
+    (0.00 1.00 0.82) (0.00 1.00 0.52) (,opal:green-fill ,opal:green-line)
     (0.52 1.00 0.00) (0.82 1.00 0.00) (,opal:yellow-fill ,opal:yellow-line)
-    (1.00 0.82 0.00)
-    (1.00 0.52 0.00) (,opal:red-fill ,opal:red-line)))
+    (1.00 0.82 0.00) (1.00 0.52 0.00) (,opal:red-fill ,opal:red-line)))
 
 (defvar *TEMP-POINTS* NIL)
 (defvar *TEMP-LIST* NIL)
@@ -426,7 +424,7 @@ DIALOG BOXES
 			 (floor (gvl :width) 2))))
     (:top (o-formula (- (floor (gv WIN :height) 2)
 			(floor (gvl :height) 2))))
-    (:width 345)
+    (:width 400)
     (:height 85))
   (setf *GRID-DB*
 	(create-instance NIL opal:aggregadget
@@ -440,7 +438,8 @@ DIALOG BOXES
 	     (:value ,gg:motif-trill-device
 	      (:foreground-color ,opal:motif-green)
 	      (:constant T)
-	      (:left 225) (:top 5)
+	      (:left ,(o-formula (+ (gvl :parent :text :width) 10)  225))
+	      (:top 5)
 	      (:height 30) (:width 100))
 	     (:ok-cancel ,gg:motif-text-button-panel
 	      (:foreground-color ,opal:motif-green)
@@ -1354,8 +1353,8 @@ line-styles and filling-styles.
   ;; controller know (if it's there).
   (when (fboundp 'common-lisp-user::Garnet-Note-Quitted)
     (pushnew
-     #'(lambda (win)
-	 (declare (ignore win))
+     #'(lambda (w)
+	 (declare (ignore w))
 	 (common-lisp-user::Garnet-Note-Quitted "GARNETDRAW"))
      (g-value win :destroy-hooks)))
   

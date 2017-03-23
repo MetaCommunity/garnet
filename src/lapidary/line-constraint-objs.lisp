@@ -13,18 +13,18 @@
 ;;;
 ;;; Changes:
 ;;; 14-Jul-93 AMICKISH  *white-line-style* ---> opal:white-line;  Declared
-;;;                     LINE-CON-PANEL special in Line-Constraint-Do-Go.
+;;;                     LINE-CONSTRAINT-PANEL special in Line-Constraint-Do-Go.
 ;;; 12-May-92 ECP  Added ok and cancel buttons to *line-constraint-menu*
 ;;;
 
-(in-package :GARNET-GADGETS)
+(in-package :LAPIDARY-DIALOGS)
 
 (defvar *line-constraint-menu* nil)
-(defvar line-con-prim-sel-agg nil)
-(defvar line-con-sec-sel-agg nil)
+(defvar line-constraint-prim-sel-agg nil)
+(defvar line-constraint-sec-sel-agg nil)
 
 (defun line-constraint-do-go ()
-  (declare (special LINE-CON-PANEL))
+  (declare (special LINE-CONSTRAINT-PANEL))
 (line-constraint-do-stop)
 
 ;; model diagonal line--used to initialize the lines in the
@@ -59,8 +59,8 @@
 				(if (gvl :interim-selected) 4 0))))
    (:width 23) (:height 23)
    ;; become deselected whenever the user changes a selection
-   (:selected (o-formula (progn (or (gv *constraint-gadget* :obj-to-constrain)
-				    (gv *constraint-gadget* :obj-to-reference))
+   (:selected (o-formula (progn (or (gv *constraint-dialog* :obj-to-constrain)
+				    (gv *constraint-dialog* :obj-to-reference))
 				nil)))
    (:where-attach (o-formula (nth (gvl :rank)
 				  (gvl :parent :parent :where-attach))))
@@ -128,7 +128,7 @@
 		 ((:box-press ,LINE-CONSTRAINT-INTER
 		      (:final-function
 		       ,#'(lambda (interactor obj)
-			    (s-value LINE-CON-PANEL :value nil)
+			    (s-value LINE-CONSTRAINT-PANEL :value nil)
 			 (s-value (g-value interactor :operates-on :parent
 					   :parent) 
 				  :where-attach
@@ -243,7 +243,7 @@
 		 ((:line-press ,LINE-CONSTRAINT-INTER
 			       (:final-function
 				,#'(lambda (interactor obj)
-				  (s-value LINE-CON-PANEL :value nil)
+				  (s-value LINE-CONSTRAINT-PANEL :value nil)
 				  (s-value (g-value interactor :operates-on 
 						    :parent :parent) 
 					   :where-attach
@@ -259,33 +259,34 @@
 	     (:filling-style ,opal:gray-fill)
 	     (:visible ,(o-formula (not (gvl :parent :active))))))))
 
-(create-instance 'LINE-CON-TITLE opal:text
+(create-instance 'LINE-CONSTRAINT-TITLE opal:text
    (:constant '(t))
    (:left 10)
    (:top 10)
-   (:font *large-bold-italic-serif-font*)
-   (:string "Line Constraint Menu"))
+   (:font (opal:get-standard-font :sans-serif :bold-italic :large))  ; *title-font*
+   (:string "Line Constraints"))
 
-(opal:add-component *LINE-CONSTRAINT-MENU* LINE-CON-TITLE)
+(opal:add-component *LINE-CONSTRAINT-MENU* LINE-CONSTRAINT-TITLE)
 
-(create-instance 'LINE-CON-PRIM-SEL-AGG opal:aggregadget
+(create-instance 'LINE-CONSTRAINT-PRIM-SEL-AGG opal:aggregadget
 ;  (:maybe-constant :left :top :width :height :visible)
   (:constant '(:left :top :width :height :visible))
-  (:where-attach (o-formula (progn (or (gv *constraint-gadget* :obj-to-constrain)
-				       (gv *constraint-gadget* :obj-to-reference))
+  (:where-attach (o-formula (progn (or (gv *constraint-dialog* :obj-to-constrain)
+				       (gv *constraint-dialog* :obj-to-reference))
 				   nil)))
-  (:active (o-formula (case (gv *constraint-gadget* :selection-type)
+  (:active (o-formula (case (gv *constraint-dialog* :selection-type)
 			    ((one-zero one-one)
-			     (if (is-a-line-p (gv *constraint-gadget*
+			     (if (is-a-line-p (gv *constraint-dialog*
 						  :obj-to-constrain))
 				 :line
 			         :box))
 			    (t nil))))
   (:selection :primary)
   (:left 10) 
-  (:top (+ (opal:bottom line-con-title) 20))
+  (:top (+ (opal:bottom line-constraint-title) 20))
   (:parts `((:title-frame ,titled-frame
 		   (:string "obj-to-constrain")
+
 		   (:left ,(o-formula (gvl :parent :left)))
 		   (:top ,(o-formula (gvl :parent :top)))
 		   (:width ,(o-formula (+ (- (opal:gv-right 
@@ -294,17 +295,21 @@
 					  30)))
 		   (:parts (
 		     (:frame :modify
-			     (:height ,(o-formula
-					(+ (- (opal:bottom
-					       (gvl :parent :parent :box))
-					      (gvl :parent :parent :box :top))
-					   20))))
+			(:height ,(o-formula
+				   (+ (- (opal:bottom
+					  (gvl :parent :parent :box))
+					 (gvl :parent :parent :box :top))
+				      20)))
+			(:line-style ,(create-instance nil opal:line-style       ; *misc-frame-line-style*
+						       (:line-thickness 2)
+						       (:foreground-color opal:orange)))
+			     )
 		     :text-frame
 		     :text)))	     
 	    (:line ,line-constraint-obj
 		   (:middle-button-p nil)
 		   (:line-over ,(o-formula (when (gvl :active)
-						 (gv *constraint-gadget*
+						 (gv *constraint-dialog*
 						     :obj-to-constrain))))
 		   (:left ,(o-formula (+ (gvl :parent :left) 15)))
 		   (:top ,(o-formula (+ (gvl :parent :top) 17))))
@@ -316,7 +321,7 @@
 ;; demand the value of the :line-over slot in :line so that the links
 ;; are set up. then store model-diag-line in :line-over so :line can
 ;; display itself properly
-(let* ((line-agg (g-value line-con-prim-sel-agg :line))
+(let* ((line-agg (g-value line-constraint-prim-sel-agg :line))
        (line (g-value line-agg :line)))
   (g-value line-agg :line-over)
   (s-value line-agg :line-over model-diag-line)
@@ -324,18 +329,18 @@
   (g-value line :x2)
   (g-value line :y1)
   (g-value line :y2)
-  (g-value line-con-prim-sel-agg :where-attach))
+  (g-value line-constraint-prim-sel-agg :where-attach))
 
-(create-instance 'LINE-CON-SEC-SEL-AGG opal:aggregadget
+(create-instance 'LINE-CONSTRAINT-SEC-SEL-AGG opal:aggregadget
   (:constant '(:left :top :width :height :visible))
-  (:top (+ (opal:bottom line-con-prim-sel-agg) 20))
+  (:top (+ (opal:bottom line-constraint-prim-sel-agg) 20))
   (:left 10)
-  (:where-attach (o-formula (progn (or (gv *constraint-gadget* :obj-to-constrain)
-				       (gv *constraint-gadget* :obj-to-reference))
+  (:where-attach (o-formula (progn (or (gv *constraint-dialog* :obj-to-constrain)
+				       (gv *constraint-dialog* :obj-to-reference))
 				   nil)))
-  (:active (o-formula (case (gv *constraint-gadget* :selection-type)
+  (:active (o-formula (case (gv *constraint-dialog* :selection-type)
 			    (one-one
-			     (if (is-a-line-p (gv *constraint-gadget*
+			     (if (is-a-line-p (gv *constraint-dialog*
 						  :obj-to-reference))
 				 :line
 			         :box))
@@ -351,17 +356,20 @@
 					  30)))
 		   (:parts (
 		     (:frame :modify
-			     (:height ,(o-formula
-					(+ (- (opal:bottom
-					       (gvl :parent :parent :box))
-					      (gvl :parent :parent :box :top))
-					   20))))
+			 (:height ,(o-formula
+				    (+ (- (opal:bottom
+					   (gvl :parent :parent :box))
+					  (gvl :parent :parent :box :top))
+				       20)))
+			 (:line-style ,(create-instance nil opal:line-style       ; *misc-frame-line-style*
+							(:line-thickness 2)
+							(:foreground-color opal:orange))))
 		     :text-frame
-		     :text)))	     
+		     :text)))
 	    (:line ,line-constraint-obj
 		   (:middle-button-p t)
 		   (:line-over ,(o-formula (when (gvl :active)
-						 (gv *constraint-gadget*
+						 (gv *constraint-dialog*
 						  :obj-to-reference))))
 		   (:left ,(o-formula (+ (gvl :parent :left) 15)))
 		   (:top ,(o-formula (+ (gvl :parent :top) 17))))
@@ -373,7 +381,7 @@
 ;; demand the value of the :line-over slot in :line so that the links
 ;; are set up. then store model-diag-line in :line-over so :line can
 ;; display itself properly
-(let* ((line-agg (g-value line-con-sec-sel-agg :line))
+(let* ((line-agg (g-value line-constraint-sec-sel-agg :line))
        (line (g-value line-agg :line)))
   (g-value line-agg :line-over)
   (s-value line-agg :line-over model-diag-line)
@@ -381,35 +389,34 @@
   (g-value line :x2)
   (g-value line :y1)
   (g-value line :y2)
-  (g-value line-con-sec-sel-agg :where-attach))
+  (g-value line-constraint-sec-sel-agg :where-attach))
 
 
-(opal:add-components *LINE-CONSTRAINT-MENU* LINE-CON-PRIM-SEL-AGG
-		                         LINE-CON-SEC-SEL-AGG)
+(opal:add-components *LINE-CONSTRAINT-MENU* LINE-CONSTRAINT-PRIM-SEL-AGG
+		                         LINE-CONSTRAINT-SEC-SEL-AGG)
 
 ;; set the interim selected slots of the buttons in the secondary line menu
 ;; to nil, so that they will not inherit from the prototype
 
-(dolist (obj (g-value line-CON-SEC-SEL-AGG :line :buttons :components))
+(dolist (obj (g-value LINE-CONSTRAINT-SEC-SEL-AGG :line :buttons :components))
 	(s-value obj :interim-selected nil))
-(dolist (obj (g-value line-CON-SEC-SEL-AGG :box :buttons :components)) 
+(dolist (obj (g-value LINE-CONSTRAINT-SEC-SEL-AGG :box :buttons :components)) 
 	(s-value obj :interim-selected nil))
 
-(create-instance 'LINE-CON-PANEL garnet-gadgets:text-button-panel 
+(create-instance 'LINE-CONSTRAINT-PANEL garnet-gadgets:motif-text-button-panel 
    (:constant '(t))
    (:left 10)
-   (:top (+ (opal:bottom line-con-sec-sel-agg) 20))
+   (:top (+ (opal:bottom line-constraint-sec-sel-agg) 20))
    (:value (o-formula (progn 
-			(or (gv *constraint-gadget* :obj-to-constrain)
-			    (gv *constraint-gadget* :obj-to-reference))
+			(or (gv *constraint-dialog* :obj-to-constrain)
+			    (gv *constraint-dialog* :obj-to-reference))
 			nil)))
-   (:shadow-offset 5) (:gray-width 3)
-   (:text-offset 3)
    (:final-feedback-p t)
+   (:font *text-button-font*)
    (:items `(("unconstrain" LINE-UNCONSTRAIN-FN) 
 	     ("customize" LINE-CUSTOM-FN)))
    (:interactors `(
-     (:text-button-press :modify
+     (:press :modify
    	(:final-function
 	 ,#'(lambda (interactor final-obj-over)
 	      (let* ((action (g-value final-obj-over :action))
@@ -431,27 +438,27 @@
 		(when action
 		  (funcall action gadget string)))))))))
 
-(create-instance 'LINE-CON-OK-PANEL garnet-gadgets:text-button-panel
+(create-instance 'LINE-CONSTRAINT-OK-PANEL garnet-gadgets:motif-text-button-panel
   (:constant '(t))
-  (:left (o-formula (+ (opal:gv-right line-con-title) 10)))
+  (:left (o-formula (+ (opal:gv-right line-constraint-title) 10)))
   (:top 10)
   (:direction :horizontal)
   (:fixed-width-p nil)
   (:button-width 44)
-  (:gray-width 3) (:shadow-offset 5) (:text-offset 2)
   (:selection-function
       #'(lambda (button string)
 	  (cond ((string= string "OK")
 		 (s-value (g-value button :window) :visible nil))
 		(t
 		 (set-line-constraint-feedback)))))
+  (:font *text-button-font*)
   (:items '("Show Constraints" "OK"))
   (:final-feedback-p nil))
 
 (create-instance 'X-OFFSET-BOX garnet-gadgets:labeled-box
    (:constant '(t))
-   (:left (+ (opal:right LINE-CON-PANEL) 20))
-   (:top (g-value LINE-CON-PANEL :top))
+   (:left (+ (opal:right LINE-CONSTRAINT-PANEL) 20))
+   (:top (g-value LINE-CONSTRAINT-PANEL :top))
    (:value "0")
    (:old-value "0")
    (:numerical-value (o-formula (read-from-string (gvl :value))))
@@ -468,8 +475,8 @@
    (:label-string "y-offset")
    (:selection-function #'set-y-offset))
 
-(opal:add-components *LINE-CONSTRAINT-MENU* LINE-CON-PANEL
-			LINE-CON-OK-PANEL X-OFFSET-BOX Y-OFFSET-BOX)
+(opal:add-components *LINE-CONSTRAINT-MENU* LINE-CONSTRAINT-PANEL
+			LINE-CONSTRAINT-OK-PANEL X-OFFSET-BOX Y-OFFSET-BOX)
 
 ;; create the labeled boxes that display the coordinates of a line
 (create-instance 'line-position-proto garnet-gadgets:labeled-box
@@ -478,7 +485,7 @@
 			   233
 			   (+ offset-right 10)))))
    (:top 0)
-   (:value (o-formula (let ((selected (gv *constraint-gadget* :obj-to-constrain))
+   (:value (o-formula (let ((selected (gv *constraint-dialog* :obj-to-constrain))
 			    (slot (gvl :slot)))
 			(if (and selected (is-a-line-p selected))
 			    (princ-to-string (gv selected slot))
@@ -487,7 +494,7 @@
    ;; can only change a line's position when a line is the primary or
    ;; secondary selection
    (:interactors `((:text-inter :modify
-		     (:active ,(o-formula (eq (gv *constraint-gadget*
+		     (:active ,(o-formula (eq (gv *constraint-dialog*
 						  :selection-type)
 					      'one-zero))))))
    (:slot nil))
@@ -534,20 +541,20 @@
 (opal:add-components *line-constraint-menu* x1-box y1-box x2-box y2-box
 		                         line-pos-gray-box)
 
-(create-instance 'LINE-CON-WIN inter:interactor-window
+(create-instance 'LINE-CONSTRAINT-WIN inter:interactor-window
    (:title "line constraints")
    (:aggregate *line-constraint-menu*)
    (:left (g-value box-constraint-win :left))
    (:top #-apple (opal:bottom box-constraint-win)
          #+apple (g-value box-constraint-win :top))
-   (:width 356)
+   (:width 460)
    (:height (o-formula (+ 20 (gvl :aggregate :height))))
    (:visible nil)
 ;   (:double-buffered-p t)
 )
 
 
-(opal:update LINE-CON-WIN))
+(opal:update LINE-CONSTRAINT-WIN))
 
 (defun line-constraint-do-stop ()
-  (when (boundp 'LINE-CON-WIN) (opal:destroy LINE-CON-WIN)))
+  (when (boundp 'LINE-CONSTRAINT-WIN) (opal:destroy LINE-CONSTRAINT-WIN)))

@@ -241,11 +241,11 @@
 
 (create-instance 'MENU2 opal:aggregadget
    (:constant :items :visible :left :top)
-   (:left 268)
+   (:left (o-formula (+ (gv MENU6 :width) (gv MENU6 :left) 10)  268))
    (:top 10)
    (:items '("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday"
 	     "Saturday"))
-   (:inner-frame-width (o-formula (+ (gvl :items-list :width) 8 19)))
+   (:inner-frame-width (o-formula (+ (gvl :items-list :width) 8 30)))
    (:outer-frame-width (o-formula (+ (gvl :inner-frame-width) 8)))
    (:inner-frame-height (o-formula (+ (gvl :items-list :height)
 				      8)))
@@ -311,7 +311,7 @@
 
 (create-instance 'MENU3 garnet-gadgets:text-button-panel
    (:constant T)
-   (:left 420)
+   (:left 510)
    (:top 10)
    (:items '("Red" "Purple" "Green" "Blue" "Yellow"))
    (:item-colors
@@ -361,8 +361,10 @@
 (create-instance 'MENU4 opal:aggregadget
    (:constant :items :num-items :selected-interim-selected-font :left :top
 	      :offset :offset2 :max-item-width :max-item-height)
-   (:left 250)
-   (:top 230)
+   (:left (o-formula (gv MENU2 :left) 250))
+   ;;   (:left 250)
+   (:top (o-formula (+ (gv MENU2 :top) (gv MENU2 :height) 20) 230))
+;;   (:top 230)
    (:items '("History" "Math" "Chemistry" "Computer Science" "Biology"
 	     "English" "Basket Weaving"))
    (:num-items (o-formula (length (gvl :items))))
@@ -447,7 +449,8 @@
 (create-instance 'MENU5 opal:aggregadget
    (:constant :left :top :offset :visible)
    (:left 10)
-   (:top 210)
+   (:top (o-formula (+ (gv MENU1 :height) 25) 250))
+;;   (:top 250)
    (:offset 4)
    (:offset2 (o-formula (* 2 (gvl :offset))))
    (:frame-width (o-formula (gvl :title-bar :width)))
@@ -569,7 +572,8 @@
 
 (create-instance 'MENU6 opal:aggregadget
    (:constant :items :visible :font :left :top)
-   (:left 100)
+   (:left (o-formula (+ (gv MENU1 :width) 20) 150))
+;;   (:left 100)
    (:top 10)
    (:font (opal:get-standard-font :sans-serif NIL NIL))
    ; initial value=:set
@@ -652,7 +656,7 @@
   ;;; create a window and an aggregate inside the window
   (create-instance 'MENU-WIN inter:interactor-window
 	   (:double-buffered-p double-buffered-p)
-	   (:left 50) (:top 45) (:width 530) (:height 400)
+	   (:left 50) (:top 45) (:width 630) (:height 450)
 	   (:title "GARNET MENU") (:icon-title "Menu"))
   (s-value MENU-WIN :aggregate
 	   (create-instance 'MENU-TOP-AGG opal:aggregate
@@ -770,10 +774,16 @@
 
   (create-instance 'DASHED-ITEM opal:line
      (:constant '(T :width :height :except :line-style))
-     (:x1 64)
-     (:y1 336)
-     (:x2 114)
-     (:y2 366)
+     ;;     (:x1 (o-formula (+ (gv SQUARE-ITEM :left) 5)))
+     (:x1 (o-formula (+ 10
+			(gvl :parent :left)
+			(gv MEDIUM-TEXT :width))))
+     (:y1 (o-formula (+ 10
+			(gvl :parent :top) 
+			(gv SQUARE-ITEM :height)
+			(gv CIRCLE-ITEM :height)) 336))
+     (:x2 (o-formula (+ (gvl :x1) 45)))
+     (:y2 (o-formula (+ (gvl :y1) 30) 366))
      (:red-dashed-line (create-instance NIL opal:line-style
 			 (:constant T)
 			 (:line-style :dash)

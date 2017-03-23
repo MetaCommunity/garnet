@@ -28,15 +28,14 @@
   (:WIDTH (o-formula (KR:GVL :WINDOW :WIDTH) 450))
   (:HEIGHT (o-formula (KR:GVL :WINDOW :HEIGHT) 300))
   (:parts `(
-    (:window-name ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:window-name ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
       (:value "")
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:BOX (31 60 327 74 ))
       (:MIN-WIDTH 20)
       (:GROW-P T)
@@ -56,14 +55,11 @@
       (:STRING "or on the window's icon")
       (:LEFT ,(o-formula (FIRST (KR:GVL :BOX)) 115))
       (:TOP ,(o-formula (SECOND (KR:GVL :BOX)) 30)))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (NIL ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKAPPLYCANCEL")
       (:ITEMS ("OK" "Apply" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
       (:BOX (106 100 159 51 ))
       (:LEFT ,(o-formula (FIRST (KR:GVL :BOX)) 106))
@@ -101,5 +97,5 @@
         (lapidary-error 
 	 (format nil "Could not find window ~S. You must
 enter either the name of a window's title bar
-or the name of a window's icon" window-name)))))
+or the name of a window's icon." window-name)))))
 

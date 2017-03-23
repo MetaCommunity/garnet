@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8,20 +8,20 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Constraint Gadget:Defs.Lisp
+;;; Constraint Dialog:Defs.Lisp
 ;;;
 ;;; This file contains many of the schemas, defconstants, defvars, defmacros, 
-;;; and defstructs which are used by Constraint Gadget.  
+;;; and defstructs which are used by Constraint Dialog.
 ;;;
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(box-constraint-do-go
-	    line-constraint-do-go 
-	    show-box-constraint-menu show-line-constraint-menu
+	    line-constraint-do-go
+	    show-box-constraint-dialog show-line-constraint-dialog
 	    c32 destroy-constraint-support-slots
-	    cg-destroy-constraint valid-integer-p)))
+	    cd-destroy-constraint valid-integer-p)))
 	  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -36,8 +36,15 @@
 					 (:family :serif)))
 
 ;;; font used for slot names in constraint menus
+#-(and)(defvar *slot-font* (create-instance NIL opal:font
+		      (:size :large) (:family :serif) (:face :bold-italic)))
+
 (defvar *slot-font* (create-instance NIL opal:font
-		       (:size :large) (:family :serif) (:face :bold-italic)))
+		       (:size :large) (:family :sans-serif) (:face :bold-italic)))
+
+
+(defparameter *labeled-box-label-font* (opal:get-standard-font :sans-serif :bold nil))
+(defparameter *text-button-font* (opal:get-standard-font :sans-serif :bold nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -47,13 +54,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (declaim (inline apply-box-constraint-p))
 (defun apply-box-constraint-p ()
-  (and (g-value *constraint-gadget* :obj-to-constrain)
-       (g-value *constraint-gadget* :obj-to-reference)))
+  (and (g-value *constraint-dialog* :obj-to-constrain)
+       (g-value *constraint-dialog* :obj-to-reference)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; determines whether the constraint
-;;; gadget considers this object an instance of a line
+;;; dialog considers this object an instance of a line
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (declaim (inline is-a-line-p))
@@ -64,7 +71,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; exported gadget used to collect information about:
+;;; exported dialog used to collect information about:
 ;;;   1) which object should be constrained
 ;;;   2) which object should be used as a reference in the constraint
 ;;;   3) where in the aggregate hierarchy to stop when searching for
@@ -74,7 +81,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(create-schema '*constraint-gadget*
+(create-schema '*constraint-dialog*
    (:obj-to-constrain nil)
    (:obj-to-reference nil)
    (:selection-type (o-formula (let ((p-selection (gvl :obj-to-constrain))
@@ -88,30 +95,30 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; error gadget to display error messages
+;;; error window to display error messages
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(create-instance '*constraint-gadget-error-window* garnet-gadgets:error-gadget)
+(create-instance '*constraint-dialog-error-window* garnet-gadgets:motif-error-gadget)
 
-(defun constraint-gadget-error (msg &optional (wait-p t))
+(defun constraint-dialog-error (msg &optional (wait-p t))
   (if wait-p
-      (garnet-gadgets:display-error-and-wait *constraint-gadget-error-window* msg)
-      (garnet-gadgets:display-error *constraint-gadget-error-window* msg)))
+      (garnet-gadgets:display-error-and-wait *constraint-dialog-error-window* msg)
+      (garnet-gadgets:display-error *constraint-dialog-error-window* msg)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; query gadget to display queries
+;;; query window to display queries
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(create-instance '*constraint-gadget-query-window* garnet-gadgets:query-gadget)
+(create-instance '*constraint-dialog-query-window* garnet-gadgets:motif-query-gadget)
 
-(defun constraint-gadget-query (msg labels &optional (wait-p t))
+(defun constraint-dialog-query (msg labels &optional (wait-p t))
   (if wait-p
-      (garnet-gadgets:display-query-and-wait *constraint-gadget-query-window*
+      (garnet-gadgets:display-query-and-wait *constraint-dialog-query-window*
 					     msg labels)
-      (garnet-gadgets:display-query *constraint-gadget-query-window* msg
+      (garnet-gadgets:display-query *constraint-dialog-query-window* msg
 				    labels)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,7 +141,7 @@
     `((:frame ,opal:rectangle
 		(:left ,(o-formula (gvl :parent :left)))
 		(:top ,(o-formula (opal:gv-center-y (gvl :parent :text))))
-		(:width ,(o-formula (gvl :parent :width)))
+		(:width ,(o-formula (+ 20 (gvl :parent :width))))
 		(:height ,(o-formula (+ 20 (gvl :parent :parent :contents
 						:height)))))
       (:text-frame ,opal:rectangle
@@ -161,7 +168,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
-;;; prototype formulas for the constraints shown in the constraint gadget's
+;;; prototype formulas for the constraints shown in the constraint dialog's
 ;;; constraint menus
 ;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

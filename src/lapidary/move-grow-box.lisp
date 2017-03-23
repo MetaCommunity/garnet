@@ -47,11 +47,10 @@
   (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 450))
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 300))
   (:parts `(
-    (:box-slots ,GARNET-GADGETS:X-BUTTON-PANEL
+    (:box-slots ,GARNET-GADGETS:MOTIF-CHECK-BUTTON-PANEL
       (:GILT-REF "TYPE-X-BUTTON-PANEL")
       (:INDENT 0)
       (:H-SPACING 5)
-      (:GRAY-WIDTH 3)
       (:TEXT-ON-LEFT-P T)
       (:V-SPACING 5)
       (:BUTTON-HEIGHT 20)
@@ -59,8 +58,6 @@
       (:DIRECTION :HORIZONTAL)
       (:PIXEL-MARGIN NIL)
       (:RANK-MARGIN NIL)
-      (:TEXT-OFFSET 5)
-      (:SHADOW-OFFSET 5)
       (:BUTTON-WIDTH 20)
       (:FONT ,OPAL:DEFAULT-FONT)
       (:FIXED-WIDTH-P T)
@@ -68,14 +65,11 @@
       (:ITEMS (:LEFT :TOP :WIDTH :HEIGHT ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 10))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 40)))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (NIL ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
       (:BOX (104 90 127 46 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 104))

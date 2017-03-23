@@ -23,6 +23,16 @@ Change log:
 
 (in-package "LAPIDARY")
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *lapidary-read-load-files* 
+    (list "motif-text-buttons"
+	  "motif-radio-buttons"))
+
+  (dolist (file *lapidary-read-load-files*)
+    (cl-user::garnet-load (concatenate 'string "gadgets:" file "-loader"))))
+
+
+
 (create-instance 'READ-FILE OPAL:AGGREGADGET
   (:WINDOW-TITLE "Read File")
   (:WINDOW-LEFT 120)
@@ -37,55 +47,49 @@ Change log:
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 139))
   (:parts `(
     (NIL ,OPAL:TEXT
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD-ITALIC)))
+      (:FONT ,*title-font*)
       (:BOX (9 8 35 14 ))
       (:STRING "Reading...")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 9))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 8)))
-    (:FILENAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:FILENAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:BOX (20 40 285 19 ))
       (:LABEL-STRING "Filename:")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 40))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (:WINDOWNAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:WINDOWNAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:BOX (20 68 285 53 ))
       (:LABEL-STRING "Windowname:")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 68))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (NIL ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION LAPIDARY::OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:SELECT-FUNCTION LAPIDARY::OKCANCEL-FUNCTION)
+      (:FONT ,*text-button-font*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
-      (:BOX (188 6 117 29 ))
-      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 188))
+      (:BOX (175 6 117 29 ))
+      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 175))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 6)))
-    (:ADD-REPLACE ,GARNET-GADGETS:RADIO-BUTTON-PANEL
+    (:ADD-REPLACE ,GARNET-GADGETS:MOTIF-RADIO-BUTTON-PANEL
       (:GILT-REF "TYPE-RADIO-BUTTON-PANEL")
       (:INDENT 0)
       (:V-ALIGN :TOP)
@@ -93,17 +97,13 @@ Change log:
       (:DIRECTION :VERTICAL)
       (:SELECT-FUNCTION NIL)
       (:H-ALIGN :RIGHT)
-      (:GRAY-WIDTH 3)
       (:TEXT-ON-LEFT-P T)
       (:V-SPACING 5)
       (:FIXED-HEIGHT-P T)
       (:PIXEL-MARGIN NIL)
       (:RANK-MARGIN NIL)
-      (:TEXT-OFFSET 5)
-      (:SHADOW-OFFSET 5)
       (:BUTTON-DIAMETER 23)
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:FONT ,*radio-button-font*)
       (:FIXED-WIDTH-P T)
       (:BOX (22 96 129 53 ))
       (:ITEMS ("Add to existing objects" "Replace existing objects" ))

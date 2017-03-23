@@ -29,7 +29,7 @@ Change log:
   (:WINDOW-TITLE "Add Gadget")
   (:WINDOW-LEFT 120)
   (:WINDOW-TOP 220)
-  (:WINDOW-WIDTH 316)
+  (:WINDOW-WIDTH 375)
   (:WINDOW-HEIGHT 175)
   (:PACKAGE-NAME "LAPIDARY")
   (:FUNCTION-FOR-OK `LAPIDARY::add-gadget-ok-fn)
@@ -39,62 +39,57 @@ Change log:
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 139))
   (:parts `(
     (NIL ,OPAL:TEXT
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD-ITALIC)))
+      (:FONT ,*title-font*)
       (:BOX (9 8 35 14 ))
       (:STRING "Adding Gadget...")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 9))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 8)))
-    (:GADGETNAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:GADGETNAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
-      (:BOX (20 40 285 19 ))
+      (:LABEL-FONT ,*labeled-box-label-font*)
+      (:BOX (20 45 325 19 ))
       (:LABEL-STRING "Gadgetname:")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
-      (:TOP ,(o-formula (SECOND (GVL :BOX)) 40))
-      (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (:WINDOWNAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+      (:TOP ,(o-formula (SECOND (GVL :BOX)) 45))
+      (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 325)))
+    (:WINDOWNAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
-      (:BOX (20 68 285 53 ))
+      (:LABEL-FONT ,*labeled-box-label-font*)
+      (:BOX (20 75 325 53 ))
       (:LABEL-STRING "Windowname:")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
-      (:TOP ,(o-formula (SECOND (GVL :BOX)) 68))
-      (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
+      (:TOP ,(o-formula (SECOND (GVL :BOX)) 75))
+      (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 325)))
 
-    (:instance-p ,garnet-gadgets:radio-button-panel
+    (:instance-p ,garnet-gadgets:motif-radio-button-panel
       (:direction :vertical)
       (:fixed-height-p nil)
       (:text-on-left-p nil)
+      (:FONT ,*radio-button-font*)
       (:top ,(o-formula (+ (opal:gv-bottom (gvl :parent :windowname)) 20)))
       (:left 20)
       (:items ("add this object" "add an instance of this object")))
 
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:ok-cancel ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION LAPIDARY::OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:SELECT-FUNCTION LAPIDARY::OKCANCEL-FUNCTION)
+      (:FONT ,*text-button-font*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
-      (:BOX (188 6 117 29 ))
-      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 188))
+      (:BOX (225 6 117 29 ))
+      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 225))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 6))))))
 
 (defun add-gadget-ok-fn (add-gadget values)

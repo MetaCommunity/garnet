@@ -116,8 +116,8 @@ Good values of number-of-rectangles are 3..50"
     ;; controller know (if it's there).
     (when (fboundp 'common-lisp-user::Garnet-Note-Quitted)
       (pushnew
-       #'(lambda (win)
-	   (declare (ignore win))
+       #'(lambda (w)
+	   (declare (ignore w))
 	   (common-lisp-user::Garnet-Note-Quitted "DEMO-MANYOBJS"))
        (g-value win :destroy-hooks)))
 
@@ -167,12 +167,10 @@ Good values of number-of-rectangles are 3..50"
 
 ;; dzg - for new version of KR
 (defun Move (n)
-  (let ((outline 
-	 (g-value
-	  (third
-	   (g-value agg :components)) 
-	  :outline)))
-    (dotimes (i n)
+  (let* ((components (g-value agg :components))
+	 (length (length components))
+	 (outline (g-value (nth (random length) components) :outline)))
+    (dotimes (i (random length))
       (s-value outline :left (* i 4))
       (opal:update win))))
 

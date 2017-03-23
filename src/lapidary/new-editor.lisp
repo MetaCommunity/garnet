@@ -79,7 +79,7 @@
 
   (create-instance 'test-build-mode-label opal:text
     (:string "Test/Build Mode:")
-    (:left 180)
+    (:left 240)
     (:top 30))
 
   (create-instance 'test-build-obj garnet-gadgets:radio-button-panel
@@ -87,12 +87,12 @@
     (:direction :vertical)
     (:selection-function 'test-build-fct)
     (:top (+ (opal:bottom test-build-mode-label) 10))
-    (:left 185)
+    (:left 250)
     (:items '("test" "build")))
 
   (create-instance 'editor-menu-divider-line opal:line
-    (:x1 170)
-    (:x2 170)
+    (:x1 230)
+    (:x2 230)
     (:y1 (o-formula (gv editor-menu :height)))
     (:y2 (o-formula (gvl :window :height))))
 

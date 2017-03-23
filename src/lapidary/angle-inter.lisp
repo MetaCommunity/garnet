@@ -1,24 +1,16 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; -*- Mode: Lisp; Package: LAPIDARY -*-
-;;;
-;;;  Move/Grow Interactor dialog box
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;; This code was written as part of the Garnet project at            ;;
+;; Carnegie Mellon University, and has been placed in the public     ;;
+;; domain.                                                           ;;
+;;*******************************************************************;;
+;; $Id$
+;;
+;;  Angle Interactor dialog box
 
-;;;  Note: This file needs parts from the file  dialog-parts.lisp
-
-;;; CHANGE LOG
-;;;
-;;; 07/14/93 amickish - Declared ANGLE-INTER-MENU special in
-;;;                     Angle-Feedback-Obj-Fn
-;;; 08/25/92 amickish - Added proclaim
+;;  Note: This file needs parts from the file  dialog-parts.lisp
 
 (in-package "LAPIDARY")
 
@@ -29,18 +21,18 @@
   (when (boundp 'ANGLE-INTER-WIN) (opal:destroy ANGLE-INTER-WIN)))
 
 (defmacro ANGLE-START-WHERE ()
-  `(g-value ANGLE-INTER-MENU :start-where))
+  `(g-value ANGLE-INTER-DIALOG :start-where))
 (defmacro ANGLE-FEEDBACK-OBJ ()
-  `(g-value ANGLE-INTER-MENU :feedback-obj))
+  `(g-value ANGLE-INTER-DIALOG :feedback-obj))
 (defmacro ANGLE-OTHER-BOX ()
-  `(g-value ANGLE-INTER-MENU :start-where :contents :other-box))
+  `(g-value ANGLE-INTER-DIALOG :start-where :contents :other-box))
 (defmacro ANGLE-OTHER-BUTTON ()
-  `(g-value ANGLE-INTER-MENU :start-where :contents :other-button))
+  `(g-value ANGLE-INTER-DIALOG :start-where :contents :other-button))
 (defmacro ANGLE-CENTER-OF-ROTATION ()
-  `(g-value ANGLE-INTER-MENU :center-of-rotation))
+  `(g-value ANGLE-INTER-DIALOG :center-of-rotation))
 
 (defun ANGLE-INTERACTOR-NAME-FN (gadget interactor-name)
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (declare (ignore gadget))
   (dialog-enqueue :known-as
 		  (if (string/= "" interactor-name)
@@ -50,7 +42,7 @@
 
 ;;;    :start-where is in a single object
 (defun ANGLE-OBJ-PRESS-OVER-FN (obj-box button-label)
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (declare (ignore obj-box))
   (let ((selection (car (g-value *SELECTION-INFO* :selected)))
 	(start-where (ANGLE-START-WHERE)))
@@ -69,7 +61,7 @@
 
 (defun ANGLE-START-ANYWHERE (button button-label)
   (declare (ignore button))
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (let ((start-where (ANGLE-START-WHERE)))
     (s-value start-where :field-string nil)
     (s-value start-where :type nil)
@@ -77,7 +69,7 @@
     (dialog-enqueue :start-where t *angle-inter-queue*)))
 
 (defun ANGLE-OBJ-TO-CHANGE-FN (panel value)
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (s-value (g-value panel :parent) :value value) 
   (if (string= value "<Formula>")
       (progn
@@ -89,13 +81,13 @@
 		      *ANGLE-INTER-QUEUE*)))
 
 (defun ANGLE-FEEDBACK-OBJ-FN (feedback-obj-box button-label)
-  (declare (special *selection-info* ANGLE-INTER-MENU))
+  (declare (special *selection-info* ANGLE-INTER-DIALOG))
   (let ((selection (g-value *SELECTION-INFO* :selected)))
     (cond ((null selection)
 	   (s-value (ANGLE-FEEDBACK-OBJ) :field-string nil)
 	   (s-value (ANGLE-FEEDBACK-OBJ) :value nil)
-	   (lapidary-error "please make a selection, then press the
-interim feedback button again"))
+	   (lapidary-error "Please make a selection, then press the
+interim feedback button again."))
 	((null (cdr selection)) ; only one selection
 	 (s-value (ANGLE-FEEDBACK-OBJ) :field-string
 		  (name-for-schema (car selection)))
@@ -113,7 +105,7 @@ interim feedback button again"))
 				     '*angle-inter-queue*)))))
 
 (defun ANGLE-NIL-FEEDBACK-OBJ-FN (button button-label)
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (declare (ignore button))
   (dialog-enqueue :feedback-obj NIL *ANGLE-INTER-QUEUE*)
   (s-value (ANGLE-FEEDBACK-OBJ) :field-string nil)
@@ -121,7 +113,7 @@ interim feedback button again"))
 
 (defun ANGLE-FINAL-FUNCTION-FN (labeled-box string)
   (declare (ignore labeled-box))
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (dialog-enqueue :final-function
 		  (if (string= "" string)
 		      nil
@@ -129,7 +121,7 @@ interim feedback button again"))
 		  *ANGLE-INTER-QUEUE*))
 
 (defun angle-attach-point-fn (inter button)
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
   (s-value (ANGLE-CENTER-OF-ROTATION) :value button)
   (s-value (ANGLE-CENTER-OF-ROTATION) :x "")
   (s-value (ANGLE-CENTER-OF-ROTATION) :y "")
@@ -144,7 +136,7 @@ interim feedback button again"))
 		      *ANGLE-INTER-QUEUE*))))
 
 (defun angle-x-fn (gadget value)  
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
 
   ;; first determine if the value is valid
   (let* ((x (read-from-string value))
@@ -152,7 +144,7 @@ interim feedback button again"))
 	(y (if (string= y-value "") 0 (read-from-string y-value)))
 	(selection (g-value (ANGLE-CENTER-OF-ROTATION) :value)))
 
-    (when (not (gg:valid-integer-p gadget value))
+    (when (not (valid-integer-p gadget value))
 	  (return-from angle-x-fn))
 
     (s-value (ANGLE-CENTER-OF-ROTATION) :x value)
@@ -165,7 +157,7 @@ interim feedback button again"))
 		   :obj-over nil))))
 
 (defun angle-y-fn (gadget value)  
-  (declare (special angle-inter-menu))
+  (declare (special angle-inter-dialog))
 
   ;; first determine if the value is valid
   (let* ((y (read-from-string value))
@@ -173,7 +165,7 @@ interim feedback button again"))
 	(x (if (string= x-value "") 0 (read-from-string x-value)))
 	(selection (g-value (ANGLE-CENTER-OF-ROTATION) :value)))
 
-    (when (not (gg:valid-integer-p gadget value))
+    (when (not (valid-integer-p gadget value))
 	  (return-from angle-y-fn))
 
     (s-value (ANGLE-CENTER-OF-ROTATION) :y value)
@@ -189,15 +181,8 @@ interim feedback button again"))
   (let ((kr::*constants-disabled* nil))
   (angle-inter-do-stop)
 
-  (create-instance 'ANGLE-INTER-WIN inter:interactor-window
-		   (:title "angle interactor")
-		   (:left #-apple 500 #+apple 200)
-		   (:top  #-apple 0   #+apple 50)
-		   (:width 545)(:height 692)
-		   (:queue '*angle-inter-queue*))
-  (opal:update ANGLE-INTER-WIN)
 
-  (create-instance 'ANGLE-INTER-MENU opal:aggregadget
+  (create-instance 'ANGLE-INTER-DIALOG opal:aggregadget
    (:constant '(:left :top :width :height))
    (:left 10)
    (:top 10)
@@ -207,7 +192,7 @@ interim feedback button again"))
           (:left ,(o-formula (gvl :parent :left)))
 	  (:top ,(o-formula (gvl :parent :top)))
 	  (:string "Angle Interactor")
-	  (:font ,*very-large-bold-italic-serif-font*))
+	  (:font ,*dialog-title-font*))
 
       (:known-as ,NAME-BOX
 	  (:constant (t))
@@ -233,7 +218,7 @@ interim feedback button again"))
 	   ((:titled-frame ,titled-frame
 			   (:constant (t))
 			   (:string ":obj-to-change"))
-	    (:contents ,garnet-gadgets:radio-button-panel
+	    (:contents ,garnet-gadgets:motif-radio-button-panel
 		(:constant (t))
 		(:top ,(o-formula (+ 20 (gvl :parent :top))))
 		(:left ,(o-formula (+ 15 (gvl :parent :left))))
@@ -266,7 +251,7 @@ interim feedback button again"))
 		      (:string "Interim Feedback")
 		      (:min-frame-width 125)
 		      (:selection-function ANGLE-FEEDBACK-OBJ-FN))
-		  (:none-button ,garnet-gadgets:radio-button
+		  (:none-button ,garnet-gadgets:motif-radio-button
 		      (:constant (t))
                       (:left ,(o-formula (+ 10 (opal:gv-right
 						(gvl :parent :feedback-obj-box)))))
@@ -364,7 +349,7 @@ interim feedback button again"))
 		      (:value ,(o-formula (gvl :parent :parent :x)))
 		      (:selection-function angle-x-fn)
 		      (:label-string "X")
-		      (:label-font ,opal:default-font))
+		      (:label-font ,*labeled-box-label-font*))
 
 		  (:y ,garnet-gadgets:labeled-box
 		      (:constant (t))
@@ -376,7 +361,7 @@ interim feedback button again"))
 		      (:value ,(o-formula (gvl :parent :parent :y)))
 		      (:selection-function angle-y-fn)
 		      (:label-string "Y")
-		      (:label-font ,opal:default-font))
+		      (:label-font ,*labeled-box-label-font*))
 
 		  (:formula ,LABELED-LAP-RADIO-BUTTON
 		      (:constant (t))
@@ -408,16 +393,29 @@ interim feedback button again"))
 		    (:queue *ANGLE-INTER-QUEUE*)))))
 
   ;; make the text box for the start anywhere item be invisible
-  (s-value (g-value (second (g-value angle-inter-menu :start-where 
+  (s-value (g-value (second (g-value angle-inter-dialog :start-where 
 			     :contents :select-box-panel :components))
 		    :text-box) 
 	   :visible nil)
 
 
-(opal::fix-update-slots (g-value angle-inter-menu :start-where :contents
-				:select-box-panel))
-(opal::fix-update-slots (g-value angle-inter-menu :center-of-rotation :contents
-				:box-buttons))
+  (opal::fix-update-slots (g-value angle-inter-dialog :start-where :contents
+				   :select-box-panel))
+  (opal::fix-update-slots (g-value angle-inter-dialog :center-of-rotation :contents
+				   :box-buttons))
 
-(s-value ANGLE-INTER-WIN :aggregate ANGLE-INTER-MENU)
+
+  (create-instance 'ANGLE-INTER-WIN inter:interactor-window
+    (:title "angle interactor")
+    (:aggregate angle-inter-dialog)
+    (:left #-apple 500 #+apple 200)
+    (:top  #-apple 0   #+apple 50)
+    (:width (o-formula (+ (g-value angle-inter-dialog :width) 30) 500))
+    (:height (o-formula (+ (g-value angle-inter-dialog :height) 30) 500)))
+
+  (opal:update ANGLE-INTER-WIN)
+
+
+
+(s-value ANGLE-INTER-WIN :aggregate ANGLE-INTER-DIALOG)
 (opal:update ANGLE-INTER-WIN)))

@@ -26,8 +26,8 @@
   (:FUNCTION-FOR-OK `create-parameters)
   (:LEFT 0)
   (:TOP 0)
-  (:parts `(
-    (:OKCANCEL-BUTTON ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+  (:parts
+   `((:OKCANCEL-BUTTON ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION OKCANCEL-FUNCTION)
       (:INDENT 0)
       (:V-ALIGN :TOP)
@@ -39,22 +39,20 @@
       (:RANK-MARGIN NIL)
       (:FIXED-WIDTH-P T)
       (:SELECT-FUNCTION OKCANCEL-FUNCTION)
+      (:font ,*text-button-font*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
-      (:LEFT 80)
+      (:LEFT ,(o-formula (ceiling (- (gvl :parent :instructions :width) (gvl :width)) 2) 100))
       (:top ,(o-formula (+ (opal:gv-bottom (gvl :parent :link-slots)) 20))))
-    (:label ,opal:multi-text
+     (:label ,opal:multi-text
       (:left 10)
       (:top 10)
       (:string "If a slot should be a parameter, enter the name of
 the slot in the secondary selection that it should 
 retrieve its value from. If you do not want a slot 
 to be a parameter, just leave the text box next to 
-it blank (or make it blank it it currently contains 
+it blank (or make it blank if it currently contains 
 the name of a slot."))
 #|
       (:string "To make a slot a parameter, select its text box and
@@ -76,7 +74,8 @@ make its text box be blank"))
     (:parameters-list ,opal:aggrelist
       (:left ,(o-formula (+ (opal:gv-right (gvl :parent :slots)) 10)))
       (:top ,(o-formula (gvl :parent :slots :top)))
-      (:v-spacing 10)
+      (:label-font ,*slot-font*)
+      (:v-spacing 5)
       (:item-prototype 
        (,garnet-gadgets:labeled-box
 	(:label-string "")
@@ -88,12 +87,10 @@ make its text box be blank"))
 that are referenced by the primary selection, and
 which lapidary thinks should be parameters. If there
 are no such objects, nothing will appear."))
-    (:link-slots ,garnet-gadgets:text-button
+    (:link-slots ,garnet-gadgets:motif-text-button
       (:left 10)
-      (:GRAY-WIDTH 3)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:top ,(o-formula (+ (opal:gv-bottom (gvl :parent :instructions)) 20)))
+      (:font ,*text-button-font*)
       (:string "link parameters")
       (:final-feedback-p nil)
       (:selection-function set-up-and-display-link-parameters)))))
@@ -251,20 +248,20 @@ are no such objects, nothing will appear."))
     (when (cdr (g-value *selection-info* :p-selected))
 	  (lapidary-error "There should only be one primary selection. Please
 deselect objects so you have only one
-selection, then try again")
+selection, then try again.")
 	  (return-from show-parameter-window))
     (when (cdr (g-value *selection-info* :s-selected))
 	  (lapidary-error "There should only be one secondary selection. Please
 deselect objects so you have only one
-selection, then try again")
+selection, then try again.")
 	  (return-from show-parameter-window))
     (when (null s-selected)
 	  (lapidary-error "Must use a secondary selection to select the 
-object which provides the parameter values")
+object which provides the parameter values.")
 	  (return-from show-parameter-window))
     (when (null p-selected)
 	  (lapidary-error "Must use a primary selection to select the 
-object which should be parameterized")
+object which should be parameterized.")
 	  (return-from show-parameter-window))
 
     (setf parameters (g-value p-selected :slot-parameters))

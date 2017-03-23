@@ -142,8 +142,8 @@ Change log:
 			       (:Type (known-as-type :known-as)))
 		     (:constant T)
 		     (:box '(15 29 NIL NIL))
-		     (:left (formula leftform))
-		     (:top (formula topform))
+		     (:left (formula left-form))
+		     (:top (formula top-form))
 		     (:items '(("File" NIL
 				   (("Open...")("New")("Close")("Print")))
 				 ("Edit" NIL
@@ -164,7 +164,7 @@ Change log:
 ;			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(10 57 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:items '("Label1" "Label2" "Label3"))))))
 
        (create-instance NIL garnet-gadgets:x-button-panel
@@ -180,7 +180,7 @@ Change log:
 ;			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(100 30 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:items '("Label1" "Label2" "Label3"))))))
        (create-instance NIL garnet-gadgets:radio-button-panel
 	    (:constant T :value)
@@ -195,7 +195,7 @@ Change log:
 ;			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(100 135 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:items '("Label1" "Label2" "Label3"))))))
        (create-instance NIL opal:bitmap
 	    (:image (Get-Gilt-Bitmap "scrolling-menu.bitmap"))
@@ -209,7 +209,7 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(10 200 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:items '("Label1" "Label2" "Label3" "Label4"
 				  "Label5" "Label6" "Label7" "Label8"))
 			(:title "Title")))))
@@ -225,7 +225,7 @@ Change log:
 			(:Ok-Cancel-p T)
 			(:constant T)
 			(:box '(11 350 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:DIRECTION :HORIZONTAL)
 			(:SHADOW-OFFSET 5)
 			(:TEXT-OFFSET 2)
@@ -245,7 +245,7 @@ Change log:
 			(:Ok-Cancel-p T)
 			(:constant T)
 			(:box '(11 385 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:DIRECTION :HORIZONTAL)
 			(:SHADOW-OFFSET 5)
 			(:TEXT-OFFSET 2)
@@ -265,7 +265,7 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(110 240 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:items '("Label1" "Label2" "Label3"))
 			(:title "Title")))))
 
@@ -280,8 +280,8 @@ Change log:
 			       (:Type (known-as-type :known-as)))
 		     (:constant T)
 		     (:box '(117 340 NIL NIL))
-		     (:left (formula leftform))
-		     (:top (formula topform))))))
+		     (:left (formula left-form))
+		     (:top (formula top-form))))))
 
        (create-instance NIL opal:bitmap
 	 (:image (Get-Gilt-Bitmap "popup-button.bitmap"))
@@ -294,8 +294,8 @@ Change log:
 			       (:Type (known-as-type :known-as)))
 		     (:constant T)
 		     (:box '(117 340 NIL NIL))
-		     (:left (formula leftform))
-		     (:top (formula topform))))))
+		     (:left (formula left-form))
+		     (:top (formula top-form))))))
 
        (create-instance NIL opal:bitmap
 	    (:constant T)
@@ -310,9 +310,9 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(185 30 200 NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:grow-p T)
-			(:width (formula widthform))) 25)))
+			(:width (formula width-form))) 25)))
        (create-instance NIL opal:bitmap
 	    (:image (Get-Gilt-Bitmap "h-slider.bitmap"))
 	    (:constant T)
@@ -326,9 +326,9 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(185 65 200 NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:grow-p T)
-			(:width (formula widthform))
+			(:width (formula width-form))
 			(:val-2 10)(:num-marks 6)) 3)))
        (create-instance NIL opal:bitmap
 	    (:constant T)
@@ -343,9 +343,9 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(185 110 NIL 250))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:grow-p T)
-			(:height (formula heightform)))
+			(:height (formula height-form)))
 		      25))) ;; initial value
        (create-instance NIL opal:bitmap
 	    (:constant T)
@@ -360,9 +360,9 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(225 110 NIL 250))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:grow-p T)
-			(:height (formula heightform))
+			(:height (formula height-form))
 			(:val-2 10)(:num-marks 6)) 3)))
        (create-instance NIL opal:bitmap
 	    (:constant T)
@@ -377,8 +377,8 @@ Change log:
 ;	                (:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(280 110 100 NIL))
-			(:left (formula leftform))(:top (formula topform))
-			(:width (formula widthform))
+			(:left (formula left-form))(:top (formula top-form))
+			(:width (formula width-form))
 			(:int-feedback-p NIL)
 			(:val-1 10)(:val-2 0)
 			(:num-marks 6)(:title "Title")(:value-feedback-p NIL))
@@ -396,7 +396,7 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(290 210 NIL NIL))
-			(:left (formula leftform))(:top (formula topform)))
+			(:left (formula left-form))(:top (formula top-form)))
 		      25)))
        (create-instance NIL garnet-gadgets:labeled-box
 	    (:constant T :value)
@@ -413,7 +413,7 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(280 245 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:min-width 120)
 			(:label-string "Title:")))))
 
@@ -423,7 +423,7 @@ Change log:
 	    (:loaded :scrolling-labeled-box)
 	    (:min-width 120) (:grow-p T)
 	    (:value "Very long string")
-	    (:width (formula widthform))
+	    (:width (formula width-form))
 	    (:label-string "Title:")
 	    (:parts
 	     `(:label-text :frame
@@ -436,8 +436,8 @@ Change log:
 			(:do-not-dump-objects :me)
 			(:constant T)
 			(:box '(280 275 130 NIL))
-			(:left (formula leftform))(:top (formula topform))
-			(:width (formula widthform))
+			(:left (formula left-form))(:top (formula top-form))
+			(:width (formula width-form))
 			(:label-string "Title:")
 			(:min-width 120) (:grow-p T))))))
        (create-instance NIL opal:rectangle
@@ -450,9 +450,9 @@ Change log:
 				  (:Type (known-as-type :known-as)))
 			(:constant T)
 			(:box '(280 318 50 40))
-			(:left (formula leftform))(:top (formula topform))
-			(:width (formula widthform))
-			(:height (formula heightform))
+			(:left (formula left-form))(:top (formula top-form))
+			(:width (formula width-form))
+			(:height (formula height-form))
 			(:grow-p T)))))
        (create-instance NIL opal:line
 	    (:constant T)
@@ -478,7 +478,7 @@ Change log:
 				  (:Type (known-as-type :known-as)))
 			(:constant T)
 			(:box '(375 305 NIL NIL))
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			;; :point-to-leaf needed for text-interactor
 			(:point-to-leaf 'Fake-Point-to-Leaf)
 			(:string "Label")))))
@@ -496,7 +496,7 @@ Change log:
 					 (filename-type :image-name)))
 			(:box '(375 330 NIL NIL))
 			(:constant T)
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:image (o-formula (opal:read-image
 					    (gvl :image-name))))
 			;; want this to be a string, not a pathname.
@@ -523,7 +523,7 @@ Change log:
 				  (:Type (known-as-type :known-as)))
 			(:constant T)
 			(:box '(366 284 NIL NIL)) 
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			;; :point-to-leaf needed for text-interactor
 			(:point-to-leaf 'Fake-Point-to-Leaf)
 		        (:initial-Text "MultiFont-Text")))))
@@ -543,7 +543,7 @@ Change log:
 					 (filename-type :image-name)))
 			(:box '(267 237 NIL NIL))
 			(:constant T)
-			(:left (formula leftform))(:top (formula topform))
+			(:left (formula left-form))(:top (formula top-form))
 			(:image (o-formula (opal:read-xpm-file
 					    (gvl :image-name))))
 			(:image-name

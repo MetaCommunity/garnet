@@ -696,10 +696,10 @@ being used for ~S" obj)))
 
 (create-instance 'VALUE-CONTROL opal:aggregadget
   (:window-left 300) (:window-top 400)
-  (:window-width 495) (:window-height 225)
+  (:window-width 525) (:window-height 225)
   (:window-title "Value Control")
   (:window-background-color *Foreground-Color*)
-  (:width (o-formula (gvl :window :width) 495))
+  (:width (o-formula (gvl :window :width) 525))
   (:height (o-formula (gvl :window :height) 225))
   (:for-object NIL)
   (:slot-to-reference :filtered-value)

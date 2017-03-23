@@ -1,23 +1,20 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; -*- Mode: Lisp; Package: LAPIDARY -*-
-;;;
-;;;
-;;;  Choice of Items Interactor dialog box
-;;;
-
-;;;  Note: This file needs parts from the file  dialog-parts.lisp
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+;;  $Id$
+;;
+;;  Choice of Items Interactor dialog box
+;;
+;;  Note: This file needs parts from the file  dialog-parts.lisp
 
 (in-package "LAPIDARY")
 
-(declaim (special choice-menu *by-demo-copy*))
+(declaim (special choice-inter-dialog *by-demo-copy*))
 (defvar *CHOICE-INTER-QUEUE* NIL)
 
 ;; accessor functions for various aggregates in the choice interactor
@@ -26,22 +23,22 @@
 (declaim (inline choice-start-where choice-feedback-obj choice-final-feedback
 		 choice-how-set choice-other-box choice-other-button))
 (defun CHOICE-START-WHERE ()
-  (g-value CHOICE-MENU :start-where))
+  (g-value CHOICE-INTER-DIALOG :start-where))
 (defun CHOICE-FEEDBACK-OBJ ()
-  (g-value CHOICE-MENU :feedback-obj))
+  (g-value CHOICE-INTER-DIALOG :feedback-obj))
 (defun CHOICE-FINAL-FEEDBACK ()
-  (g-value CHOICE-MENU :final-feedback-obj))
+  (g-value CHOICE-INTER-DIALOG :final-feedback-obj))
 (defun CHOICE-HOW-SET ()
-  (g-value CHOICE-MENU :how-set))
+  (g-value CHOICE-INTER-DIALOG :how-set))
 (defun CHOICE-OTHER-BOX ()
-  (g-value CHOICE-MENU :start-where :contents :other-box))
+  (g-value CHOICE-INTER-DIALOG :start-where :contents :other-box))
 (defun CHOICE-OTHER-BUTTON ()
-  (g-value CHOICE-MENU :start-where :contents :other-button))
+  (g-value CHOICE-INTER-DIALOG :start-where :contents :other-button))
 
-;;; *********************************
-;;; Change the name of the interactor
-;;; *********************************
-;;;    -- interactor-name is a string
+;;**********************************
+;; Change the name of the interactor
+;;    -- interactor-name is a string
+;;**********************************
 (defun INTERACTOR-NAME-FN (gadget interactor-name)
   (declare (ignore gadget))
   (dialog-enqueue :known-as
@@ -51,11 +48,11 @@
 		  *CHOICE-INTER-QUEUE*))
 
 
-;;; ************************************
-;;; Functions for the :start-where panel
-;;; ************************************
+;;*************************************
+;; Functions for the :start-where panel
+;;*************************************
 
-;;;    :start-where is in an aggregate of items
+;;    :start-where is in an aggregate of items
 (defun AGG-OF-ITEMS-FN (agg-box label)
   (declare (ignore agg-box))
   (let ((selection (car (g-value *SELECTION-INFO* :selected)))
@@ -89,9 +86,9 @@
 	  (s-value panel :field-string "")))))
 
 
-;;; *************************************
-;;; Functions for the :feedback-obj panel
-;;; *************************************
+;;**************************************
+;;  Functions for the :feedback-obj panel
+;;**************************************
 
 (defun FEEDBACK-OBJ-FN (feedback-obj-box button-label)
   (declare (special *selection-info*))
@@ -99,8 +96,8 @@
     (cond ((null selection)
 	   (s-value (CHOICE-FEEDBACK-OBJ) :field-string nil)
 	   (s-value (CHOICE-FEEDBACK-OBJ) :value nil)
-	   (lapidary-error "please make a selection, then press the
-interim feedback button again"))
+	   (lapidary-error "Please make a selection, then press the
+interim feedback button again."))
 	((null (cdr selection)) ; only one selection
 	 (s-value (CHOICE-FEEDBACK-OBJ) :field-string
 		  (name-for-schema (car selection)))
@@ -155,7 +152,7 @@ interim feedback button again"))
 	(s-value gadget :value (not (g-value gadget :value)))
 	(lapidary-error "Demonstration is already in progress. Press the 
 cancel button in the by-demo window, then the by-demo button 
-if you want to start over"))))
+if you want to start over."))))
 
 (defun NIL-FEEDBACK-OBJ-FN (button button-label)
   (declare (ignore button))
@@ -163,9 +160,9 @@ if you want to start over"))))
   (s-value (CHOICE-FEEDBACK-OBJ) :field-string nil)
   (s-value (CHOICE-FEEDBACK-OBJ) :value button-label))
 
-;;; ******************************************
-;;; Functions for changing the :final-feedback-obj
-;;; ******************************************
+;;***********************************************
+;; Functions for changing the :final-feedback-obj
+;;***********************************************
 
 (defun FINAL-FEEDBACK-FN (final-feedback-box button-label)
   (declare (special *selection-info*))
@@ -173,8 +170,8 @@ if you want to start over"))))
     (cond ((null selection)
 	   (s-value (CHOICE-FINAL-FEEDBACK) :field-string nil)
 	   (s-value (CHOICE-FINAL-FEEDBACK) :value nil)
-	   (lapidary-error "please make a selection, then press the
-interim feedback button again"))
+	   (lapidary-error "Please make a selection, then press the
+interim feedback button again."))
 	((null (cdr selection)) ; only one selection
 	 (s-value (CHOICE-FINAL-FEEDBACK) :field-string
 		  (name-for-schema (car selection)))
@@ -230,7 +227,7 @@ interim feedback button again"))
 	(s-value gadget :value (not (g-value gadget :value)))
 	(lapidary-error "Demonstration is already in progress. Press the 
 cancel button in the by-demo window, then the by-demo button 
-if you want to start over"))))
+if you want to start over."))))
   
 (defun NIL-FINAL-FEEDBACK-FN (button button-label)
   (declare (ignore button))
@@ -239,9 +236,9 @@ if you want to start over"))))
   (s-value (CHOICE-FINAL-FEEDBACK) :value button-label))
 
 
-;;; *****************************
-;;; Change the type of interactor
-;;; *****************************
+;;******************************
+;; Change the type of interactor
+;;******************************
 
 (defun INTER-TYPE-FN (button-panel value)
   (declare (ignore button-panel))
@@ -251,11 +248,11 @@ if you want to start over"))))
 		      lapidary-button-interactor)
 		  *CHOICE-INTER-QUEUE*))
 
-;;; ********************************************
-;;; Change the :final-function of the interactor
-;;; ********************************************
+;;*********************************************
+;; Change the :final-function of the interactor
+;;*********************************************
 
-;;;    Note:  (funcall (read-from-string "equal") 3 3) ==> T
+;;    Note:  (funcall (read-from-string "equal") 3 3) ==> T
 (defun FINAL-FUNCTION-FN (labeled-box string)
   (declare (ignore labeled-box))
   (dialog-enqueue :final-function
@@ -264,11 +261,11 @@ if you want to start over"))))
 		      (read-from-string string))
 		  *CHOICE-INTER-QUEUE*))
 
-;;; *************************************
-;;; Change the :how-set of the interactor
-;;; *************************************
+;;**************************************
+;; Change the :how-set of the interactor
+;;**************************************
 
-;;;    Note:  assume items in the button-panel are atoms (i.e., :toggle)
+;;    Note:  assume items in the button-panel are atoms (i.e., :toggle)
 (defun HOW-SET-FN (button-panel value)
   (s-value (CHOICE-HOW-SET) :value value)
   (if (and (stringp value) (string-equal value "<formula>"))
@@ -306,16 +303,8 @@ if you want to start over"))))
   (choice-inter-do-stop)
 
 
-(create-instance 'CHOICE-INTERACTOR-WIN inter:interactor-window
-   (:title "choice interactor")
-   (:left #-apple 500 #+apple 200)
-   (:top  #-apple 10  #+apple 50)
-   (:width 540)(:height 600)
-   (:queue '*choice-inter-queue*))
-(opal:update CHOICE-INTERACTOR-WIN)
 
-
-(create-instance 'CHOICE-MENU opal:aggregadget
+(create-instance 'CHOICE-INTER-DIALOG opal:aggregadget
    (:constant '(:left :top :width :height :visible))
    (:left 10)
    (:top 10)
@@ -325,7 +314,7 @@ if you want to start over"))))
           (:left ,(o-formula (gvl :parent :left)))
 	  (:top ,(o-formula (gvl :parent :top)))
 	  (:string "Choice of Items Interactor")
-	  (:font ,*very-large-bold-italic-serif-font*))
+	  (:font ,*dialog-title-font*))
 
       (:known-as ,NAME-BOX
           (:constant (t))
@@ -368,7 +357,7 @@ if you want to start over"))))
 		      (:string "Interim Feedback")
 		      (:min-frame-width 125)
 		      (:selection-function FEEDBACK-OBJ-FN))
-		  (:demo-button ,garnet-gadgets:text-button
+		  (:demo-button ,garnet-gadgets:motif-text-button
 		      (:constant (t))
 		      (:demo-slot :interim-selected)
 		      (:demo-p t)
@@ -380,15 +369,11 @@ if you want to start over"))))
 			       (+ 20 (opal:gv-right
 				      (gvl :parent :feedback-obj-box)))))
 		      (:top ,(o-formula (+ 20 (gvl :parent :parent :top))))
-;		      (:width ,(o-formula (+ (gvl :shadow-offset)
-;					     (gvl :fixed-width-size))))
-;		      (:height ,(o-formula (+ (gvl :shadow-offset)
-;					      (gvl :fixed-height-size))))
+		      (:font ,*text-button-nonbold-font*)
 		      (:string "By Demo")
 		      (:selection-function by-demo-interim-feedback)
-		      (:gray-width 3) (:shadow-offset 5) (:text-offset 3)
 		      (:final-feedback-p t))
-		  (:none-button ,garnet-gadgets:radio-button
+		  (:none-button ,garnet-gadgets:motif-radio-button
 		      (:constant (t))
                       (:left ,(o-formula (+ 10 (opal:gv-right
 						(gvl :parent :demo-button)))))
@@ -427,7 +412,7 @@ if you want to start over"))))
 		      (:string "Final Feedback")
 		      (:min-frame-width 125)
 		      (:selection-function FINAL-FEEDBACK-FN))
-		  (:demo-button ,garnet-gadgets:text-button
+		  (:demo-button ,garnet-gadgets:motif-text-button
 		      (:constant (t))
 		      (:demo-slot :selected)
 		      (:demo-p t)
@@ -439,15 +424,11 @@ if you want to start over"))))
 			       (+ 20 (opal:gv-right
 				      (gvl :parent :final-feedback-box)))))
 		      (:top ,(o-formula (+ 20 (gvl :parent :parent :top))))
-;		      (:width ,(o-formula (+ (gvl :shadow-offset)
-;					     (gvl :fixed-width-size))))
-;		      (:height ,(o-formula (+ (gvl :shadow-offset)
-;					      (gvl :fixed-height-size))))
+		      (:font ,*text-button-nonbold-font*)
 		      (:string "By Demo")
 		      (:selection-function by-demo-final-feedback)
-		      (:gray-width 3) (:shadow-offset 5) (:text-offset 3)
 		      (:final-feedback-p t))
-		  (:none-button ,garnet-gadgets:radio-button
+		  (:none-button ,garnet-gadgets:motif-radio-button
 		      (:constant (t))
                       (:left ,(o-formula (+ 10 (opal:gv-right
 						(gvl :parent :demo-button)))))
@@ -460,14 +441,14 @@ if you want to start over"))))
 		      (:selection-function NIL-FINAL-FEEDBACK-FN))))))))
 
 
-      (:inter-type ,garnet-gadgets:radio-button-panel
+      (:inter-type ,garnet-gadgets:motif-radio-button-panel
 	  (:constant (t))
           (:left ,(o-formula (+ 20 (gvl :parent :left))))
 	  (:top ,(o-formula (+ 10 (opal:gv-bottom
 				   (gvl :parent :final-feedback-obj)))))
 	  (:width ,(o-formula (let ((width 0))
-				(gvl :radio-button-list :components)
-				(opal:do-components (gvl :radio-button-list)
+				(gvl :button-list :components)
+				(opal:do-components (gvl :button-list)
 				 #'(lambda (button)
 				     (setf width
 					   (+ width (g-value button :width)))))
@@ -489,7 +470,7 @@ if you want to start over"))))
           (:left ,(o-formula (+ 20 (gvl :parent :left))))
 	  (:top ,(o-formula (+ 10 (opal:gv-bottom
 				   (gvl :parent :inter-type)))))
-	  (:label-string "Final Function:")
+	  (:label-string ":final-function")
 	  (:value "")
 	  (:min-frame-width 150)
 	  (:selection-function FINAL-FUNCTION-FN))
@@ -512,7 +493,7 @@ if you want to start over"))))
 					10 (gvl :increment-box :height))))
 		(:value ,(o-formula (gvl :parent :value)))
 		(:parts
-		 ((:how-set-panel ,garnet-gadgets:radio-button-panel
+		 ((:how-set-panel ,garnet-gadgets:motif-radio-button-panel
 		       (:constant (t))
 		       (:left ,(o-formula (+ 15 (gvl :parent :parent :left))))
 		       (:top ,(o-formula (+ 20 (gvl :parent :parent :top))))
@@ -521,6 +502,7 @@ if you want to start over"))))
 		       (:direction :horizontal)
 		       (:fixed-width-p NIL)
 		       (:rank-margin 4)
+;;;		       (:font ,*radio-button-font*)
 		       (:font ,opal:default-font)
 		       (:value ,(o-formula (let ((value (gvl :parent :value)))
 					     (when (or (stringp value)
@@ -536,7 +518,8 @@ if you want to start over"))))
                       (:left ,(o-formula (+ 15 (gvl :parent :parent :left))))
 		      (:top ,(o-formula (+ 5 (opal:gv-bottom
 					      (gvl :parent :how-set-panel)))))
-		      (:label-string "increment by:")
+		      (:label-string "Increment by:")
+;;;		      (:label-font ,*labeled-box-label-font*)
 		      (:label-font ,opal:default-font)
 		      (:selection-function increment-by-fn)
 		      (:value ,(o-formula (let ((value (gvl :parent :value)))
@@ -552,7 +535,8 @@ if you want to start over"))))
 						(gvl :parent :increment-box)))))
 		      (:top ,(o-formula (+ 5 (opal:gv-bottom
 					      (gvl :parent :how-set-panel)))))
-		      (:label-string "max value:")
+		      (:label-string "Max value:")
+;;;		      (:label-font ,*labeled-box-label-font*)
 		      (:label-font ,opal:default-font)
 		      (:selection-function max-value-fn)
 		      (:value ,(o-formula (let ((value (gvl :parent :value)))
@@ -568,11 +552,19 @@ if you want to start over"))))
 				   (gvl :parent :how-set)))))
 	  (:queue *CHOICE-INTER-QUEUE*)))))
 
-(opal::fix-update-slots (g-value choice-menu :start-where :contents
+(opal::fix-update-slots (g-value choice-inter-dialog :start-where :contents
 				:select-box-panel))
 
-(opal:update CHOICE-INTERACTOR-WIN)
-(s-value choice-interactor-win :aggregate CHOICE-MENU)
+
+(create-instance 'CHOICE-INTERACTOR-WIN inter:interactor-window
+   (:title "choice interactor")
+   (:left #-apple 500 #+apple 200)
+   (:top  #-apple 10  #+apple 50)
+   (:aggregate choice-inter-dialog)
+   (:width (o-formula (+ (g-value choice-inter-dialog :width) 30) 600))
+   (:height (o-formula (+ (g-value choice-inter-dialog :height) 30) 600))
+   (:queue '*choice-inter-queue*))
+
 (opal:update CHOICE-INTERACTOR-WIN)))
 
 (defun choice-inter-do-stop ()

@@ -60,9 +60,9 @@
 
 ;; loading gadgets is in c32loader
 
-(create-instance 'ital-font opal:font (:face :italic))
-(create-instance 'bold-font opal:font (:face :bold))
-(create-instance 'reg-font opal:font)
+(create-instance 'ital-font opal:font (:family :sans-serif) (:face :italic))
+(create-instance 'bold-font opal:font (:family :sans-serif) (:face :bold))
+(create-instance 'reg-font opal:font (:family :sans-serif))
 
 (create-instance 'form-icon opal:bitmap
   (:image (opal:read-image (merge-pathnames
@@ -260,7 +260,7 @@
       (:top ,(o-formula (+ header-height (gvl :parent :top))))
       (:width ,Header-width)
       (:height ,Scroll-Panel-Height))
-     (:scroll-bar ,garnet-gadgets:v-scroll-bar
+     (:scroll-bar ,garnet-gadgets:motif-v-scroll-bar
       ; (:constant T)
       (:left ,(o-formula (gvl :parent :left)))
       (:top ,(o-formula (gvl :parent :top)))
@@ -513,7 +513,7 @@
   (setf obj-list (append obj-list (list NIL))) ; add empty panel for new objs
   (let* ((num (length obj-list))
 	 (scroll-gadget (create-instance NIL
-			    garnet-gadgets:scrolling-window-with-bars
+			    garnet-gadgets:motif-scrolling-window-with-bars
 ;;;			  (:constant T)
 			  (:left left) (:top top)
 			  (:title "C32")
@@ -760,7 +760,7 @@
 (defun C32error (str)
   (unless error-gadget-object
     (setf error-gadget-object		; first time - create it.
-	  (create-instance nil garnet-gadgets:error-gadget)))
+	  (create-instance nil garnet-gadgets:motif-error-gadget)))
   (gg:display-error error-gadget-object str))
 
 
@@ -769,7 +769,7 @@
 (defun c32-query (string)
   (unless query-gadget-object
     (setf query-gadget-object		; first time - create it.
-	  (create-instance nil garnet-gadgets:query-gadget)))
+	  (create-instance nil garnet-gadgets:motif-query-gadget)))
   (string= "OK"
 	   (gg:display-query-and-wait query-gadget-object string)))
 
@@ -1012,17 +1012,17 @@
 (defun Create-Main-Menu (left top)
   (let (win agg menu)
     (setq win (create-instance NIL inter:interactor-window
-		(:top top) (:left left) (:width 286) (:height 195)
+		(:top top) (:left left) (:width 400) (:height 195)
 		(:title "C32 Commands")
 		(:aggregate (setq agg (create-instance NIL opal:aggregate
 					; (:constant :parent :visible T)
 					(:visible T))))))
-    (setq menu (create-instance NIL garnet-gadgets:text-button-panel
+    (setq menu (create-instance NIL garnet-gadgets:motif-text-button-panel
 		 (:left 5) (:top 5)
 		 (:final-feedback-p NIL)
 		 (:rank-margin 5)
 		 (:shadow-offset 4) (:text-offset 2) (:gray-width 2)
-		 (:font opal:default-font)
+		 (:font (opal:get-standard-font :sans-serif :bold :small))
 		 #+DZG
 		 (:constant :parent :visible :text-offset :gray-width
 			    :shadow-offset :rank-margin :font T)
@@ -1041,8 +1041,8 @@
 
     (opal:add-component
      agg
-     (create-instance nil gg:scrolling-labeled-box
-       (:left 10) (:top 170) (:width 270)
+     (create-instance nil gg:motif-scrolling-labeled-box
+       (:left 10) (:top 170) (:width 350)
        (:label-string "Current package:") (:value "COMMON-LISP-USER")
        (:selection-function 'set-current-package)
 ;;;    (:constant T)
@@ -1081,7 +1081,7 @@
 	(:line-style opal:blue-line)
 	(:x1 (o-formula (+ (gv r :left) (floor (gv r :width) 2))))
 	(:y1 40)(:x2 100)(:y2 10))
-      (create-instance 'mybutton garnet-gadgets:text-button
+      (create-instance 'mybutton garnet-gadgets:motif-text-button
 	(:box '(10 100 0 0))
 	(:left (o-formula (first (gvl :box))))
 	(:top (o-formula (second (gvl :box))))

@@ -1024,8 +1024,8 @@ avoiding wasted objects.
 			   :top :left :width :height :cursor :title :icon-title
 			   :display :background-color :icon-bitmap
 			   :draw-on-children :modal-p :save-under)
-	    (:local-only-slots (:drawable nil) (:window nil) 
-			       (:parent nil) (:destroy-hooks nil)))
+	    (:local-only-slots (:drawable nil) (:window nil) (:parent nil) 
+			       (:destroy-hooks nil) (:notify-hooks nil)))
   (:left 0)
   (:top 0)
   (:width 355)

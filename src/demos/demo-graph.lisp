@@ -20,12 +20,13 @@
 
 ;; Load necessary files
 ;;
-(defvar DEMO-GRAPH-INIT
-  (progn
-    (load common-lisp-user::Garnet-Aggregraphs-Loader)
-    (dolist (file '("text-buttons-loader" "scrolling-labeled-box-loader"
-		    "error-gadget-loader"))
-   (common-lisp-user::garnet-load (concatenate 'string "gadgets:" file)))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar DEMO-GRAPH-INIT
+    (progn
+      (load common-lisp-user::Garnet-Aggregraphs-Loader)
+      (dolist (file '("text-buttons-loader" "scrolling-labeled-box-loader"
+		      "error-gadget-loader"))
+	(common-lisp-user::garnet-load (concatenate 'string "gadgets:" file))))))
 
 
 (declaim (special DEMO-GRAPH-WIN DEMO-GRAPH-TOP-AGG SCHEMA-GRAPH
@@ -212,10 +213,15 @@
 				       SCHEMA-GRAPH))))
 
 
+  (opal:add-component DEMO-GRAPH-TOP-AGG RELAYOUT)
+  (opal:update DEMO-GRAPH-WIN)
+
+  
   ;;; Used to set the root of the graph
   ;;; 
   (create-instance 'ROOT-BOX garnet-gadgets:scrolling-labeled-box
-     (:left 100) (:top 10) (:width 250)
+     (:left (o-formula (+ (g-value RELAYOUT :button-width) 20))) 
+     (:top 10) (:width 275)
      (:label-string "Schema Root:")
      (:value "opal:view-object")
      (:old-value "opal:view-object")
@@ -253,8 +259,7 @@
 	    ))))
 
   
-  (opal:add-components DEMO-GRAPH-TOP-AGG
-		       RELAYOUT ROOT-BOX SCHEMA-GRAPH)
+  (opal:add-components DEMO-GRAPH-TOP-AGG ROOT-BOX SCHEMA-GRAPH)
   (opal:update DEMO-GRAPH-WIN)
   
 

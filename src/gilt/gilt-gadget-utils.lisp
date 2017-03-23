@@ -67,10 +67,11 @@ Change log:
 ;;;  by putting the multi-selection gadget at a higher priority level
 
 ;; never run the objects in the gadget selection window
-(defparameter RunGadgetActiveForm
+#+UNUSED
+(defparameter run-gadget-active-form
   (o-formula (and (not (eq (gvl :window) *Ib-Win*))
 		  (eq :run (gv *Run-Build-Obj* :value)))))
-(defparameter BuildGadgetActiveForm
+(defparameter build-gadget-active-form
   (o-formula (eq :build (gv *Run-Build-Obj* :value))))
 
 ;;; Move takes precedence over text editing, popping up sub-objects
@@ -99,7 +100,7 @@ Change log:
 (pushnew *Selection-Move-Grow-Priority-Level* inter:priority-level-list)
 (pushnew *Selection-Grow-Multiple-Priority-Level* inter:priority-level-list)
 
-(defparameter LinepForm
+(defparameter linep-form
   (o-formula (let ((objs (gv *selection-obj* :value)) obj)
 	       (cond ((cdr objs) NIL) ;not line if multiple
 		     ((setq obj (car objs))
@@ -107,10 +108,10 @@ Change log:
 		     (T NIL)))))
 
 
-(defparameter leftform (o-formula (first (gvl :box))))
-(defparameter topform (o-formula (second (gvl :box))))
-(defparameter widthform (o-formula (third (gvl :box))))
-(defparameter heightform (o-formula (fourth (gvl :box))))
+(defparameter left-form (o-formula (first (gvl :box))))
+(defparameter top-form (o-formula (second (gvl :box))))
+(defparameter width-form (o-formula (third (gvl :box))))
+(defparameter height-form (o-formula (fourth (gvl :box))))
 
 
 ;;; Set the value slot, but first make sure that formulas are set up by
@@ -292,7 +293,7 @@ Change log:
 	(:how-set :set)
 	(:continuous NIL)
 	(:final-feedback-obj ,(o-formula (gvl :operates-on :feedback)))
-	(:active ,(formula BuildGadgetActiveForm))
+	(:active ,(formula build-gadget-active-form))
 	(:start-event :any-mousedown)
 	(:start-where
 	 ,(o-formula (list :element-of

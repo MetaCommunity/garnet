@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,39 +22,42 @@
 ;;; 5/10/93 bvz Created
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(*hourglass-cursor* *regular-cursor*)))
 
 ;;; This function loads the bitmap specified from the Gilt directory
 (defun Get-Gilt-Bitmap (bitmapname)
   (opal:read-image (merge-pathnames bitmapname
 			 common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
-(defparameter HourGlassCursor
+(defparameter *hourglass-cursor*
   (cons (create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.cursor")))
 	(create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.mask")))))
-(defparameter RegularCursor (g-value opal::window :cursor))
+(defparameter *regular-cursor* (g-value opal::window :cursor))
 
-(defun SetHourGlassCursor (&optional extrawindows)
-  (declare (special *constraint-gadget*))
-  (when (g-value *constraint-gadget* :obj-to-constrain)
-	(s-value (g-value *constraint-gadget* :obj-to-constrain :window)
-		 :cursor HourGlassCursor)
-	(opal:update (g-value *constraint-gadget* :obj-to-constrain :window)))
-  (dolist (win extrawindows)
-    (s-value win :cursor HourGlassCursor)
+(defun set-hourglass-cursor (&optional extra-windows)
+  (declare (special *constraint-dialog*))
+  (when (g-value *constraint-dialog* :obj-to-constrain)
+	(s-value (g-value *constraint-dialog* :obj-to-constrain :window)
+		 :cursor *hourglass-cursor*)
+	(opal:update (g-value *constraint-dialog* :obj-to-constrain :window)))
+  (dolist (win extra-windows)
+    (s-value win :cursor *hourglass-cursor*)
     (opal:update win)))
 
 
-(defun RestoreRegularCursor (&optional extrawindows)
-  (declare (special *constraint-gadget*))
-  (when (g-value *constraint-gadget* :obj-to-constrain)
-	(s-value (g-value *constraint-gadget* :obj-to-constrain :window)
-		 :cursor RegularCursor)
-	(opal:update (g-value *constraint-gadget* :obj-to-constrain :window)))
-  (dolist (win extrawindows)
-    (s-value win :cursor RegularCursor)
+(defun restore-regular-cursor (&optional extra-windows)
+  (declare (special *constraint-dialog*))
+  (when (g-value *constraint-dialog* :obj-to-constrain)
+	(s-value (g-value *constraint-dialog* :obj-to-constrain :window)
+		 :cursor *regular-cursor*)
+	(opal:update (g-value *constraint-dialog* :obj-to-constrain :window)))
+  (dolist (win extra-windows)
+    (s-value win :cursor *regular-cursor*)
     (opal:update win)))
 
 ;;; make c32 windows disappear
@@ -68,20 +71,20 @@
 (defun c32 (&optional (obj nil) (slot nil) 
 	    &key (left nil) (top nil) (c32-custom-function nil)
 	         (prompt "Press OK when you're finished with C32"))
-  (declare (special *constraint-gadget* c32::lapidary-p
+  (declare (special *constraint-dialog* c32::lapidary-p
 		    c32::*all-windows* c32::ask-object
 		    c32::*current-panel-set*
-		    *constraint-gadget-query-window*
+		    *constraint-dialog-query-window*
 		    c32::*Custom-Function* c32::*C32-Custom-Function*
 		    c32::*Top-Level-Agg*))
 
 
-  (let ((p-selected (g-value *constraint-gadget* :obj-to-constrain))
-	(s-selected (g-value *constraint-gadget* :obj-to-reference))
+  (let ((p-selected (g-value *constraint-dialog* :obj-to-constrain))
+	(s-selected (g-value *constraint-dialog* :obj-to-reference))
 	(win-list c32::*all-windows*)
 	(reversed-list (reverse c32::*all-windows*))
 	win panel w)
-    (SetHourGlassCursor win-list)
+    (set-hourglass-cursor win-list)
 
     (if c32::*all-windows*
 	(progn
@@ -112,7 +115,7 @@
     
     ;; set the *top-level-agg*, *custom-function*, and *c32-custom-function*
     ;; global variables in c32
-    (setf c32::*top-level-agg* (g-value *constraint-gadget* :top-level-agg))
+    (setf c32::*top-level-agg* (g-value *constraint-dialog* :top-level-agg))
     (setf c32::*c32-custom-function* c32-custom-function)
     ;; custom function should be called only if a constraint is installed--if
     ;; a c32-custom-function is provided, the constraint will not be installed,
@@ -120,7 +123,7 @@
     (setf c32::*custom-function* 
 	  (if c32-custom-function
 	      nil
-	      (g-value *constraint-gadget* :custom-function)))
+	      (g-value *constraint-dialog* :custom-function)))
     ;; if there was an object passed in, display the object and pop up
     ;; the formula box for the slot that is passed in
 
@@ -169,20 +172,20 @@
     ;; press when they're done with C32
     (when left
 	  ;; make sure query gadget stays on screen
-	  (when (> (+ left (g-value *constraint-gadget-query-window* :width))
+	  (when (> (+ left (g-value *constraint-dialog-query-window* :width))
 		   gem:*screen-width*)
 	    (setf left (- gem:*screen-width* 
-			  (g-value *constraint-gadget-query-window* :width))))
-	  (when (> (+ top (g-value *constraint-gadget-query-window* :height))
+			  (g-value *constraint-dialog-query-window* :width))))
+	  (when (> (+ top (g-value *constraint-dialog-query-window* :height))
 		   gem:*screen-height*)
 	    (setf top (- gem:*screen-height*
-			 (g-value *constraint-gadget-query-window* :height))))
-	  (s-value *constraint-gadget-query-window* :selection-function
+			 (g-value *constraint-dialog-query-window* :height))))
+	  (s-value *constraint-dialog-query-window* :selection-function
 		   'c32-ok)
-	  (s-value *constraint-gadget-query-window* :modal-p nil)
-	  (garnet-gadgets:display-query *constraint-gadget-query-window*
+	  (s-value *constraint-dialog-query-window* :modal-p nil)
+	  (garnet-gadgets:display-query *constraint-dialog-query-window*
 			prompt
 			'("OK")))
 
-    (RestoreRegularCursor win-list)))
+    (restore-regular-cursor win-list)))
 	 

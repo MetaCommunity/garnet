@@ -28,7 +28,7 @@
 (defparameter formula-win-offset 0
   "Offset for formula windows, so they are not exactly on top of one another")
 
-(create-instance 'My-Text-Button-Panel garnet-gadgets:text-button-panel
+(create-instance 'My-Text-Button-Panel garnet-gadgets:motif-text-button-panel
 		 (:shadow-offset 4)
 		 (:text-offset 2)
 		 (:final-feedback-p NIL)
@@ -55,11 +55,11 @@
 			    5) 100))
       (:top 2)
       (:items (("OK" Do-Form-Ok) ("Cancel" Do-Form-Cancel))))
-     (:buttons ,garnet-gadgets:text-button-panel
+     (:buttons ,garnet-gadgets:motif-text-button-panel
       (:left 6) (:top 38) (:final-feedback-p nil)
       (:rank-margin 1)
       (:shadow-offset 2) (:text-offset 2) (:gray-width 2)
-      (:font ,opal:default-font)
+      (:font ,(opal:get-standard-font :sans-serif nil nil))
       (:items (("Insert Function" InsertFunction)
 	       ("Insert From Spread" InsertRefFromSpread)
 	       ("Insert From Mouse" InsertRefFromMouse)))))))
@@ -73,7 +73,7 @@
 
 
 (defun make-scroll-gadget (win1)
-  (create-instance NIL garnet-gadgets:scrolling-window-with-bars
+  (create-instance NIL garnet-gadgets:motif-scrolling-window-with-bars
     (:left -2) (:top Form-Header-Height)
     ;; width and height overridden with formulas below
     (:width (+ 1 Formula-Win-Width))

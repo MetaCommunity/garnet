@@ -135,7 +135,7 @@
 	 editor-agg result
 ;	 obj-name
 	 )
-    (cond ((null objs) (lapidary-error "must select an object first") nil)
+    (cond ((null objs) (lapidary-error "You must select an object first.") nil)
 	  (t
 	   ; this prevents create-instance from copying feedback links
 	   (primary-deselect-objects :none)
@@ -171,7 +171,7 @@
 	     (dolist (slot (if (is-a-line-p result)
 			       '(:x1 :y1 :x2 :y2)
 			       '(:left :top)))
-	       (gg:cg-destroy-constraint result slot))
+	       (lapidary-dialogs:cd-destroy-constraint result slot))
 
 	     ;;; if a position is passed in for the object, position it at
 	     ;;; the prescribed position; otherwise, move the instance 20 

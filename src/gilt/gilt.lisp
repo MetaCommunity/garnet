@@ -99,7 +99,7 @@
 
 (defun Make-Main-Menu ()
   (let* ((win (create-instance NIL inter:interactor-window
-		 (:top 45)(:left 500)(:width 346)(:height 131)
+		 (:top 45)(:left 500)(:width 500)(:height 131)
 		 (:title "Gilt Commands")
 		 (:background-color wheat)))
 	 (agg (create-instance NIL opal:aggregate
@@ -123,7 +123,7 @@
 	     (:constant '(T :EXCEPT :active-p :LABEL-STRING :FIELD-FONT))
 	     (:foreground-color wheat)
 	     (:left 93)(:top 44)
-	     (:line-p (formula LinepForm))
+	     (:line-p (formula linep-form))
 	     (:Label-string (o-formula
 			     (if (gvl :line-p) "    X1" "  LEFT") "  LEFT"))
 	     (:slot (o-formula  (if (gvl :line-p) :x1 :left)))
@@ -749,7 +749,7 @@
 	      (gv *Selection-Obj* :rect-movegrow-feedback))))
 	(:line-p (o-formula (gvl :window :current-gadget :line-p)))
 	;; active if in :build mode
-	(:active (formula BuildGadgetActiveForm))
+	(:active (formula build-gadget-active-form))
 	(:final-function
 	 #'(lambda (an-interactor point-list)
 	     (when point-list
@@ -898,16 +898,23 @@ you give the 'Properties' command or go into Run mode."))))
   )
 
 
-(defun do-go (&optional gadget-set)
-  "Start Gilt.  Gadget-set must be one of :garnet or :motif"
+(defun do-go (&optional (gadget-set :motif arg-p))
+  "Start Gilt. Motif gadget-set is the default or when :motif is
+passed as the optional argument. Pass :garnet as the optional argument
+to use the old gadget set."
 
-  (unless (or (eq gadget-set :motif)
-	      (eq gadget-set :garnet))
-    (error "Gilt:Do-go must be passed the gadget set to use: :motif or :garnet"))
+  (if arg-p
+      (unless (or (eq gadget-set :garnet)
+		  (eq gadget-set :motif))
+	(error "~S does not designate a valid gadget set.~%
+               Use :motif to get the Motif-like gadget set.
+               Use :garnet to use the original Garnet gadget set.
+               Without an argument the Motif gadget set is used." gadget-set))
+      (setf gadget-set :motif))
   
   (setq *work-win* (create-instance NIL inter:interactor-window
 		      (:title "Gilt Work Window")
-		      (:left 0)(:top 45)(:width 450)(:height 300)
+		      (:left 45)(:top 45)(:width 450)(:height 300)
 		      (:current-gadget (o-formula (gvl :ib-win :aggregate
 					       :feedback :obj-over)))
 		      (:aggregate

@@ -253,12 +253,13 @@
 
 |#
 
-(create-instance 'event-panel garnet-gadgets:text-button-panel
+(create-instance 'event-panel garnet-gadgets:motif-text-button-panel
    (:left 5)
    (:top 5)
    (:inter (o-formula (gvl :window :inter)))
    (:final-feedback-p NIL)
    (:direction :horizontal)
+   (:font *text-button-font*)
    (:items '(:start-event :stop-event :abort-event))
    (:selection-function #'event-final-function))
 

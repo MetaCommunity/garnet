@@ -1,23 +1,23 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; -*- Mode: Lisp; Package: LAPIDARY -*-
-;;;  This file contains the code to either MOVE or GROW objects inside
-;;;  the editor drawing window
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+;;  $Id$
+;; 
+;;  This file contains the code to either MOVE or GROW objects inside
+;;  the editor drawing window
 
 (in-package "LAPIDARY")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Move-Grow-Do-Go Move-Grow-Do-Stop)))
 
-;;; make sure that slots which are going to be changed by the move
-;;; interactor do not have formulas
+;; make sure that slots which are going to be changed by the move
+;; interactor do not have formulas
 (defun check-move-slots (obj inter)
   (let ((attach-point (g-value inter :attach-point))
 	constrained-slots)
@@ -104,27 +104,27 @@
 	  (push :top constrained-slots))
     (reverse constrained-slots)))
 
-;;; ==========================================================
-;;; grow-obj inserts the appropriate formulas into the
-;;; selected object so that it is resized. 
-;;; ==========================================================
+;; ==========================================================
+;; grow-obj inserts the appropriate formulas into the
+;; selected object so that it is resized. 
+;; ==========================================================
         
-;;; standard grow function for non-line objects
+;; standard grow function for non-line objects
 
 (define-method :lapidary-grow opal:view-object (inter obj box)
   (let ((attach-point (g-value inter :attach-point)))
     ;; change width if any of the grow boxes on the corners or left
     ;; or right sides are chosen
     (when (member attach-point '(:nw :ne :se :sw :e :w))
-	  (gg::cg-destroy-constraint obj :left)
-	  (gg::cg-destroy-constraint obj :width)
+	  (lapidary-dialogs:cd-destroy-constraint obj :left)
+	  (lapidary-dialogs:cd-destroy-constraint obj :width)
 	  (s-value obj :left (first box))
 	  (s-value obj :width (third box)))
     ;; change height if any of the grow boxes on the corners or top
     ;; or bottom sides are chosen
     (when (member attach-point '(:nw :ne :se :sw :n :s))
-	   (gg::cg-destroy-constraint obj :top)
-	   (gg::cg-destroy-constraint obj :height)
+	   (lapidary-dialogs:cd-destroy-constraint obj :top)
+	   (lapidary-dialogs:cd-destroy-constraint obj :height)
 	   (s-value obj :top (second box))
 	   (s-value obj :height (fourth box)))))
 
@@ -132,13 +132,13 @@
   (let ((attach-point (g-value inter :attach-point)))
     (case attach-point
 	  ((1 :center)
-	   (gg::cg-destroy-constraint obj :x1)
-	   (gg::cg-destroy-constraint obj :y1)
+	   (lapidary-dialogs:cd-destroy-constraint obj :x1)
+	   (lapidary-dialogs:cd-destroy-constraint obj :y1)
 	   (s-value obj :x1 (first points))
 	   (s-value obj :y1 (second points)))
 	  (2
-	   (gg::cg-destroy-constraint obj :x2)
-	   (gg::cg-destroy-constraint obj :y2)
+	   (lapidary-dialogs:cd-destroy-constraint obj :x2)
+	   (lapidary-dialogs:cd-destroy-constraint obj :y2)
 	   (s-value obj :x2 (third points))
 	   (s-value obj :y2 (fourth points))))))
 
@@ -153,25 +153,25 @@
   garnet-gadgets:double-arrow-line (inter obj points)
   (grow-line inter obj points))
 
-;;; aggrelists have to be handled as a special case. When their
-;;; width or height is changed, new items must be added to the
-;;; aggrelist and the constraints on the width and height are
-;;; not changed (we presume that they are the standard formulas
-;;; for computing an aggregate's width and height, and if they're
-;;; not, we presume the designer has used formulas that will correctly
-;;; compute the width and height, even with the changed number of items)
+;; aggrelists have to be handled as a special case. When their
+;; width or height is changed, new items must be added to the
+;; aggrelist and the constraints on the width and height are
+;; not changed (we presume that they are the standard formulas
+;; for computing an aggregate's width and height, and if they're
+;; not, we presume the designer has used formulas that will correctly
+;; compute the width and height, even with the changed number of items)
 
 (define-method :lapidary-grow opal:aggrelist (inter obj box)
 (let ((attach-point (g-value inter :attach-point)))
     ;; change left if any of the grow boxes on the corners or left
     ;; or right sides are chosen
     (when (member attach-point '(:nw :ne :se :sw :e :w))
-	  (gg::cg-destroy-constraint obj :left)
+	  (lapidary-dialogs:cd-destroy-constraint obj :left)
 	  (s-value obj :left (first box)))
     ;; change top if any of the grow boxes on the corners or top
     ;; or bottom sides are chosen
     (when (member attach-point '(:nw :ne :se :sw :n :s))
-	   (gg::cg-destroy-constraint obj :top)
+	   (lapidary-dialogs:cd-destroy-constraint obj :top)
 	   (s-value obj :height (fourth box)))
 
     ;; change the number of items in a list
@@ -181,9 +181,9 @@
     (s-value (g-value inter :feedback-obj) :visible nil)))
 
 #|
-;;; circles must be handled as a special case since their width and
-;;; height must always be the same. if a corner is moved, select the
-;;; minimum of the changed height and width.
+;; circles must be handled as a special case since their width and
+;; height must always be the same. if a corner is moved, select the
+;; minimum of the changed height and width.
 
 (define-method :lapidary-grow opal:circle (inter obj box)
   (let* ((attach-point (g-value inter :attach-point))
@@ -203,21 +203,21 @@
     ;; set the :diameter slot
     (s-value obj :diameter diameter)))
 |#
-;;; ==========================================================
-;;; move-obj inserts the appropriate formulas into the
-;;; selected object so that it is moved, and updates
-;;; the constraint menu info to reflect this new state of
-;;; affairs
-;;; ==========================================================
+;; ==========================================================
+;; move-obj inserts the appropriate formulas into the
+;; selected object so that it is moved, and updates
+;; the constraint menu info to reflect this new state of
+;; affairs
+;; ==========================================================
 
 (defun move-obj (obj attach-point)
   (if (is-a-line-p obj)
       ;; move a line
       (let ((points (g-value obj :points)))
-	(gg::cg-destroy-constraint obj :x1)
-	(gg::cg-destroy-constraint obj :y1)
-	(gg::cg-destroy-constraint obj :x2)
-	(gg::cg-destroy-constraint obj :y2)
+	(lapidary-dialogs:cd-destroy-constraint obj :x1)
+	(lapidary-dialogs:cd-destroy-constraint obj :y1)
+	(lapidary-dialogs:cd-destroy-constraint obj :x2)
+	(lapidary-dialogs:cd-destroy-constraint obj :y2)
 	(s-value obj :x1 (first points))
 	(s-value obj :y1 (second points))
 	(s-value obj :x2 (third points))
@@ -225,10 +225,10 @@
       ;; move a non-line
       (let ((box (g-value obj :box)))
 	(when (member attach-point '(:nw :ne :se :sw :center :e :w))
-	      (gg::cg-destroy-constraint obj :left)
+	      (lapidary-dialogs:cd-destroy-constraint obj :left)
 	      (s-value obj :left (first box)))
 	(when (member attach-point '(:nw :ne :se :sw :center :s :n))
-	      (gg::cg-destroy-constraint obj :top)
+	      (lapidary-dialogs:cd-destroy-constraint obj :top)
 	      (s-value obj :top (second box))))))
 
 
@@ -263,13 +263,13 @@
 	(cond ((not (eq (g-value objbeingchanged :parent)
 			(g-value objbeingchanged :window :editor-agg)))
 	       (lapidary-error 
-		"This object is part of an aggregate and thus cannot be moved")
+		"This object is part of an aggregate and thus cannot be moved.")
 	       (inter:abort-interactor interactor))
 	      ((setf constrained-slots
 		     (check-move-slots objbeingchanged interactor))
 	       (lapidary-error 
 		(format nil "To move this object you must first unconstrain
-the ~S slots" constrained-slots))
+the ~S slots." constrained-slots))
 	       (inter:abort-interactor interactor))
 	      (t
 	       (kr::call-prototype-method interactor objbeingchanged newsize)
@@ -358,18 +358,18 @@ the ~S slots" constrained-slots))
 	 (cond ((not (eq (g-value objbeingchanged :parent)
 			 (g-value objbeingchanged :window :editor-agg)))
 		(lapidary-error 
-		"This object is part of an aggregate and thus cannot be grown")
+		"This object is part of an aggregate and thus cannot be grown.")
 		(inter:abort-interactor interactor))
 	       ((is-a-p objbeingchanged opal:text)
 		(lapidary-error
-		 "You cannot change the size of a text object")
+		 "You cannot change the size of a text object.")
 		(inter:abort-interactor interactor))
 	      ((setf constrained-slots
 		     (kr-send objbeingchanged :lapidary-check-grow-slots
 			      objbeingchanged interactor))
 	       (lapidary-error 
 		(format nil "To resize this object you must first unconstrain
-the ~S slots" constrained-slots))
+the ~S slots." constrained-slots))
 	       (inter:abort-interactor interactor))
 	       (t
 		(if (is-a-p (g-value interactor :feedback-obj) opal:aggrelist)

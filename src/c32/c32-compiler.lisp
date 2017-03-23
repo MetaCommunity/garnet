@@ -58,15 +58,14 @@ Change log:
 
 (dolist (gadget '(
 		  "labeled-box-loader"
-		  "x-buttons-loader"
+		  "motif-check-buttons-loader"
 		  "arrow-line-loader"
-		  "text-buttons-loader"
-		  "scrolling-window-loader"
-		  "scrolling-input-string-loader"
-		  "scrolling-menu-loader"  ; for pop-up-functions
-		  "error-gadget-loader"	  		; for C32error
-		  "scrolling-labeled-box-loader"	; for package name
+		  "motif-text-buttons-loader"
 		  "motif-scrolling-window-loader"
+		  "scrolling-input-string-loader"
+		  "motif-scrolling-menu-loader"		; for pop-up-functions
+		  "motif-error-gadget-loader"  		; for C32error
+		  "scrolling-labeled-box-loader"	; for package name
 		  ))
   (load (merge-pathnames gadget garnet-gadgets-pathname)))
 

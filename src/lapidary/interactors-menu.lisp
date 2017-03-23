@@ -196,64 +196,65 @@
     (s-value interactor-menu :visible nil)
 
     ;; now instantiate the proper interactor menu and make it visible
-    (init-inter-menu (g-value obj-over :item)))
+    (init-inter-dialog (g-value obj-over :item)))
 
-;;; figure out which interactor menu to use and instantiate it with the
+;;; figure out which interactor dialog to use and instantiate it with the
 ;;; information from inter
 
-(defun init-inter-menu (inter)
+(defun init-inter-dialog (inter)
   (declare (special choice-interactor-win move-grow-inter-win 
 		    text-interactor-win two-point-inter-win
 		    angle-inter-win))
   (reset-undo)
-  (SetHourGlassCursor (list interactor-menu))
+;;;  (set-hourglass-cursor (list interactor-menu))
   (let ((dialog-box
 	 (if (not (stringp inter))
 	     (cond ((or (is-a-p inter lapidary-menu-interactor) 
 			(is-a-p inter lapidary-button-interactor))
-		    (init-choice-inter-menu inter)
+		    (init-choice-inter-dialog inter)
 		    choice-interactor-win)
 		   ((is-a-p inter directional-move-grow-interactor) 
-		    (init-move-grow-inter-menu inter)
+		    (init-move-grow-inter-dialog inter)
 		    move-grow-inter-win)
 		   ((is-a-p inter lapidary-text-interactor) 
-		    (init-text-inter-menu inter)
+		    (init-text-inter-dialog inter)
 		    text-interactor-win)
 		   ((is-a-p inter lapidary-two-point-interactor) 
-		    (init-two-point-inter-menu inter)
+		    (init-two-point-inter-dialog inter)
 		    two-point-inter-win)
 		   ((is-a-p inter lapidary-angle-interactor) 
-		    (init-angle-inter-menu inter)
+		    (init-angle-inter-dialog inter)
 		    angle-inter-win))
 	      (cond
 		((string= inter "choice")
-		 (init-choice-inter-menu lapidary-menu-interactor)
+		 (init-choice-inter-dialog lapidary-menu-interactor)
 		 (setf inter lapidary-menu-interactor)
 		 choice-interactor-win)
 		((string= inter "move/grow")
-		 (init-move-grow-inter-menu 
+		 (init-move-grow-inter-dialog 
 		  lapidary:directional-move-grow-interactor)
 		 (setf inter lapidary:directional-move-grow-interactor)
 		 move-grow-inter-win)
 		((string= inter "text")
-		 (init-text-inter-menu lapidary-text-interactor)
+		 (init-text-inter-dialog lapidary-text-interactor)
 		 (setf inter lapidary-text-interactor)
 		 text-interactor-win)
 		((string= inter "two-point")
-		 (init-two-point-inter-menu lapidary-two-point-interactor)
+		 (init-two-point-inter-dialog lapidary-two-point-interactor)
 		 (setf inter lapidary-two-point-interactor)
 		 two-point-inter-win)
 		((string= inter "angle")
-		 (init-angle-inter-menu lapidary-angle-interactor)
+		 (init-angle-inter-dialog lapidary-angle-interactor)
 		 (setf inter lapidary-angle-interactor)
 		 angle-inter-win)))))
 
     (s-value dialog-box :visible t)
     (opal:update dialog-box)
-    (RestoreRegularCursor (list interactor-menu))))
+;;;    (restore-regular-cursor (list interactor-menu))
+    ))
 
 (defun interactor-menu-do-go ()
-  (let ((menu (create-instance nil garnet-gadgets:scrolling-menu
+  (let ((menu (create-instance nil garnet-gadgets:motif-scrolling-menu
 		 (:left 0) (:top 0)
 		 (:num-visible 6)
 		 (:scroll-on-left-p nil)

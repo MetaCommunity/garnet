@@ -396,7 +396,7 @@
 (defun do-go (&key dont-enter-main-event-loop double-buffered-p)
   (setq vp (kr:create-instance NIL inter:interactor-window
                                (:left 600)
-			       (:top 70)(:width 400)(:height 360)
+			       (:top 70)(:width 400)(:height 370)
                                (:double-buffered-p double-buffered-p)
 			       (:title "GARNET 3D") (:icon-title "3D")))
   (setq agg (s-value vp :aggregate (create-instance NIL opal:aggregate)))

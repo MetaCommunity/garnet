@@ -28,13 +28,14 @@
 
 (in-package :DEMO-MOTIF)
 
-(defvar DEMO-MOTIF-INIT
-  (dolist (file '("motif-v-scroll-loader" "motif-slider-loader"
-		  "motif-text-buttons-loader" "motif-check-buttons-loader"
-		  "motif-radio-buttons-loader" "motif-menu-loader"
-		  "motif-scrolling-labeled-box-loader" "motif-gauge-loader"
-                  "motif-scrolling-window-loader"))
-    (common-lisp-user::garnet-load (concatenate 'string "gadgets:" file))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar DEMO-MOTIF-INIT
+    (dolist (file '("motif-v-scroll-loader" "motif-slider-loader"
+		    "motif-text-buttons-loader" "motif-check-buttons-loader"
+		    "motif-radio-buttons-loader" "motif-menu-loader"
+		    "motif-scrolling-labeled-box-loader" "motif-gauge-loader"
+		    "motif-scrolling-window-loader"))
+      (common-lisp-user::garnet-load (concatenate 'string "gadgets:" file)))))
 
 (declaim (special COMBO-BOX RED-BOX GREEN-BOX BLUE-BOX RED-BAR GREEN-BAR
 		  BLUE-BAR GROUND-BUTTONS SHADE-SLIDER SHADE-BUTTONS
@@ -47,7 +48,6 @@
 (defparameter *FILL-TO-SWAP* (create-instance NIL opal:default-filling-style
 				(:foreground-color
 				 (create-instance NIL opal:black))))
-
 
 (defun MEMBER-STRING (string list)
   (member string list :test 'string=))
@@ -192,7 +192,7 @@
 				       (gvl :filling-style :foreground-color)
 				       opal:WHITE)))
      (:title "Demo-Motif")
-     (:left 650)(:top 45)(:width 480)(:height 450)))
+     (:left 650) (:top 45) (:width 560) (:height 450)))
   (s-value DEMO-MOTIF-WIN
 	   :aggregate
 	   (create-instance 'DEMO-MOTIF-TOP-AGG opal:aggregate))
@@ -267,10 +267,10 @@
      (:filling-style (initial-color-fill opal:white)))
   
   (create-instance 'SHADE-BOX-BORDER COLOR-BOX-PROTO
-     (:left 243) (:top 10)
+     (:left 270) (:top 10)
      (:filling-style (initial-color-fill opal:white)))
   (create-instance 'SHADE-BOX COLOR-BOX-PROTO
-     (:left 244) (:top 11) (:width 23) (:height 23)
+     (:left 271) (:top 11) (:width 23) (:height 23)
      (:line-style NIL)
      (:filling-style (initial-color-fill opal:white)))
   ) ;; Close binding of COLOR-BOX-PROTO
@@ -279,8 +279,7 @@
      (:constant T :except :foreground-color)
      (:left 130) (:top 45)
      (:v-spacing 4)
-     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN
-				       :background-color)))
+     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN :background-color)))
      (:items `("Gray" "Orange" "Green" "Blue"))
      (:active-p T)
      (:selection-function
@@ -292,9 +291,8 @@
   
   (create-instance 'COLOR-MENU garnet-gadgets:MOTIF-MENU
      (:constant T :except :foreground-color)
-     (:left 300) (:top 20)
-     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN
-				       :background-color)))
+     (:left 350) (:top 10)
+     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN :background-color)))
      (:final-feedback-p NIL)
      (:items `(
 	    ;; Needs Blue
@@ -351,7 +349,7 @@
 	       
   (create-instance 'SHADE-SLIDER garnet-gadgets:MOTIF-SLIDER
      (:constant T :except :foreground-color)
-     (:left 220) (:top 40)
+     (:left 240) (:top 40)
      (:val-1 (o-formula (if (gv opal:color :color-p) 150 100)))
      (:val-2 0)
      (:scr-incr 5)
@@ -372,8 +370,7 @@
   (create-instance 'SHADE-BUTTONS garnet-gadgets::MOTIF-TEXT-BUTTON-PANEL
      (:constant T :except :foreground-color)
      (:left 130) (:top 245)
-     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN
-				       :background-color)))
+     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN :background-color)))
      (:final-feedback-p NIL)
      (:direction :horizontal)
      (:fixed-width-p NIL)
@@ -443,16 +440,17 @@
   (create-instance 'TEXT-BOX-1 garnet-gadgets::motif-scrolling-labeled-box
      (:constant T :except :foreground-color)
      (:left 280) (:top 300)
-     (:width 170)
+     (:width 200)
      (:label-string "Title:")
      (:value "Motif Gauge")
-     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN
-				       :background-color)))
+     (:foreground-color (o-formula (gv DEMO-MOTIF-WIN :background-color)))
      (:field-offset 5))
 
   (create-instance 'GAUGE-1 garnet-gadgets:MOTIF-GAUGE
      (:constant T :except :foreground-color :title)
-     (:left 20) (:top 280)
+     (:left 20)
+     ;; Set up some dependencies so the gauge will place itself correctly.
+     (:top 280)
      (:title (o-formula (gv TEXT-BOX-1 :value)))
      (:foreground-color (o-formula (gv DEMO-MOTIF-WIN
 				       :background-color)))
@@ -461,13 +459,12 @@
         (:gauge-title :modify
                       (:fast-redraw-p :rectangle)
                       (:fast-redraw-filling-style
-                       ,(o-formula
-                         (gv demo-motif::DEMO-MOTIF-WIN :filling-style))))
+                       ,(o-formula (gv DEMO-MOTIF-WIN :filling-style))))
         (:value-feedback :modify
                          (:fast-redraw-p :rectangle)
                          (:fast-redraw-filling-style
                           ,(o-formula
-                            (gv demo-motif::DEMO-MOTIF-WIN :filling-style))))
+                            (gv DEMO-MOTIF-WIN :filling-style))))
         :sel-box)))
 
   (create-instance 'RED-BAR garnet-gadgets:MOTIF-V-SCROLL-BAR

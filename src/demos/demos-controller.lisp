@@ -27,7 +27,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
 ;; Load multifont stuff.
 (unless (get :garnet-modules :multifont)
-   (cl-user::garnet-load "multifont-loader"))
+   (cl-user::garnet-load "opal:multifont-loader"))
 
 (dolist (file '("motif-check-buttons-loader"
 		"motif-text-buttons-loader"
@@ -165,7 +165,7 @@ devised by David Goldberg at Xerox PARC.")
 
   (create-instance 'demos-mouseline gg:mouselinepopup
     (:windows win1)
-    #+garnet-processes (:wait-amount 2)
+    #+garnet-processes (:wait-amount 1)
     #-garnet-processes (:wait-amount NIL))
 
   (opal:add-components agg1 bt qbt demos-mouseline)
@@ -174,10 +174,10 @@ devised by David Goldberg at Xerox PARC.")
     (:constant T :except :background-color :top :left :width :height :title :total-height)
     (:foreground-color *demos-controller-color*)
     (:left 5) (:top (o-formula (+ (g-value win1 :top) (g-value win1 :height) 30)))
-    (:width 700)(:height 180)
+    (:width 850)(:height 180)
     (:title "Instructions for Demos")
     (:h-scroll-bar-p NIL)
-    (:total-width 700)
+    (:total-width 850)
     (:total-height (o-formula (+ 5 (gvl :inner-aggregate :height)) 200)))
 
 
@@ -196,8 +196,12 @@ Click the button to start the demo."))
   (opal:update win2)
 
   ;; We want the scroll wheel to operate anywhere in the text.
-;;  (s-value win2 :v-scroll :wheel-up :start-where (list :element-of-or-none (g-value text :parent)))
-;;  (s-value win2 :v-scroll :wheel-down :start-where (list :element-of-or-none (g-value win2 :parent)))
+  #-(and)
+  (s-value win2 :v-scroll :wheel-up :start-where
+	   (list :element-of-or-none (g-value text :parent)))
+  #-(and)
+  (s-value win2 :v-scroll :wheel-down :start-where
+	   (list :element-of-or-none (g-value win2 :parent)))
   (opal:update win2)
   
   ;;if not CMU CommonLisp, then start the main event loop to look for events

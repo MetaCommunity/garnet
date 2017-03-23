@@ -14,6 +14,12 @@
 
 ;;; This is the device handler for the X window system.  It implements the
 ;;  Gem methods.
+;;
+;; XXX FMG There are several "modularity violations" --- i.e. forward
+;; references to OPAL or INTERACTORS packages. These could be fixed
+;; but as long as they are identified it's probably not worth the
+;; trouble.
+;;
 
 (in-package "GEM")
 
@@ -561,8 +567,8 @@ for the two fonts."
                                 :background background)
       (xlib:create-cursor :source source :mask mask
                           :x x :y y
-                          :foreground (g-value opal::black :xcolor)
-                          :background (g-value opal::white :xcolor))))
+                          :foreground (g-value opal::black :xcolor)     ; XXX modularity
+                          :background (g-value opal::white :xcolor))))  ; XXX modularity
   
 
 ;; The following deals with cases where the display provides pixmaps
@@ -1258,7 +1264,7 @@ pixmap format in the list of valid formats."
       (if ignore-keys
         ;; We don't want keys, but check if this is the abort key
           (let ((c (x-translate-character *root-window* 0 0 state code 0)))
-            (when (eq c interactors::*garnet-break-key*)
+            (when (eq c interactors::*garnet-break-key*)  ; XXX modularity
               (format T "~%**Aborting transcript due to user command**~%")
               (return-from x-event-handler :abort)))
           ;; Normal case: we do want keys
@@ -1505,9 +1511,15 @@ pixmap format in the list of valid formats."
                "-*-*-*-" 
                size-part
 	       "-"
+	       #-(and)
 	       (princ-to-string *screen-x-resolution*)
+	       #+(and)
+	       "*"
 	       "-"
+	       #-(and)
 	       (princ-to-string *screen-y-resolution*)
+	       #+(and)
+	       "*"
                "-*-*-"
 	       *Registry*
 	       "-1"))))))
@@ -2005,7 +2017,7 @@ pixmap format in the list of valid formats."
 ;;;
 (defun x-reparent (window new-parent drawable left top)
   (if new-parent
-    (if (is-a-p new-parent opal::window)
+    (if (is-a-p new-parent opal::window) ; XXX modularity
       (xlib:reparent-window drawable
                             (g-value new-parent :drawable)
                             left top)
@@ -2113,6 +2125,7 @@ returns the HOST name, stripping off the display number."
   (setq *screen-height* (xlib:screen-height *default-x-screen*))
 
   ;; XXX For now we only allow 75x75 DPI and 100x100 DPI.
+  #-(and)
   (setq *screen-x-resolution*
 	(let ((screen-x-res
 	       (* 25 (ceiling (xlib:screen-width *default-x-screen*)
@@ -2120,6 +2133,7 @@ returns the HOST name, stripping off the display number."
 	  (if (> screen-x-res 80)
 	      100
 	      75)))
+  #-(and)
   (setq *screen-y-resolution*
 	(let ((screen-y-res
 	       (* 25 (ceiling (xlib:screen-height *default-x-screen*)
@@ -2602,7 +2616,7 @@ the X drawable."
   
   ;; now make all windows inherit Gem methods from the X device.
   ;;
-  (set-window-methods opal::window x-device)
+  (set-window-methods opal::window x-device) ; XXX modularity
   )
 
 
@@ -2622,7 +2636,7 @@ the X drawable."
   ;; We use create-schema to prevent any :initialize method from firing.
   ;;
   (create-schema '*root-window*
-    (:is-a opal::window))
+    (:is-a opal::window)) ; XXX Modularity
 
   ;; This schema points to the root window, and contains the slot :methods
   ;; which names all existing Gem method.  The slot is copied into the root

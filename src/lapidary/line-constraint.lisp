@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -18,15 +18,15 @@
 ;;; 08/24/92 amickish - Removed gadget from list of ignored variables in
 ;;;                     LINE-CUSTOM-FN
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 (defun ATTACH-LINE-CONSTRAINT (interactor obj)
   (declare (ignore interactor obj))
-  (declare (special *constraint-gadget*))
-  (let ((p (g-value *constraint-gadget* :obj-to-constrain))
-	(s (g-value *constraint-gadget* :obj-to-reference))
-	(p-where (g-value LINE-CON-PRIM-SEL-AGG :where-attach))
-	(s-where (g-value LINE-CON-SEC-SEL-AGG :where-attach)))
+  (declare (special *constraint-dialog*))
+  (let ((p (g-value *constraint-dialog* :obj-to-constrain))
+	(s (g-value *constraint-dialog* :obj-to-reference))
+	(p-where (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach))
+	(s-where (g-value LINE-CONSTRAINT-SEC-SEL-AGG :where-attach)))
     (when (and p s p-where s-where)
       (if (is-a-line-p p)
 	  (if (is-a-line-p s)
@@ -38,12 +38,12 @@
 
 
 (defun ATTACH-BOX-TO-BOX ()
-  (constraint-gadget-error
+  (constraint-dialog-error
    "Unimplemented: cannot constrain a non-line to a non-line."))
 
 (defun ATTACH-LINE-TO-LINE ()
-  (let* ((where-attach-line-1 (g-value LINE-CON-PRIM-SEL-AGG :where-attach))
-	 (where-attach-line-2 (g-value LINE-CON-SEC-SEL-AGG :where-attach)))
+  (let* ((where-attach-line-1 (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach))
+	 (where-attach-line-2 (g-value LINE-CONSTRAINT-SEC-SEL-AGG :where-attach)))
 
       (case where-attach-line-1
 	(0 (attach-constraint *line-constraint-menu* :x1 :x1-over :x1-offset
@@ -59,12 +59,12 @@
 ;; line.
 ;;
 (defun ATTACH-BOX-TO-LINE ()
-  (declare (special *constraint-gadget* *line-constraint-menu*))
+  (declare (special *constraint-dialog* *line-constraint-menu*))
   (let* ((where-attach-box
-	  (g-value LINE-CON-PRIM-SEL-AGG :where-attach))
+	  (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach))
 	 (where-attach-line 
-	  (g-value LINE-CON-SEC-SEL-AGG :where-attach))
-	 (box (g-value *constraint-gadget* :obj-to-constrain))
+	  (g-value LINE-CONSTRAINT-SEC-SEL-AGG :where-attach))
+	 (box (g-value *constraint-dialog* :obj-to-constrain))
 	 (constraint-vectors 
 	  (cond ((is-a-p box opal:circle) 
 		 (aref *box-to-line* 0 where-attach-line))
@@ -88,12 +88,12 @@
 ;;;================================================================
 
 (defun ATTACH-LINE-TO-BOX ()
-  (declare (special *line-constraint-menu* *constraint-gadget*))
+  (declare (special *line-constraint-menu* *constraint-dialog*))
   (let* ((where-attach-box
-	  (g-value LINE-CON-SEC-SEL-AGG :where-attach))
+	  (g-value LINE-CONSTRAINT-SEC-SEL-AGG :where-attach))
 	 (where-attach-line 
-	  (g-value LINE-CON-PRIM-SEL-AGG :where-attach))
-	 (box (g-value *constraint-gadget* :obj-to-reference))
+	  (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach))
+	 (box (g-value *constraint-dialog* :obj-to-reference))
 	 (constraint-vectors 
 	  (cond ((is-a-p box opal:circle) 
 		 (aref *line-to-box* 0 where-attach-line))
@@ -116,15 +116,15 @@
     
 ;; store an integer position in one of a line's position slots
 (defun set-position-slot (gadget value)
-  (declare (special *constraint-gadget*))
+  (declare (special *constraint-dialog*))
   (when (valid-integer-p gadget value)
-	(let ((obj (g-value *constraint-gadget* :obj-to-constrain))
+	(let ((obj (g-value *constraint-dialog* :obj-to-constrain))
 	      (slot (g-value gadget :slot)))
-	  (cg-destroy-constraint obj slot)
+	  (cd-destroy-constraint obj slot)
 	  (s-value obj slot (read-from-string value)))))
 
 (defun set-x-offset (gadget value)
-  (declare (special *line-constraint-menu* *constraint-gadget*))
+  (declare (special *line-constraint-menu* *constraint-dialog*))
 
   ;; first determine if the offset is valid
   (when (not (valid-integer-p gadget value))
@@ -139,10 +139,10 @@
 
     ;; if the offset should be placed in the appropriate offset slot
     ;; of the primary selection, do so
-    (if (g-value LINE-CON-PRIM-SEL-AGG :active)
-	(let ((obj (g-value *constraint-gadget* :obj-to-constrain)))
+    (if (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :active)
+	(let ((obj (g-value *constraint-dialog* :obj-to-constrain)))
 	  (if (is-a-line-p obj)
-	      (let ((sel (g-value LINE-CON-PRIM-SEL-AGG :where-attach)))
+	      (let ((sel (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach)))
 		(case sel
 		      (0 (when (set-offset-p :x1) 
 			       (s-value obj :x1-offset x-offset)))
@@ -159,7 +159,7 @@
 		    (s-value obj :left-offset x-offset)))))))
 
 (defun set-y-offset (gadget value)
-  (declare (special *line-constraint-menu* *constraint-gadget*))
+  (declare (special *line-constraint-menu* *constraint-dialog*))
 
   ;; first determine if the offset is valid
   (when (not (valid-integer-p gadget value))
@@ -174,10 +174,10 @@
     
     ;; if the offset should be placed in the appropriate offset slot
     ;; of the primary selection, do so
-    (if (g-value LINE-CON-PRIM-SEL-AGG :active)
-	(let ((obj (g-value *constraint-gadget* :obj-to-constrain)))
+    (if (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :active)
+	(let ((obj (g-value *constraint-dialog* :obj-to-constrain)))
 	  (if (is-a-line-p obj)
-	      (let ((sel (g-value LINE-CON-PRIM-SEL-AGG :where-attach)))
+	      (let ((sel (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach)))
 		(case sel
 		      (0 (when (set-offset-p :y1) 
 			       (s-value obj :y1-offset y-offset)))
@@ -197,20 +197,20 @@
 ;; function to clear the line buttons
 
 (defun deselect-line-buttons (&optional (only-s-selection-p nil))
-  (declare (special LINE-CON-PRIM-SEL-AGG LINE-CON-SEC-SEL-AGG))
+  (declare (special LINE-CONSTRAINT-PRIM-SEL-AGG LINE-CONSTRAINT-SEC-SEL-AGG))
   (when (not only-s-selection-p)
 	(deselect-constraint-button
-	 (g-value LINE-CON-PRIM-SEL-AGG :line :buttons))
+	 (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :line :buttons))
 	(deselect-constraint-button
-	 (g-value LINE-CON-PRIM-SEL-AGG :box :buttons)))
+	 (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :box :buttons)))
   (deselect-constraint-button
-   (g-value LINE-CON-SEC-SEL-AGG :line :buttons))
+   (g-value LINE-CONSTRAINT-SEC-SEL-AGG :line :buttons))
   (deselect-constraint-button
-   (g-value LINE-CON-SEC-SEL-AGG :box :buttons)))
+   (g-value LINE-CONSTRAINT-SEC-SEL-AGG :box :buttons)))
 
 (defun LINE-CUSTOM-FN (gadget string)
   (declare (ignore string))
-  (declare (special *constraint-gadget-query-window*))
+  (declare (special *constraint-dialog-query-window*))
   (deselect-line-buttons)
   (multiple-value-bind (left top)
     (opal:convert-coordinates (g-value gadget :window)
@@ -221,16 +221,16 @@
 
 (defun LINE-UNCONSTRAIN-FN (gadget string)
   (declare (ignore string))
-  (declare (special *constraint-gadget*))
-  (let ((obj (g-value *constraint-gadget* :obj-to-constrain))
-	(reference-obj (g-value *constraint-gadget* :obj-to-reference)))
+  (declare (special *constraint-dialog*))
+  (let ((obj (g-value *constraint-dialog* :obj-to-constrain))
+	(reference-obj (g-value *constraint-dialog* :obj-to-reference)))
     (when obj
 	  (if (not (is-a-line-p obj))
 	      (progn
 		(deselect-line-buttons)
-		(cg-destroy-constraint obj :left)
-		(cg-destroy-constraint obj :top))
-	      (let ((sel (g-value LINE-CON-PRIM-SEL-AGG :where-attach)))
+		(cd-destroy-constraint obj :left)
+		(cd-destroy-constraint obj :top))
+	      (let ((sel (g-value LINE-CONSTRAINT-PRIM-SEL-AGG :where-attach)))
 		;; if the user has selected an endpoint to unconstrain, or
 		;; if it is possible to determine the endpoint to unconstrain
 		;; without the user's intervention, unconstrain the endpoint.
@@ -243,7 +243,7 @@
 					 (depends-on-p obj reference-obj :x1)
 					 (formula-p (get-value obj :x2))
 					 (depends-on-p obj reference-obj :x2))
-				    (constraint-gadget-error "Both endpoints are constrained. Please select one of
+				    (constraint-dialog-error "Both endpoints are constrained. Please select one of
 the two endpoints of the line in the primary
 selection box and press unconstrain again")
 				    (s-value gadget :value nil)
@@ -259,7 +259,7 @@ selection box and press unconstrain again")
 			    (t
 			     (cond ((and (formula-p (get-value obj :x1))
 					 (formula-p (get-value obj :x2)))
-				    (constraint-gadget-error "Both endpoints are constrained. Please select one of
+				    (constraint-dialog-error "Both endpoints are constrained. Please select one of
 the two endpoints of the line in the primary
 selection box and press unconstrain again")
 				    (s-value gadget :value nil)
@@ -272,9 +272,9 @@ selection box and press unconstrain again")
 	        (when sel
 		  (deselect-line-buttons)
 		  (case sel
-			(0 (cg-destroy-constraint obj :x1)
-			   (cg-destroy-constraint obj :y1))
-			(1 (cg-destroy-constraint obj :x2)
-			   (cg-destroy-constraint obj :y2)))
+			(0 (cd-destroy-constraint obj :x1)
+			   (cd-destroy-constraint obj :y1))
+			(1 (cd-destroy-constraint obj :x2)
+			   (cd-destroy-constraint obj :y2)))
 			))))))
 

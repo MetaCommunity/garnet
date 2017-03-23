@@ -19,53 +19,43 @@
 
 (defun shapes-do-go ()
 
-(declare (special aggrelist-feedback))
+(declare (special aggrelist-feedback shape-top-agg))
 (shapes-do-stop)
 
-(create-instance 'SHAPE-WIN inter:interactor-window
-   (:title "shapes")
-   (:left (first *shape-menu-dimensions*))
-   (:top (second *shape-menu-dimensions*))
-   (:width (o-formula (+ 20 (gvl :aggregate :width))))
-   (:height (o-formula (+ 20 (gvl :aggregate :height)))))
-
-
-(s-value SHAPE-WIN :aggregate (create-instance 'SHAPE-TOP-AGG opal:aggregate))
-;; I commented this out -- ECP
-;; (opal:update SHAPE-WIN)
-
+(create-instance 'SHAPE-TOP-AGG opal:aggregate)
 
 (setf *shape-button-list*
-      (make-button-list `((opal:line :value opal:line
-				      :name :line)
-			  (garnet-gadgets:arrow-line 
-			         :value garnet-gadgets:arrow-line
-				 :name :arrow-line)
-			  (garnet-gadgets:double-arrow-line 
-			         :value garnet-gadgets:double-arrow-line
-				 :name :double-arrow-line)
-			  (opal:rectangle :value opal:rectangle
-					   :name :rectangle)
-			  (opal:roundtangle :value opal:roundtangle
-					     :name :roundtangle)
-			  (opal:circle :value opal:circle
-					:name :circle)
-			  (opal:text :string "text" :value opal:cursor-text
-				      :name :text)
-			  (opal:text :string "multi-text" :value opal:cursor-multi-text
-				      :name :multi-text)
-			  (opal:text :string "window" 
-				      :value inter:interactor-window
-				      :name :window)
-			  (opal:text :string "bitmap" 
-				      :value opal:bitmap
-				      :name :bitmap)
-			  (opal:text :string "horizontal list" 
-				      :value opal:aggrelist
-				      :name :horizontal-aggrelist)
-			  (opal:text :string "vertical list" 
-				      :value opal:aggrelist
-				      :name :vertical-aggrelist))))
+      (make-button-list
+       `((opal:line :value opal:line
+		    :name :line)
+	 (garnet-gadgets:arrow-line 
+	  :value garnet-gadgets:arrow-line
+	  :name :arrow-line)
+	 (garnet-gadgets:double-arrow-line 
+	  :value garnet-gadgets:double-arrow-line
+	  :name :double-arrow-line)
+	 (opal:rectangle :value opal:rectangle
+			 :name :rectangle)
+	 (opal:roundtangle :value opal:roundtangle
+			   :name :roundtangle)
+	 (opal:circle :value opal:circle
+		      :name :circle)
+	 (opal:text :string "text" :value opal:cursor-text
+		    :name :text)
+	 (opal:text :string "multi-text" :value opal:cursor-multi-text
+		    :name :multi-text)
+	 (opal:text :string "window" 
+		    :value inter:interactor-window
+		    :name :window)
+	 (opal:text :string "bitmap" 
+		    :value opal:bitmap
+		    :name :bitmap)
+	 (opal:text :string "horizontal list" 
+		    :value opal:aggrelist
+		    :name :horizontal-aggrelist)
+	 (opal:text :string "vertical list" 
+		    :value opal:aggrelist
+		    :name :vertical-aggrelist))))
 
 ;;  SHAPE-MENU is the top panel of buttons controlling line-styles
 ;;
@@ -73,7 +63,10 @@
    (:constant '(t :button-width :button-height))
    (:left 10)
    (:top 10)
-   (:button-width 120)
+   (:button-width (+ 20
+		     (g-value
+		      (create-instance nil opal:text (:string "horizontal list"))
+		      :width)))
    (:button-height 40)
    (:value (o-formula (gvl :selected :label :value)))
    (:name (o-formula (gvl :selected :label :name)))
@@ -92,6 +85,15 @@
 (s-value aggrelist-feedback :shape-menu shape-menu)
 
 (opal:add-components SHAPE-TOP-AGG SHAPE-MENU)
+
+(create-instance 'SHAPE-WIN inter:interactor-window
+  (:title "shapes")
+  (:aggregate shape-top-agg)
+  (:left (first *shape-menu-dimensions*))
+  (:top (second *shape-menu-dimensions*))
+  (:width (o-formula (+ 20 (gvl :aggregate :width))))
+  (:height (o-formula (+ 20 (gvl :aggregate :height)))))
+
 (opal:update SHAPE-WIN))
 
 (defun shapes-do-stop ()

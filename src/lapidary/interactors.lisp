@@ -115,7 +115,7 @@
 ;		 (undo-save inter :feedback-obj)
 		 (s-value inter :feedback-obj nil))))
 	  (:feedback-obj 
-	   (gg:cg-destroy-constraint inter :feedback-obj)
+	   (lapidary-dialogs:cd-destroy-constraint inter :feedback-obj)
 	   (cond ((null value)
 		   (when (is-a-p inter lapidary-two-point-interactor)
 			 (s-value inter :std-feedback-p nil))
@@ -194,7 +194,7 @@
 		      (when (not (eq (g-formula-value (get-value obj :visible)
 						      :menu-item)
 				     :lapidary-mode))
-			    (gg:cg-destroy-constraint obj :visible)
+			    (lapidary-dialogs:cd-destroy-constraint obj :visible)
 			    (s-value obj :visible (o-formula (gvl :obj-over)))
 			    (save-value obj :visible t)
 			    ;; indicate that this formula depends on the mode
@@ -264,7 +264,7 @@
 		      (when (not (eq (g-formula-value (get-value obj :visible)
 						      :menu-item)
 				     :lapidary-mode))
-			    (gg:cg-destroy-constraint obj :visible)
+			    (lapidary-dialogs:cd-destroy-constraint obj :visible)
 			    (s-value obj :visible (o-formula (gvl :obj-over)))
 			    (save-value obj :visible t)
 			    ;; indicate that this formula depends on the mode
@@ -434,50 +434,50 @@
 				 t)
 
 	    (when (inter:wait-interaction-complete)
-		  (cond 
-		   ((g-value inter :operates-on)
-		    ;; only add the interactor to an aggregate if it does not
-		    ;; already belong to the aggregate
-		    (when (not (eq (g-value inter :operates-on) agg))
-			  ;; the interactor already belongs to an aggregate so
-			  ;; remove it from its old aggregate
-			  ;; first delete any formulas that depend on the
-			  ;; :operates-on slot
-			  (dolist (formula (kr::get-dependents inter :operates-on))
-				  (gg:cg-destroy-constraint (kr::on-schema formula)
-							    (kr::on-slot formula)))
-			  (opal:remove-interactor (g-value inter :operates-on)
-						  inter)
-			  (opal:add-interactor agg inter)))
-		   (t
-		    ;; interactor does not belong to an aggregate so add it
-		    (opal:add-interactor agg inter)))
+	      (cond 
+		((g-value inter :operates-on)
+		 ;; only add the interactor to an aggregate if it does not
+		 ;; already belong to the aggregate
+		 (when (not (eq (g-value inter :operates-on) agg))
+		   ;; the interactor already belongs to an aggregate so
+		   ;; remove it from its old aggregate
+		   ;; first delete any formulas that depend on the
+		   ;; :operates-on slot
+		   (dolist (formula (kr::get-dependents inter :operates-on))
+		     (lapidary-dialogs:cd-destroy-constraint (kr::on-schema formula)
+							     (kr::on-slot formula)))
+		   (opal:remove-interactor (g-value inter :operates-on)
+					   inter)
+		   (opal:add-interactor agg inter)))
+		(t
+		 ;; interactor does not belong to an aggregate so add it
+		 (opal:add-interactor agg inter)))
 
-		  ;; store a formula in the interactor's :start-where slot that makes
-		  ;; the aggregate part of the start where depend on the :operates-on slot
-		  (setf start-where (copy-list start-where))
-		  (setf (second start-where) 
-			(if (is-a-p ref-obj opal:aggregate)
-			    `(gvl :operates-on)
-			  `(gvl :operates-on ,(g-value ref-obj :known-as))))
-		  ;; if the start-where has a type restriction, shove a list
-		  ;; modifier in front of the type restriction if it is a list
-		  (when (and (setf type-restriction (member :type start-where))
-			     (listp (second type-restriction)))
-			(push 'list (second type-restriction)))
-		  (s-value inter :start-where (formula `(list ,@start-where)))
-		  ;; demand the value of the :start-where slot so that the
-		  ;; proper dependencies are set up. This is necessary to ensure
-		  ;; that when an object is renamed, the link in the start-where
-		  ;; slot will be renamed
-		  (g-value inter :start-where)
+	      ;; store a formula in the interactor's :start-where slot that makes
+	      ;; the aggregate part of the start where depend on the :operates-on slot
+	      (setf start-where (copy-list start-where))
+	      (setf (second start-where) 
+		    (if (is-a-p ref-obj opal:aggregate)
+			`(gvl :operates-on)
+			`(gvl :operates-on ,(g-value ref-obj :known-as))))
+	      ;; if the start-where has a type restriction, shove a list
+	      ;; modifier in front of the type restriction if it is a list
+	      (when (and (setf type-restriction (member :type start-where))
+			 (listp (second type-restriction)))
+		(push 'list (second type-restriction)))
+	      (s-value inter :start-where (formula `(list ,@start-where)))
+	      ;; demand the value of the :start-where slot so that the
+	      ;; proper dependencies are set up. This is necessary to ensure
+	      ;; that when an object is renamed, the link in the start-where
+	      ;; slot will be renamed
+	      (g-value inter :start-where)
 
-		  ;; check the :feedback-obj, final-feedback-obj, and obj-to-change
-		  ;; slots to see if the objects they point to are in the same 
-		  ;; aggregate as the interactor. if they are, create formulas
-		  ;; to these objects
-		  (dolist (slot '(:feedback-obj :final-feedback-obj :obj-to-change))
-			  (store-obj-in-inter-slot inter slot (g-value inter slot))))))))
+	      ;; check the :feedback-obj, final-feedback-obj, and obj-to-change
+	      ;; slots to see if the objects they point to are in the same 
+	      ;; aggregate as the interactor. if they are, create formulas
+	      ;; to these objects
+	      (dolist (slot '(:feedback-obj :final-feedback-obj :obj-to-change))
+		(store-obj-in-inter-slot inter slot (g-value inter slot))))))))
 
 ;;;=================================================================
 ;;;
@@ -497,7 +497,7 @@
 	 new-inter)
     (when (and (not start-where-pair)
 	       (eq (g-value is-a :start-where) :not-supplied))
-      (lapidary-error "start-where must be supplied")
+      (lapidary-error "\"start-where\" must be supplied.")
       (return-from create-interactor nil))
 ;    (reset-undo)
     (setf new-inter (create-instance nil is-a
@@ -586,7 +586,7 @@
     ;; the basic interactors cannot be modified so make sure
     ;; that the user is not trying to modify one of them
     (when (garnet-inter-p inter)
-      (lapidary-error "** cannot modify a garnet-defined interactor")
+      (lapidary-error "** Cannot modify a garnet-defined interactor.")
       (return-from modify-interactor))
 
     (when (and (choice-inter-p inter) is-a)
@@ -615,7 +615,7 @@
 	
 	;; deactivate the interactor--not destroyed because of possibility
 	;; of undo
-	(gg:cg-destroy-constraint inter :active)
+	(lapidary-dialogs:cd-destroy-constraint inter :active)
 	(inter:change-active inter nil)
 
 	(s-value gadget :inter new-inter)
@@ -644,10 +644,8 @@
     ;; reset the interactor menu to the old values of the interactor
 ;    (reset-inter-menu inter)
     ;; make the window disappear
-    (if (is-a-p inter inter:move-grow-interactor)
-	(s-value (g-value gadget :window :parent :parent) :visible nil)
-        (s-value (g-value gadget :window) :visible nil))
-))
+    (s-value (g-value gadget :window) :visible nil))
+)
 
 (defun destroy-interactor (gadget value)
   (declare (ignore value))
@@ -656,7 +654,7 @@
     ;; the basic interactors cannot be destroyed so make sure
     ;; that the user is not trying to destroy one of them
     (when (garnet-inter-p inter)
-      (lapidary-error "** cannot destroy a garnet-defined interactor")
+      (lapidary-error "** Cannot destroy a garnet-defined interactor.")
       (return-from destroy-interactor))
 
     ;; store the interactor's :is-a parent in the interactor menu
@@ -664,7 +662,7 @@
 
     ;; reset the interactor menu so that it displays the information
     ;; associated with the interactor's :is-a parent
-    (reset-inter-menu parent-inter)
+    (reset-inter-dialog parent-inter)
 
     ;; reset the slot-value list to nil
     (setf (symbol-value (g-value gadget :queue)) nil)
@@ -695,7 +693,7 @@
   (declare (ignore value))
   (multiple-value-bind (left top)
        (get-coordinates gadget)
-       (gg:c32 (g-value gadget :inter) nil :left left :top top)))
+       (lapidary-dialogs:c32 (g-value gadget :inter) nil :left left :top top)))
 
 (defun read-interactor (gadget value)
   (declare (ignore gadget value))
@@ -708,6 +706,6 @@
     ;; interactor
     (dolist (obj *created-instances*)
       (when (is-a-p obj inter:interactor)
-	(init-inter-menu obj)
+	(init-inter-dialog obj)
 	(return-from read-interactor)))
-    (lapidary-error "This file did not contain any interactors")))
+    (lapidary-error "This file did not contain any interactors.")))

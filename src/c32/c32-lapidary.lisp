@@ -24,11 +24,11 @@
   (setf lapidary-p nil)
   (dolist (win *All-windows*)
     (if (schema-p win)
-      (s-value win :visible nil)))
+	(s-value win :visible nil)))
   (dolist (panel (copy-list (g-value *Current-Panel-Set* :aggrel :components)))
-	  ;; do not remove the last panel which is the "other name" panel
-	  (when (g-value panel :obj)
-		(remove-panel panel))))
+    ;; do not remove the last panel which is the "other name" panel
+    (when (g-value panel :obj)
+      (remove-panel panel))))
 
 
 
@@ -36,10 +36,10 @@
   (declare (ignore gadget sel))
   (declare (special lapidary-p))
   (if lapidary-p
-    (c32-ok-function)
-    (progn
-      (do-stop)
-      #-cmu (inter:exit-main-event-loop))))
+      (c32-ok-function)
+      (progn
+	(do-stop)
+	#-cmu (inter:exit-main-event-loop))))
 
 
 
@@ -49,10 +49,10 @@
   (let ((counter 0)
 	(link :link-0))
     (loop
-     (when (not (has-slot-p obj link))
-       (return))
-     (incf counter)
-     (setf link (read-from-string (format nil ":link-~A" counter))))
+       (when (not (has-slot-p obj link))
+	 (return))
+       (incf counter)
+       (setf link (read-from-string (format nil ":link-~A" counter))))
     link))
 
 
@@ -64,10 +64,10 @@
     ;; generating of links if they are
     (cond ((eq to-obj from-obj)
 	   (setf ref (if (or (null to-slot) (eq to-slot T)) 
-		       ;; if a reference to the object itself, return SELF
-		       "(gv :SELF)" 
-		       ;; else use to-slot of object	     
-		       (prin1-to-string `(gvl ,to-slot)))))
+			 ;; if a reference to the object itself, return SELF
+			 "(gv :SELF)" 
+			 ;; else use to-slot of object	     
+			 (prin1-to-string `(gvl ,to-slot)))))
 	  (t
 	   ;; see if a link for this object already exists
 	   (dolist (slot (g-value from-obj :links))
@@ -95,8 +95,8 @@
 
 	   ;; create the reference that will be returned
 	   (if (or (null to-slot) (eq to-slot T)) ; reference to the object itself
-	     (setf ref (prin1-to-string `(gvl ,link)))
-	     (setf ref (prin1-to-string `(gvl ,link ,to-slot))))))
+	       (setf ref (prin1-to-string `(gvl ,link)))
+	       (setf ref (prin1-to-string `(gvl ,link ,to-slot))))))
 
     ref))
 
@@ -163,7 +163,7 @@
 
 
 
-(create-instance 'direct-ref-query-gadget garnet-gadgets:query-gadget
+(create-instance 'direct-ref-query-gadget garnet-gadgets:motif-query-gadget
   (:modal-p t)
   (:button-names '("YES" "NO")))
 
@@ -262,8 +262,8 @@ Do you want to edit the formula?" expr))
 	  (s-value win :disappear-p nil)
 	  (s-value win :queue t)
 
-	  (c32-ok-function))
-)))
+	  (c32-ok-function)))))
+
 
 
 

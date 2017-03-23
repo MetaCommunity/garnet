@@ -23,11 +23,20 @@ Change log:
 
 (in-package "LAPIDARY")
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *lapidary-save-load-files* 
+    (list "motif-text-buttons"
+	  "motif-radio-buttons"
+	  "motif-check-buttons"))
+
+  (dolist (file *lapidary-save-load-files*)
+    (cl-user::garnet-load (concatenate 'string "gadgets:" file "-loader"))))
+
 (create-instance 'SAVE-FILE OPAL:AGGREGADGET
   (:WINDOW-TITLE "Save File")
   (:WINDOW-LEFT 100)
   (:WINDOW-TOP 200)
-  (:WINDOW-WIDTH 316)
+  (:WINDOW-WIDTH 400)
   (:WINDOW-HEIGHT 228)
   (:PACKAGE-NAME "LAPIDARY")
   (:inter nil) ; indicates if interactor is being saved
@@ -38,97 +47,85 @@ Change log:
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 228))
   (:parts `(
     (NIL ,OPAL:TEXT
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD-ITALIC)))
+      (:FONT ,*title-font*)
       (:BOX (9 8 35 14 ))
       (:STRING "Saving...")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 9))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 8)))
-    (:FILENAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:FILENAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
-      (:BOX (20 40 285 19 ))
+      (:LABEL-FONT ,*labeled-box-label-font*)
+      (:BOX (20 40 350 19 ))
       (:LABEL-STRING "Filename:")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 40))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (:GADGET-NAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:GADGET-NAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:LABEL-STRING "Top-level Gadget name:")
-      (:BOX (20 70 285 18 ))
+      (:BOX (20 70 350 18 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 70))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (:WIN-TITLE ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:WIN-TITLE ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:LABEL-STRING "Window Title:")
-      (:BOX (20 130 285 18 ))
+      (:BOX (20 130 350 18 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 130))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (:PACKAGE-NAME ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:PACKAGE-NAME ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:MIN-FRAME-WIDTH NIL)
       (:SELECT-FUNCTION NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:LABEL-STRING "Package name:")
-      (:BOX (20 160 285 18 ))
+      (:BOX (20 160 350 18 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 20))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 160))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 285)))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (NIL ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION lapidary::OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:SELECT-FUNCTION LAPIDARY::OKCANCEL-FUNCTION)
+      (:FONT ,*text-button-font*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
-      (:BOX (188 6 117 29 ))
-      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 188))
-      (:TOP ,(o-formula (SECOND (GVL :BOX)) 6)))
-    (:EXPORT-P ,GARNET-GADGETS:X-BUTTON-panel
+      (:BOX (250 10 150 29 ))
+      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 250))
+      (:TOP ,(o-formula (SECOND (GVL :BOX)) 10)))
+    (:EXPORT-P ,GARNET-GADGETS:MOTIF-CHECK-BUTTON-PANEL
       (:INDENT 0)
       (:V-ALIGN :TOP)
       (:H-SPACING 5)
       (:DIRECTION :VERTICAL)
       (:SELECT-FUNCTION NIL)
       (:H-ALIGN :RIGHT)
-      (:GRAY-WIDTH 3)
       (:TEXT-ON-LEFT-P T)
       (:V-SPACING 5)
       (:BUTTON-HEIGHT 20)
       (:FIXED-HEIGHT-P NIL)
       (:PIXEL-MARGIN NIL)
       (:RANK-MARGIN NIL)
-      (:TEXT-OFFSET 5)
-      (:SHADOW-OFFSET 5)
       (:BUTTON-WIDTH 20)
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:FONT ,*radio-button-font*)
       (:FIXED-WIDTH-P T)
       (:BOX (20 100 197 25 ))
       (:items ("Export Gadgets?"))

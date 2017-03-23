@@ -50,7 +50,7 @@
   (declare (special *event-info*))
   (if (cdr (g-value *event-info* :event-cards))
       (remove-card card)
-      (lapidary-error "this is the only event so you cannot delete it")))
+      (lapidary-error "You cannot delete the last event.")))
 
 (defun remove-card (card)
   (declare (special *event-info*))
@@ -142,7 +142,7 @@
     (cond ((or (string-equal (g-value mouse :value) "any-mousedown")
 	       (string-equal (g-value mouse :value) "any-mouseup"))
 	   (lapidary-error (format nil "~S is built-in to ~S and
-thus is not a valid selection" button (g-value mouse :value)))
+thus is not a valid selection." button (g-value mouse :value)))
 	   (s-value gadget :value (g-value gadget :old-value))
 	   (return-from modifiers-handler))
 
@@ -150,9 +150,9 @@ thus is not a valid selection" button (g-value mouse :value)))
 	  ;; is already selected
 	  ((string-equal button "any modifier")
 	   (when (not (g-value mouse :value))
-		 (lapidary-error "You cannot use the any modifier prefix with keyboard characters.
+		 (lapidary-error "You cannot use the \"any\" modifier prefix with keyboard characters.
 You need to create a separate event for each set of
-modifiers and keyboard combinations that you want")
+modifiers and keyboard combinations that you want.")
 		 (s-value gadget :value (g-value gadget :old-value))
 		 (return-from modifiers-handler))
 	   (s-value gadget :value '("any modifier")))
@@ -163,8 +163,8 @@ modifiers and keyboard combinations that you want")
 	  ;; if it is not already set
 	  ((string-equal button "shift")
 	   (when (not (g-value mouse :value))	       
-		 (lapidary-error "shift is built-in to the keyboard characters
-and thus is not a valid selection")
+		 (lapidary-error "Shift is built-in to the keyboard characters
+and thus is not a valid selection.")
 		 (s-value gadget :value (g-value gadget :old-value))
 		 (return-from modifiers-handler))
 	   (s-value gadget :value 
@@ -175,7 +175,7 @@ and thus is not a valid selection")
 	  ;; mouse button to leftdown
 	  (t 
 	   (when (g-value gadget :parent :any-key :value)
-		 (lapidary-error (format nil "~S is not a valid modifier for any keypress" (pop value)))
+		 (lapidary-error (format nil "~S is not a valid modifier for any keypress." (pop value)))
 		 (s-value gadget :value value)
 		 (return-from modifiers-handler))
 	   (s-value gadget :value 

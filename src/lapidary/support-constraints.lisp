@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7,13 +7,12 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; -*- Mode: Lisp; Package: GARNET-GADGETS -*-
 ;;;
 ;;; This file provides support for creating formulas. It 
 ;;; contains a set of functions that construct formulas which traverse
 ;;; an aggregate hierarchy to find an object.
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Change Log
@@ -22,15 +21,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; make the box constraint menu visible
-(defun show-box-constraint-menu ()
+(defun show-box-constraint-dialog ()
   (declare (special box-constraint-win))
   (s-value box-constraint-win :visible t)
   (opal:update-all))
 
 ;;; make the line constraint menu visible
-(defun show-line-constraint-menu ()
-  (declare (special line-con-win))
-  (s-value line-con-win :visible t)
+(defun show-line-constraint-dialog ()
+  (declare (special line-constraint-win))
+  (s-value line-constraint-win :visible t)
   (opal:update-all))
 
 ;; determine whether the primary selection depends on the secondary selection

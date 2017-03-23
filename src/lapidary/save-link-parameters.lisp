@@ -28,7 +28,7 @@
   (:PACKAGE-NAME "COMMON-LISP-USER")
   (:EXPORT-P NIL)
   (:parts `(
-    (:OKCANCEL-BUTTON ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:OKCANCEL-BUTTON ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION gilt:OKCANCEL-FUNCTION)
       (:function-for-ok save-link-parameters-ok-fct)
       (:INDENT 0)
@@ -41,10 +41,7 @@
       (:RANK-MARGIN NIL)
       (:FIXED-WIDTH-P T)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
 #|
       (:LEFT ,(o-formula (+ 20 (max (opal:gv-right (gvl :parent :object))

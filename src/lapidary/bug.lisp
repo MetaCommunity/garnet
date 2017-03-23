@@ -3,7 +3,7 @@
 (defun make-instance-or-copy (instance-p)
   (let* ((objs (g-value *selection-info* :selected))
 	 editor-agg result obj-name)
-    (cond ((null objs) (lapidary-error "must select an object first")
+    (cond ((null objs) (lapidary-error "You must select an object first.")
 	  (t
 	   ; this prevents create-instance from copying feedback links
 	   (primary-deselect-objects :none)

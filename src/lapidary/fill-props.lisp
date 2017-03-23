@@ -41,34 +41,34 @@ Change log:
       (:val :none)
       (:name "transparent")
       (:FILLING-STYLE NIL)
-      (:TOP 40))
+      (:TOP 45))
     (:WHITE-FILL-BOX ,FILLING-BOX
       (:name "no-texture")
       (:val ,opal:white-fill)
       (:FILLING-STYLE ,OPAL:WHITE-FILL)
-      (:TOP 70))
+      (:TOP 75))
     (:LIGHT-FILL-BOX ,FILLING-BOX
       (:name "light-texture")
       (:val ,opal:light-gray-fill)
       (:FILLING-STYLE ,OPAL:LIGHT-GRAY-FILL)
-      (:TOP 100))
+      (:TOP 105))
     (:GRAY-FILL-BOX ,FILLING-BOX
       (:name "medium-texture")
       (:val ,opal:gray-fill)
       (:FILLING-STYLE ,OPAL:GRAY-FILL)
-      (:TOP 130))
+      (:TOP 135))
     (:DARK-FILL-BOX ,FILLING-BOX
       (:name "dark-texture")
       (:val ,opal:dark-gray-fill)
       (:FILLING-STYLE ,OPAL:DARK-GRAY-FILL)
-      (:TOP 160))
+      (:TOP 165))
     (:BLACK-FILL-BOX ,FILLING-BOX
       (:name "solid")
       (:val ,opal:black-fill)
       (:FILLING-STYLE ,OPAL:BLACK-FILL)
-      (:TOP 190))
+      (:TOP 195))
   (:Other-box ,filling-box 
-      (:TOP 220)
+      (:TOP 225)
       (:val ,(o-formula (gv (kr-path 0 :parent :parent :other-val) :val)))))))
 
 (create-instance 'Fill-PROP OPAL:AGGREGADGET
@@ -77,7 +77,7 @@ Change log:
   (:WINDOW-TITLE "Filling Properties")
   (:WINDOW-LEFT 0)
   (:WINDOW-TOP 0)
-  (:WINDOW-WIDTH 250)
+  (:WINDOW-WIDTH 300)
   (:WINDOW-HEIGHT 255)
   (:PACKAGE-NAME "LAPIDARY")
   (:FUNCTION-FOR-OK `fill-prop-OK)
@@ -91,26 +91,26 @@ Change log:
   (:parts `(
     (:FILL-STYLES ,OPAL:TEXT
       (:constant (t))
-      (:STRING "Fill-Style:")
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD-italic)))
+      (:STRING "Fill Style:")
+      (:FONT ,*title-font*)
       (:LEFT 10)
       (:TOP 10))
     (:non ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "None")
-      (:LEFT 45)
-      (:TOP 42))
+      (:font ,*labeled-box-label-font*)
+      (:LEFT 40)
+      (:TOP 45))
   (:Other-label ,opal:text
       (:constant (t))
-      (:LEFT 38)
-      (:TOP 223)
+      (:LEFT 33)
+      (:TOP 224)
+      (:font ,*labeled-box-label-font*)
       (:string "Other:"))
-    (:Other-VAL ,Garnet-gadgets:scrolling-labeled-box
+    (:Other-VAL ,Garnet-gadgets:motif-scrolling-labeled-box
       (:constant (t))
-      (:LEFT 85)
-      (:TOP 220)
+      (:LEFT 84)
+      (:TOP 224)
       (:WIDTH 150)
       (:label-string "")
       (:val ,(o-formula (let ((val (careful-eval (gvl :value))))
@@ -120,7 +120,7 @@ Change log:
       (:obj-over ,(o-formula (gv (kr-path 0 :parent :other-val))))
       (:visible ,(o-formula (not (gv (kr-path 0 :parent :fill-boxes
 					   :other-box) :selected)))))
-    (:OKCANCEL-BUTTON ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:OKCANCEL-BUTTON ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:constant (t))
       (:SELECTION-FUNCTION gilt:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
@@ -133,11 +133,9 @@ Change log:
       (:PIXEL-MARGIN NIL)
       (:RANK-MARGIN NIL)
       (:FIXED-WIDTH-P T)
+      (:FONT ,*text-button-font*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
       (:BOX (120 50 120 30 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 120))
@@ -169,21 +167,19 @@ Change log:
       (:visible NIL)
       (:LEFT 175)
       (:TOP 12))
-    (:constraint-button ,garnet-gadgets:text-button
+    (:constraint-button ,garnet-gadgets:motif-text-button
       (:constant (t))
+      (:font ,*text-button-font*)
       (:string "Constraint")
       (:left ,(o-formula (opal:gv-center-x-is-center-of 
 			  (gvl :parent :okcancel-button))))
       (:top ,(o-formula (+ 10 (opal:gv-bottom (gvl :parent :okcancel-button)))))
       (:final-feedback-p t)
-      (:GRAY-WIDTH 3)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:selected ,(o-formula (not (gvl :parent :fill-boxes :selected))))
       (:selection-function props-constraint-final-fn)
       (:slot :filling-style)
       (:menu-gadget ,(o-formula (gvl :parent :fill-boxes))))
-    (:COLOR-BUTTON ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:COLOR-BUTTON ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:constant (t))
       (:SELECTION-FUNCTION COLOR-PROP-From-Line-Or-Fill)
       (:GILT-REF "TYPE-TEXT-BUTTON-PANEL")
@@ -197,10 +193,7 @@ Change log:
       (:FIXED-HEIGHT-P T)
       (:PIXEL-MARGIN NIL)
       (:RANK-MARGIN NIL)
-      (:SHADOW-OFFSET 5)
-      (:FONT ,OPAL:DEFAULT-FONT)
-      (:TEXT-OFFSET 5)
-      (:GRAY-WIDTH 3)
+      (:FONT ,*text-button-font*)
       (:FIXED-WIDTH-P T)
       (:ITEMS ("Color" ))
       (:LEFT 150)

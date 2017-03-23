@@ -56,13 +56,13 @@ Change log:
 	  ((equal selected-string "text properties")
 	   (s-value text-properties-win :visible t))
 	  ((equal selected-string "line constraints")
-	   (gg:show-line-constraint-menu))
+	   (lapidary-dialogs:show-line-constraint-dialog))
 	  ((equal selected-string "box constraints")
-	   (gg:show-box-constraint-menu))
+	   (lapidary-dialogs:show-box-constraint-dialog))
 	  ((equal selected-string "c32")
 	   (multiple-value-bind (left top)
 	      (get-coordinates gadget)
-	      (gg:c32 nil nil :left left :top top)))
+	      (lapidary-dialogs:c32 nil nil :left left :top top)))
 	  ((equal selected-string "clear workspace")
 	   (clear-workspace))
 	  ((equal selected-string "ungroup")
@@ -85,10 +85,12 @@ Change log:
 	   (show-read-dialog nil nil))
 	  ((equal selected-string "add gadget")
 	   (show-add-gadget-dialog))
-	  ((equal selected-string "interactors")
-	   (multiple-value-bind (left top)
-	      (get-coordinates gadget)
-	      (show-interactor-menu left top)))
+	  ((or (equal selected-string "choice")
+	       (equal selected-string "move/grow")
+	       (equal selected-string "text")
+	       (equal selected-string "two-point")
+	       (equal selected-string "angle"))
+	   (init-inter-dialog selected-string))
 	  ((equal selected-string "filling style")
 	   (multiple-value-bind (left top)
 	      (get-coordinates gadget)
@@ -199,7 +201,7 @@ Change log:
 	     (return-from name-obj))
        (setf new-name (gilt:value-of :result values))
        (cond ((string= new-name "")
-	      (lapidary-error "Please enter a non-null string"))
+	      (lapidary-error "Please enter a non-null string."))
 	     (t
 	      (setf new-name (keyword-from-string new-name))
 
@@ -216,7 +218,7 @@ Change log:
 			    (return)))
 	      (if duplicate-p
 		  (lapidary-error 
-		   "The name you just entered is already used")
+		   "The name you just entered is already used.")
 		;; if the name is not a duplicate, it is a good name
 		;; so exit the loop
 		(return)))))
@@ -299,13 +301,13 @@ Change log:
 		    ;; restore the :active slot of the interactor
 		    (s-value entry :active active)
 		    ;; reset the appropriate interactor menu
-		    (reset-inter-menu entry))))
+		    (reset-inter-dialog entry))))
     (setf *undo-deleted-obj-list* nil)
 
     ;; delete any added objects
     (dolist (entry *undo-added-obj-list*)
 	    (when (is-a-p entry inter:interactor)
-		  (reset-inter-menu (g-value entry :is-a))
+		  (reset-inter-dialog (g-value entry :is-a))
 		  (opal:destroy entry)))
     (setf *undo-added-obj-list* nil)
 
@@ -339,7 +341,7 @@ Change log:
 	left top)
     (when (or (null obj) (not (is-a-p obj opal:aggrelist)))
 	  (lapidary-error "A list object is not selected. You must 
-select a list object before changing its properties")
+select a list object before changing its properties.")
 	  (return-from PopUpPropsWin))
     (multiple-value-setq (left top)
       (opal:convert-coordinates (g-value obj :window)

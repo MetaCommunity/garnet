@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -52,7 +52,7 @@ Change log:
 ============================================================
 |#
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 
 ;;;============================================================
@@ -62,9 +62,9 @@ Change log:
 ;;;============================================================
 
 (defun set-offset-p (slot)
-  (declare (special *constraint-gadget*))
-  (let ((p-selection (g-value *constraint-gadget* :obj-to-constrain))
-	(s-selection (g-value *constraint-gadget* :obj-to-reference)))
+  (declare (special *constraint-dialog*))
+  (let ((p-selection (g-value *constraint-dialog* :obj-to-constrain))
+	(s-selection (g-value *constraint-dialog* :obj-to-reference)))
     (or (and p-selection (null s-selection))
 	(and p-selection s-selection
 	     (depends-on-p p-selection s-selection slot)))))
@@ -151,7 +151,7 @@ Change log:
     ;; of the primary selection, do so
 
     (when set-constraint-offset-p
-      (let ((p-selected (g-value *constraint-gadget* :obj-to-constrain)))
+      (let ((p-selected (g-value *constraint-dialog* :obj-to-constrain)))
 	(s-value p-selected offset-slot offset)))))
 
 ;;;============================================================
@@ -179,7 +179,7 @@ Change log:
     (if (not (numberp number))
 	(progn
 	  (s-value gadget :value (g-value gadget :old-value))
-	  (constraint-gadget-error "the value must be a number")
+	  (constraint-dialog-error "the value must be a number")
 	  nil)
 	(s-value gadget :old-value value))))
 
@@ -207,7 +207,7 @@ Change log:
     ;; of the primary selection, do so
 
     (when set-constraint-scale-p
-      (let ((p-selected (g-value *constraint-gadget* :obj-to-constrain)))
+      (let ((p-selected (g-value *constraint-dialog* :obj-to-constrain)))
 	(s-value p-selected scale-slot scale)))))
 
 ;;;============================================================
@@ -224,18 +224,18 @@ Change log:
 
   (let ((value (read-from-string string)))
 
-    (when (and (g-value *constraint-gadget* :obj-to-constrain)
-	       (null (g-value *constraint-gadget* :obj-to-reference)))
-      (let ((obj (g-value *constraint-gadget* :obj-to-constrain)))
+    (when (and (g-value *constraint-dialog* :obj-to-constrain)
+	       (null (g-value *constraint-dialog* :obj-to-reference)))
+      (let ((obj (g-value *constraint-dialog* :obj-to-constrain)))
 
 	;; certain slots should not be altered. if this slot is
 	;; one of them, tell the user and do not proceed
 	(when (member slot (g-value obj :do-not-alter-slots))
-	      (constraint-gadget-error
+	      (constraint-dialog-error
 	       (format nil "cannot change ~S's ~S slot" obj slot))
 	      (return-from set-bbox-slot))
 
-	(cg-destroy-constraint obj slot)
+	(cd-destroy-constraint obj slot)
 	(s-value obj slot value)))))
 
 (defun set-left (inter string)

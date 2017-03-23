@@ -44,23 +44,21 @@
       (:STRING ,(o-formula (gvl :parent :string)))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 10))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 7)))
-    (:result ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:result ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:BOX (6 57 315 22 ))
       (:MIN-WIDTH 20)
       (:GROW-P T)
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:LABEL-STRING "")
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 6))
       (:TOP ,(o-formula (+ (opal:gv-bottom (gvl :parent :prompt)) 15)))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 315)))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (NIL ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION gilt:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
       (:BOX (106 100 67 17 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 106))

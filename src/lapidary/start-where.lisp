@@ -22,7 +22,7 @@
 ;;;     SCROLLING-LABELED-BOX from package GARNET-GADGETS
 ;;;     SCROLLING-MENU from package GARNET-GADGETS
 (dolist (gadget '("scrolling-menu-loader"
-		  "scrolling-labeled-box-loader"
+		  "motif-scrolling-labeled-box-loader"
 		  "labeled-box-loader"
 		  "text-buttons-loader"
 		  ))
@@ -119,7 +119,7 @@
         (progn
 	  (inter:beep)
 	  (s-value gadget :value (g-value gadget :old-value))
-	  (lapidary-error "Value must be the name of a garnet object")))))
+	  (lapidary-error "Value must be the name of a garnet object.")))))
 
 ;;; ensure that the value is a valid slotname
 (defun garnet-slot-p (gadget value)
@@ -130,7 +130,7 @@
         (progn
 	  (inter:beep)
 	  (s-value gadget :value (g-value gadget :old-value))
-	  (lapidary-error "Value must be a keyword")))))
+	  (lapidary-error "Value must be a keyword.")))))
 
 ;;; set the visibility of a gray out rectangle
 (defun set-gray-out-rect-visible (gadget slot visible)
@@ -171,13 +171,13 @@
     (when (and (not (eq control t))
 	       (not (null control))
 	       (string= "" start-where-obj))
-	  (lapidary-error "An object must be supplied for the start-where expression")
+	  (lapidary-error "An object must be supplied for the start-where expression.")
 	  (s-value *start-where-win* :visible t)
 	  (return-from start-where-ok-fn))
     (when (and (listp start-where) 
 	       (member control start-where-list-options)
 	       (string= "" slot))
-	  (lapidary-error "A slot name must be supplied for the start-where expression")
+	  (lapidary-error "A slot name must be supplied for the start-where expression.")
 	  (s-value *start-where-win* :visible t)
 	  (return-from start-where-ok-fn))
   
@@ -233,7 +233,7 @@
 		    (eq control :in) (eq control :in-box) 
 		    (eq control :in-but-not-on))
 	    (lapidary-error
-	     (format nil "cannot specify a type restrictor for a start-where that begins with ~S" control))
+	     (format nil "Cannot specify a type restrictor for a start-where that begins with ~S." control))
 	    (s-value start-where :type nil)
 	    (s-value gadget :value nil)
 	    (return-from prompt-for-type-restrict))
@@ -291,7 +291,7 @@ expression, such as (list ...) or `(...)")
     (when (string= type-restriction "")
 	  (lapidary-error 
 	   "Type restriction cannot be an empty string. 
-Press cancel if you do not want a type restriction")
+Press cancel if you do not want a type restriction.")
 	  (s-value prompt-window :visible t)
 	  (return-from type-restrict-fn))
 
@@ -319,7 +319,7 @@ Press cancel if you do not want a type restriction")
 (create-instance 'START-WHERE-GADGET OPAL:AGGREGADGET
   (:WINDOW-LEFT 0)
   (:WINDOW-TOP 0)
-  (:WINDOW-WIDTH 384)
+  (:WINDOW-WIDTH 500)
   (:WINDOW-HEIGHT 261)
   (:FUNCTION-FOR-OK 'start-where-ok-fn)
   (:EXPORT-P T)
@@ -330,7 +330,7 @@ Press cancel if you do not want a type restriction")
   (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 384))
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 261))
   (:parts `(
-    (:start-where ,GARNET-GADGETS:SCROLLING-MENU
+    (:start-where ,GARNET-GADGETS:MOTIF-SCROLLING-MENU
       (:GILT-REF "TYPE-SCROLLING-MENU")
       (:INDICATOR-FONT ,(create-instance nil OPAL:FONT
             (:SIZE :SMALL)))
@@ -368,14 +368,13 @@ Press cancel if you do not want a type restriction")
       (:BOX (30 50 111 145 ))
       (:LEFT ,(o-formula (FIRST (GVL :BOX)) 30))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 50)))
-    (:obj ,GARNET-GADGETS:SCROLLING-LABELED-BOX
+    (:obj ,GARNET-GADGETS:MOTIF-SCROLLING-LABELED-BOX
       (:GILT-REF "TYPE-SCROLLING-LABELED-BOX")
       (:MIN-FRAME-WIDTH NIL)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 2)
       (:LABEL-OFFSET 5)
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:BOX (30 200 322 18 ))
       (:MIN-WIDTH 20)
       (:GROW-P T)
@@ -386,12 +385,11 @@ Press cancel if you do not want a type restriction")
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 322)))
     (:slot ,GARNET-GADGETS:LABELED-BOX
       (:GILT-REF "TYPE-LABELED-BOX")
-      (:LABEL-FONT ,(create-instance nil OPAL:FONT
-            (:FACE :BOLD)))
+      (:LABEL-FONT ,*labeled-box-label-font*)
       (:LABEL-OFFSET 5)
       (:MIN-FRAME-WIDTH 120)
       (:selection-function garnet-slot-p)
-      (:FIELD-FONT ,OPAL:DEFAULT-FONT)
+      (:FIELD-FONT ,*labeled-box-field-font*)
       (:FIELD-OFFSET 6)
       (:BOX (30 230 97 18 ))
       (:MIN-WIDTH 20)
@@ -430,7 +428,7 @@ Press cancel if you do not want a type restriction")
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 229))
       (:WIDTH ,(o-formula (THIRD (GVL :BOX)) 160))
       (:HEIGHT ,(o-formula (FOURTH (GVL :BOX)) 22)))
-    (:stop-group ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:stop-group ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:ITEMS ("OK" "Cancel" ))
@@ -439,8 +437,8 @@ Press cancel if you do not want a type restriction")
       (:TEXT-OFFSET 2)
       (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
-      (:BOX (229 10 124 21 ))
-      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 229))
+      (:BOX (275 10 124 21 ))
+      (:LEFT ,(o-formula (FIRST (GVL :BOX)) 275))
       (:TOP ,(o-formula (SECOND (GVL :BOX)) 10))))))
 
 (create-instance 'INTER-AGG-QUERY OPAL:AGGREGADGET

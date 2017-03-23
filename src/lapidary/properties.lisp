@@ -233,11 +233,16 @@
 			(:line-style nil)
 			(:draw-function :xor)))))))))
 
-    ; Construct a list which, when evaluated in the :parts slot of an
-    ; aggrelist, will create an instance of a PROPERTIES-BUTTON with the
-    ; object displayed as the :label of the button.
-    (cons NIL (cons PROPERTIES-BUTTON (list (cons :parts
-              (list (list (cons :label (cons object slots))))))))
+    ;; Construct a list which, when evaluated in the :parts slot of an
+    ;; aggrelist, will create an instance of a PROPERTIES-BUTTON with
+    ;; the object displayed as the :label of the button.
+    #+(and)
+    `(NIL ,PROPERTIES-BUTTON
+	  (:parts 
+	   ((:label ,object ,@slots))))
+    #-(and)
+    (print (cons NIL (cons PROPERTIES-BUTTON (list (cons :parts
+              (list (list (cons :label (cons object slots)))))))))
     ))
 
 

@@ -271,7 +271,7 @@
 	  ;; destroy the support slots associated with this formula
 	  ;; and destroy the meta slots that store the support slot
 	  ;; information
-	  (gg:destroy-constraint-support-slots obj (get-value obj slot) t)
+	  (lapidary-dialogs:destroy-constraint-support-slots obj (get-value obj slot) t)
 
 	  ;; put the formula back together
 	  (let ((new-form (if (null (cdr expr-list))

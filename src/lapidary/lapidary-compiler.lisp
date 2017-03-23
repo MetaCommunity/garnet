@@ -19,9 +19,9 @@
 
 (in-package "COMMON-LISP-USER")
 
-(defvar *debug-lapidary-mode* nil)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *debug-lapidary-mode* nil)
   (proclaim
    (if *debug-lapidary-mode*
        (and (boundp 'Garnet-Compile-Debug-Settings)
@@ -40,17 +40,19 @@
 
 ;; load necessary gadgets
 (dolist (pair '((:text-buttons "text-buttons-loader")
-		(:error-gadget "error-gadget-loader")
+		(:motif-text-buttons "motif-text-buttons-loader")
+		(:motif-check-buttons "motif-check-buttons-loader")
+		(:motif-error-gadget "motif-error-gadget-loader")
 		(:arrow-line "arrow-line-loader")
 		(:labeled-box "labeled-box-loader")
 		(:x-buttons "x-buttons-loader")
-		(:v-slider "v-slider-loader")
-		(:scrolling-labeled-box "scrolling-labeled-box-loader")
-		(:radio-buttons "radio-buttons-loader")
-		(:scrolling-window "scrolling-window-loader")
-		(:scrolling-menu "scrolling-menu-loader")
-		(:menubar "menubar-loader")
-		(:prop-sheet-win "prop-sheet-win-loader")))
+		(:motif-slider "motif-slider-loader")
+		(:motif-scrolling-labeled-box "motif-scrolling-labeled-box-loader")
+		(:motif-radio-buttons "motif-radio-buttons-loader")
+		(:motif-scrolling-window "motif-scrolling-window-loader")
+		(:motif-scrolling-menu "motif-scrolling-menu-loader")
+		(:motif-menubar "motif-menubar-loader")
+		(:prop-sheet-win "motif-prop-sheet-win-loader")))
   (unless (get :garnet-modules (car pair))
     (garnet-load (concatenate 'string "gadgets:" (cadr pair)))))
 
@@ -68,22 +70,25 @@
 
 ;;; Compile and load the constraint gadget
 
-(defvar Garnet-Constraint-Gadget-Pathname Garnet-Lapidary-Pathname)
-(defvar Garnet-Constraint-Gadget-Src Garnet-Lapidary-Src)
+(defvar Garnet-Constraint-Dialog-Pathname Garnet-Lapidary-Pathname)
+(defvar Garnet-Constraint-Dialog-Src Garnet-Lapidary-Src)
 
 ;;; If at cmu, then set up the search lists
 #+cmu
 (progn
-  (setf (ext:search-list "constraint-gadget:")
-	(list (namestring Garnet-Constraint-Gadget-PathName)))
-  (setf (ext:search-list "constraint-gadget-src:")
-	(list (namestring Garnet-Constraint-Gadget-Src))))
+  (setf (ext:search-list "constraint-dialog:")
+	(list (namestring Garnet-Constraint-Dialog-PathName)))
+  (setf (ext:search-list "constraint-dialog-src:")
+	(list (namestring Garnet-Constraint-Dialog-Src))))
 
-(defparameter Garnet-Constraint-Gadget-Compiler
-  (merge-pathnames "constraint-gadget-compiler" 
-		    Garnet-Constraint-Gadget-PathName))
 
-(garnet-load "lapidary-src:constraint-gadget-compiler")
+(garnet-load "lapidary-src:parameters")
+
+(defparameter Garnet-Constraint-Dialog-Compiler
+  (merge-pathnames "constraint-dialog-compiler" 
+		    Garnet-Constraint-Dialog-PathName))
+
+(garnet-load "lapidary-src:constraint-dialog-compiler")
 
 (Defparameter Garnet-Lapidary-Files
   '(
@@ -111,7 +116,7 @@
 	"color-imp" "color-props"
 	"shapes"
 	"lap-draw"
-	"support-menu-editor"		        "new-editor"
+	"support-menu-editor" #+(and) "motif-editor" #-(and) "new-editor"
         "text"   "text-properties"
         "gadgetcopy"
 	"save-link-parameters"

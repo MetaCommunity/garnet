@@ -52,7 +52,7 @@
 	(:WIDTH (o-formula (GVL :WINDOW :WIDTH) 450))
 	(:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 300))
 	(:parts
-	 `((:menu ,GARNET-GADGETS:SCROLLING-MENU
+	 `((:menu ,GARNET-GADGETS:MOTIF-SCROLLING-MENU
 	    (:GILT-REF "TYPE-SCROLLING-MENU")
 	    (:MENU-SELECTION-FUNCTION nil
 	     #+COMMENT C32::Insert-Func-Into-Form)

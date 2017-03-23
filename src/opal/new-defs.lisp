@@ -16,7 +16,7 @@
   (y1 0 :type fixnum)
   (x2 0 :type fixnum)
   (y2 0 :type fixnum)
-  (valid-p nil :type (or t nil)))
+  (valid-p nil :type boolean))
 
 
 ;; Force-Computation-P is necessary since if an object R is in an aggregate A,

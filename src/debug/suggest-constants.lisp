@@ -14,7 +14,7 @@
 (in-package "GARNET-DEBUG")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(record-from-now suggest-constants find-formulas explain-formulas)))
+  (export '(Record-From-Now Suggest-Constants Find-Formulas Explain-Formulas)))
 
 
 
@@ -73,7 +73,7 @@
 
 ;;;; RECORD-FROM-NOW
 ;;;
-(defun record-from-now ()
+(defun Record-From-Now ()
   (setf *start-recording* kr::*sweep-mark*)
   (format t "Now exercise the interface.  When you are done, call the function~%" )
   (format t "  (SUGGEST-CONSTANTS  agg  &key  max)~%")
@@ -82,7 +82,8 @@
   (format t "~%")
   (format t "You may also want to use the reverse function,~%")
   (format t "  (EXPLAIN-FORMULAS  agg  &optional  limit  eliminate-useless-p),~%")
-  (format t "to find out why formulas that were not evaluated did not come up as constant.~%"))
+  (format t "to find out why formulas that were not evaluated did not come up~%")
+  (format t "as constant.~%"))
 
 
 
@@ -91,7 +92,7 @@
 ;;; ONLY-TOTALS-P: print only number of formulas, instead of individual
 ;;; formula names.
 ;;;
-(defun find-formulas (object &optional (only-totals-p T)
+(defun Find-Formulas (object &optional (only-totals-p T)
 			     (limit 50)
 			     (from *start-recording*) recursive-p)
   (unless recursive-p
@@ -232,7 +233,7 @@
 
 ;;;; EXPLAIN-FORMULAS
 ;;;
-(defun explain-formulas (object &optional (print-limit 50) make-go-away recursive-p)
+(defun Explain-Formulas (object &optional (print-limit 50) make-go-away recursive-p)
   (unless recursive-p
     (setf *counter* 0)
     (setf *evaluated-counter* 0)
@@ -387,7 +388,7 @@
 ;;; Set <recompute-p> to NIL if you do not need to reexamine all the objects
 ;;; and you trust what was computed earlier.
 ;;;
-(defun suggest-constants (object &key (max most-positive-fixnum)
+(defun Suggest-Constants (object &key (max most-positive-fixnum)
 				 (recompute-p T) (level 1))
   (when recompute-p
     (format t "Analyzing objects...~%")

@@ -81,6 +81,6 @@ Change log:
 	:verbose T))
 
 
-(format T "Type (gilt:do-go :motif) or (gilt:do-go :garnet) to start~%")
+(format T "~&Type (gilt:do-go :motif) or (gilt:do-go :garnet) to start~%")
 
 

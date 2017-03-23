@@ -150,24 +150,24 @@ Change log:
 	  ;; a member of the objects acted on by this interactor
 	  (when (null selection)
 	    (lapidary-error
-	     "Must select an object to demonstrate with")
+	     "You must select an object to demonstrate with.")
 	    (return-from by-demo nil))
 
 	  (setf start-where (get-start-where (symbol-value queue) inter))
 	  (when (eq start-where :not-supplied)
-		(lapidary-error "Must supply a start-where before doing demonstrations")
+		(lapidary-error "You must supply a start-where before doing demonstrations.")
 		(return-from by-demo nil))
 	  (setf control (if (atom start-where) 
 			    start-where
 			    (car start-where)))
 	  (when (member control '(t nil :in-but-not-on))
 		(lapidary-error
-		 (format nil "cannot demonstrate behavior for a start-where that begins with ~S" control))
+		 (format nil "Cannot demonstrate behavior for a start-where that begins with ~S." control))
 		(return-from by-demo nil))
 	  (setf start-where-objs (find-start-where-objs start-where))
 	  (when (not (member selection start-where-objs))
 		(lapidary-error 
-		 (format nil "The selection ~S is not an object that satisfies the interactor's start-where predicate" selection))
+		 (format nil "The selection ~S is not an object that satisfies the interactor's start-where predicate." selection))
 		(return-from by-demo nil))
 
 	  ;; save the selected object
@@ -516,7 +516,7 @@ Change log:
 	 selectable-objs)
 
     (when (or (not (listp start-where)) (eq control :in-but-not-on))
-      (lapidary-error "Cannot generalize constraints if start-where is either t, nil, or :in-but-not-on")
+      (lapidary-error "Cannot generalize constraints if start-where is either t, nil, or :in-but-not-on.")
       (return-from create-feedback-obj))
 
     ;; find the list of objects this feedback object can appear with

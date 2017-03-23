@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -16,13 +16,13 @@
 ;;;
 ;;; 08/24/92 amickish - Added proclaim
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
 
 (defun set-box-constraint-feedback ()
-  (declare (special *box-constraint-menu* *constraint-gadget*))
-  (let* ((selection-type (g-value *constraint-gadget* :selection-type))
-	 (p-selection (g-value *constraint-gadget* :obj-to-constrain))
-	 (s-selection (g-value *constraint-gadget* :obj-to-reference)))
+  (declare (special *box-constraint-menu* *constraint-dialog*))
+  (let* ((selection-type (g-value *constraint-dialog* :selection-type))
+	 (p-selection (g-value *constraint-dialog* :obj-to-constrain))
+	 (s-selection (g-value *constraint-dialog* :obj-to-reference)))
        
     ;; determine which constraint icons should be highlighted 
     ;; constraint icons should be highlighted only if there is one
@@ -31,7 +31,7 @@
 	    (eq selection-type 'one-one))
        (cond ((or (is-a-line-p p-selection)
 		  (is-a-line-p s-selection))
-	      (constraint-gadget-error "One of the selected objects is a line, not a box object.
+	      (constraint-dialog-error "One of the selected objects is a line, not a box object.
 Use the line constraint menu instead"))
 	     (t
 	      (dolist (slot '(:left :top :width :height))
@@ -118,12 +118,12 @@ Use the line constraint menu instead"))
 			    (s-value con-panel :value "unconstrain")))))))))))
 
 (defun set-line-constraint-feedback ()
-  (declare (special *constraint-gadget* line-con-prim-sel-agg
-		    line-con-sec-sel-agg line-con-panel x-offset-box
-		    y-offset-box *constraint-gadget-query-window*))
-  (let* ((selection-type (g-value *constraint-gadget* :selection-type))
-	 (p-selection (g-value *constraint-gadget* :obj-to-constrain))
-	 (s-selection (g-value *constraint-gadget* :obj-to-reference)))
+  (declare (special *constraint-dialog* line-constraint-prim-sel-agg
+		    line-constraint-sec-sel-agg line-constraint-panel x-offset-box
+		    y-offset-box *constraint-dialog-query-window*))
+  (let* ((selection-type (g-value *constraint-dialog* :selection-type))
+	 (p-selection (g-value *constraint-dialog* :obj-to-constrain))
+	 (s-selection (g-value *constraint-dialog* :obj-to-reference)))
 
     ;; determine which constraint icons should be highlighted 
     ;; constraint icons should be highlighted only if there is one
@@ -133,7 +133,7 @@ Use the line constraint menu instead"))
        (cond ((and (not (is-a-line-p p-selection))
 		   s-selection
 		   (not (is-a-line-p s-selection)))
-	      (constraint-gadget-error "Both selected objects are box objects.
+	      (constraint-dialog-error "Both selected objects are box objects.
 Use the box constraint menu instead"))
 
 	     ;; if the primary selection is a line object, and there is
@@ -175,11 +175,11 @@ Use the box constraint menu instead"))
 						       s-selection :x1)
 		       ;; ask whether the user wants to see the second 
 		       ;; endpoint
-		       (setf (opal:center-x *constraint-gadget-query-window*)
+		       (setf (opal:center-x *constraint-dialog-query-window*)
 			     gem:*screen-width*)
-		       (setf (opal:center-y *constraint-gadget-query-window*)
+		       (setf (opal:center-y *constraint-dialog-query-window*)
 			     gem:*screen-height*)
-		       (when (string= (constraint-gadget-query "Both endpoints of the line are constrained. To 
+		       (when (string= (constraint-dialog-query "Both endpoints of the line are constrained. To 
 see the constraint on the second endpoint,
 press 'NEXT'. If you do not want to see the
 second constraint, press 'DONE'." '("NEXT" "DONE") t)
@@ -210,7 +210,7 @@ second constraint, press 'DONE'." '("NEXT" "DONE") t)
 		      ;; neither endpoint is constrained
 		      (t 
 		       (deselect-line-buttons)
-		       (s-value line-con-panel :value "unconstrain")))))
+		       (s-value line-constraint-panel :value "unconstrain")))))
 	     ;; if the primary selection is a box object, the secondary 
 	     ;; selection is a line, and the left and top slots of the box
 	     ;; object depend on the line, highlight the appropriate
@@ -219,9 +219,9 @@ second constraint, press 'DONE'." '("NEXT" "DONE") t)
 	      ;; only have to check :left, since both the :left and :top
 	      ;; of a box are constrained by a line constraint
 	      (let* ((formula (get-value p-selection :left))
-		    (p-selection-buttons (g-value line-con-prim-sel-agg
+		    (p-selection-buttons (g-value line-constraint-prim-sel-agg
 						  :box :buttons))
-		    (s-selection-buttons (g-value line-con-sec-sel-agg
+		    (s-selection-buttons (g-value line-constraint-sec-sel-agg
 						  :line :buttons))
 		    (menu-item-left
 		     (if (and (formula-p formula)
@@ -231,7 +231,7 @@ second constraint, press 'DONE'." '("NEXT" "DONE") t)
 			 (g-formula-value formula :menu-item))))
 		(cond ((eq menu-item-left :customize)
 		       (deselect-line-buttons)
-		       (s-value line-con-panel :value "customize"))
+		       (s-value line-constraint-panel :value "customize"))
 		      (menu-item-left
 		       ;; make sure it is safe to proceed--the primary 
 		       ;; selection is a box so the item it is constrained 
@@ -244,7 +244,7 @@ second constraint, press 'DONE'." '("NEXT" "DONE") t)
 		       (when (not (is-a-line-p 
 				   (g-value p-selection 
 					    (car (g-formula-value formula :links)))))
-			     (constraint-gadget-error "The object you have selected is a box object
+			     (constraint-dialog-error "The object you have selected is a box object
 and so is the object it is constrained to.
 Please use the box constraint menu instead")
 			     (return-from set-line-constraint-feedback))
@@ -261,7 +261,7 @@ Please use the box constraint menu instead")
 			      (s-button 
 			       (nth (cdr menu-item-left)
 				    (g-value s-selection-buttons :components))))
-			 (s-value line-con-panel :value nil)
+			 (s-value line-constraint-panel :value nil)
 			 (s-value p-button :selected t)
 			 (s-value s-button :selected t)
 			 (s-value (g-value p-button :parent) 
@@ -289,16 +289,16 @@ Please use the box constraint menu instead")
 		      ;; is a custom constraint
 		      ((formula-p formula)
 		       (deselect-line-buttons)
-		       (s-value line-con-panel :value "customize"))
+		       (s-value line-constraint-panel :value "customize"))
 		      (t
 		       (deselect-line-buttons)
-		       (s-value line-con-panel :value "unconstrain")))))))))
+		       (s-value line-constraint-panel :value "unconstrain")))))))))
 
 (defun select-line-constraint-buttons (menu-item p-selection s-selection slot
 						 &optional (select-p t))
-  (declare (special line-con-prim-sel-agg line-con-sec-sel-agg
-		    line-con-panel x-offset-box y-offset-box))
-  (let* ((p-selection-buttons (g-value line-con-prim-sel-agg
+  (declare (special line-constraint-prim-sel-agg line-constraint-sec-sel-agg
+		    line-constraint-panel x-offset-box y-offset-box))
+  (let* ((p-selection-buttons (g-value line-constraint-prim-sel-agg
 				      :line :buttons))
 	 (formula (get-value p-selection slot))
 	 (link (car (g-formula-value formula :links)))
@@ -306,9 +306,9 @@ Please use the box constraint menu instead")
 		     (is-a-line-p (g-value p-selection link))))
 	 (s-selection-buttons 
 	  (if line-p
-	      (g-value line-con-sec-sel-agg
+	      (g-value line-constraint-sec-sel-agg
 		       :line :buttons)
-	      (g-value line-con-sec-sel-agg
+	      (g-value line-constraint-sec-sel-agg
 		       :box :buttons)))
 	 (p-button (nth (if (eq slot :x1) 0 1)
 			(g-value p-selection-buttons :components)))
@@ -321,10 +321,10 @@ Please use the box constraint menu instead")
     ;; set the appropriate button in the secondary selection box
     (cond ((eq menu-item :customize)
 	   (deselect-line-buttons t)
-	   (s-value line-con-panel :value
+	   (s-value line-constraint-panel :value
 		    (if select-p "customize" nil)))
 	  (menu-item
-	   (s-value line-con-panel :value nil)
+	   (s-value line-constraint-panel :value nil)
 	   (if line-p
 	       (progn
 		 (setf s-button (nth (cdr menu-item)
@@ -375,7 +375,7 @@ Please use the box constraint menu instead")
 	  ;; slot
 	  (t
 	   (deselect-line-buttons t)
-	   (s-value line-con-panel :value 
+	   (s-value line-constraint-panel :value 
 		    (if select-p "customize" nil))))))
 
   

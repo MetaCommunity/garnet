@@ -19,22 +19,27 @@
 (defun move-grow-inter-do-go ()
   (let ((kr::*constants-disabled* nil))
   (move-grow-inter-do-stop)
-
+  #-(and)
   (create-instance 'MOVE-GROW-INTER-AGG 
-		   garnet-gadgets:scrolling-window-with-bars
-      (:left 500)(:top 0)(:width 560)(:height 710)
+		   garnet-gadgets:motif-scrolling-window-with-bars
+      (:left 500)(:top 0)
+      (:width 700) ; XXX Shouldn't have to eyeball this.
+      (:height 1030) ; XXX Get rid of scrollbar
       (:v-scroll-on-left-p nil)
       (:h-scroll-bar-p nil)
       (:title "Move/Grow Interactor")
       (:total-width (o-formula (+ 20 (gvl :inner-aggregate :width))))
       (:total-height (o-formula (+ 20 (gvl :inner-aggregate :height)))))
 
+  #-(and)
   (opal:update MOVE-GROW-INTER-AGG)
+  #-(and)
   (setf move-grow-inter-win (g-value move-grow-inter-agg :window))
+  #-(and)
   (s-value (g-value move-grow-inter-agg :inner-aggregate :window)
 	   :queue '*move-grow-inter-queue*)
 
-  (create-instance 'MOVE-GROW-INTER-MENU opal:aggregadget
+  (create-instance 'MOVE-GROW-INTER-DIALOG opal:aggregadget
    (:constant '(:left :top :width :height))
    (:left 10)
    (:top 10)
@@ -44,7 +49,7 @@
           (:left ,(o-formula (gvl :parent :left)))
 	  (:top ,(o-formula (gvl :parent :top)))
 	  (:string "Move/Grow Interactor")
-	  (:font ,*very-large-bold-italic-serif-font*))
+	  (:font ,*dialog-title-font*))
 
       (:known-as ,NAME-BOX
 	  (:constant t)
@@ -61,7 +66,7 @@
           (:left ,(o-formula (+ 20 (opal:gv-right
 				    (gvl :parent :start-where))))))
 
-      (:line-p ,garnet-gadgets:radio-button-panel
+      (:line-p ,garnet-gadgets:MOTIF-radio-button-panel
 	  (:constant (t))
 	  (:left ,(o-formula (+ 20 (gvl :parent :left))))
 	  (:top ,(o-formula (+ 10 (opal:gv-bottom
@@ -71,7 +76,7 @@
 	  (:items ("Line" "Box" "<Formula>"))
 	  (:selection-function MOVE-GROW-LINE-P-FN))
 
-      (:grow-p ,garnet-gadgets:radio-button-panel
+      (:grow-p ,garnet-gadgets:MOTIF-radio-button-panel
 	  (:constant (t))
 	  (:left ,(o-formula (+ 20 (gvl :parent :left))))
 	  (:top ,(o-formula (+ 10 (opal:gv-bottom
@@ -98,7 +103,7 @@
 		      (:top ,(o-formula (gvl :parent :top)))
 		      (:string "Grow Parameters")
 		      (:font ,*bold-font*))
-		  (:change-size ,garnet-gadgets:radio-button-panel
+		  (:change-size ,garnet-gadgets:motif-radio-button-panel
 		      (:constant (t))
                       (:left ,(o-formula (gvl :parent :left)))
 		      (:top ,(o-formula (+ 20 (opal:gv-bottom
@@ -107,7 +112,7 @@
 			       "Change Width and Height" "<Formula>"))
 		      (:selection-function grow-parms-final-fn)
 		      (:interactors
-		       ((:radio-button-press :modify
+		       ((:press :modify
 			   (:active ,(o-formula (gvl :operates-on :parent
 						     :parent :on)))))))
 		  (:line-text ,opal:text
@@ -125,7 +130,7 @@
 		      (:min-frame-width 50)
 		      (:old-value "")
 		      (:label-string "Min-Length")
-		      (:label-font ,opal:default-font)
+;;		      (:label-font ,*labeled-box-label-font*)
 		      (:selection-function move-grow-min-length-fn)
 		      (:value ,(o-formula
 				(let ((val (gvl :parent :parent :min-length)))
@@ -150,7 +155,7 @@
 		      (:old-value "")
 		      (:selection-function move-grow-min-width-fn)
 		      (:label-string "Min-Width  ")
-		      (:label-font ,opal:default-font)
+;;		      (:label-font ,*labeled-box-label-font*)
 		      (:value ,(o-formula
 				(let ((val (gvl :parent :parent :min-width)))
 				  (if (numberp val) (princ-to-string val)))))
@@ -167,7 +172,7 @@
 		      (:old-value "")
 		      (:selection-function move-grow-min-height-fn)
 		      (:label-string "Min-Height")
-		      (:label-font ,opal:default-font)
+;;		      (:label-font ,*labeled-box-label-font*)
 		      (:interactors
 		       ((:text-inter :modify
 			   (:active ,(o-formula (gvl :operates-on :parent
@@ -211,7 +216,7 @@
 		      (:top ,(o-formula (gvl :parent :top)))
 		      (:string "Move Parameters")
 		      (:font ,*bold-font*))
-		  (:change-size ,garnet-gadgets:radio-button-panel
+		  (:change-size ,garnet-gadgets:motif-radio-button-panel
 		      (:constant (t))
                       (:left ,(o-formula (gvl :parent :left)))
 		      (:top ,(o-formula (+ 20 (opal:gv-bottom
@@ -220,7 +225,7 @@
 			       "Change Left and Top" "<Formula>"))
 		      (:selection-function move-parms-final-fn)
 		      (:interactors
-		       ((:radio-button-press :modify
+		       ((:press :modify
 			   (:active ,(o-formula (gvl :operates-on :parent
 						     :parent :on))))))))))
 	    (:frame ,opal:rectangle
@@ -249,7 +254,7 @@
 	   ((:titled-frame ,titled-frame
 			   (:constant t)
 			   (:string ":obj-to-change"))
-	    (:contents ,garnet-gadgets:radio-button-panel
+	    (:contents ,garnet-gadgets:motif-radio-button-panel
 		(:constant t)
 		(:value ,(o-formula (gvl :parent :value)))
 		(:top ,(o-formula (+ 20 (gvl :parent :top))))
@@ -295,7 +300,7 @@
 		      (:min-frame-width 125)
 		      (:selection-function
 		       MOVE-GROW-FEEDBACK-OBJ-FN))
-		  (:other-button ,garnet-gadgets:radio-button-panel
+		  (:other-button ,garnet-gadgets:motif-radio-button-panel
 		      (:constant (t))
 		      (:top ,(o-formula (+ 20 (gvl :parent :parent :top))))
                       (:left ,(o-formula (+ (opal:gv-right
@@ -377,7 +382,7 @@
 			     (:attach-point 2)))))
 		  (:where-hit ,LABELED-LAP-RADIO-BUTTON
 		      (:constant (t))
-		      (:left ,(o-formula (+ (gvl :parent :parent :left) 30)))
+		      (:left ,(o-formula (+ (gvl :parent :parent :left) 20)))
 		      (:top ,(o-formula 
 			      (+ (opal:gv-bottom (gvl :parent :box-buttons)) 27)))
 		      (:attach-point :where-hit)
@@ -386,7 +391,7 @@
 		      (:constant (t))
 		      (:left ,(o-formula (- (opal:gv-right (gvl :parent :line-buttons)) 
 					    (gvl :width)
-					    30)))
+					    #-(and)30)))
 		      (:top ,(o-formula 
 			      (+ (opal:gv-bottom (gvl :parent :box-buttons)) 27)))
 		      (:attach-point :formula)
@@ -406,18 +411,32 @@
   
       (:event-panel ,event-panel
 		    (:constant (t))
-		    (:left ,(o-formula (+ 20 (gvl :parent :left))))
-		    (:top ,(o-formula (+ (opal:gv-bottom
-					  (gvl :parent :attach-point))
-					 10)))
+		    (:direction :vertical )
+		    (:left ,(o-formula (+ 60 ; Set this panel a bit apart
+					  (gvl :parent :attach-point :width)
+					  (gvl :parent :attach-point :left))))	
+	    (:top ,(o-formula (+ 20 (gvl :parent :attach-point :top))))
 		    (:queue *MOVE-GROW-INTER-QUEUE*)))))
 
-(opal::fix-update-slots (g-value move-grow-inter-menu :start-where :contents
-				:select-box-panel))
-(opal::fix-update-slots (g-value move-grow-inter-menu :attach-point :contents
-				:box-buttons))
-(opal:add-component (g-value MOVE-GROW-INTER-AGG :inner-aggregate)
-		    MOVE-GROW-INTER-MENU)
-(opal:update MOVE-GROW-INTER-AGG)))
+  (opal::fix-update-slots (g-value move-grow-inter-dialog :start-where :contents
+				   :select-box-panel))
+  (opal::fix-update-slots (g-value move-grow-inter-dialog :attach-point :contents
+				   :box-buttons))
+
+  (create-instance 'MOVE-GROW-INTER-WIN inter:interactor-window
+    (:title "move-grow interactor")
+    (:left #-apple 500 #+apple 200)
+    (:top  #-apple 0  #+apple 50)
+    (:aggregate move-grow-inter-dialog)
+    (:width (o-formula (+ (g-value move-grow-inter-dialog :width) 30) 700))
+    (:height (o-formula (+ (g-value move-grow-inter-dialog :height) 30) 1030))
+    (:queue '*move-grow-inter-queue*))
+
+  (opal:update MOVE-GROW-INTER-WIN)
+
+  #-(and)
+  (opal:add-component (g-value MOVE-GROW-INTER-AGG :inner-aggregate)
+		      MOVE-GROW-INTER-DIALOG)
+))
 
 

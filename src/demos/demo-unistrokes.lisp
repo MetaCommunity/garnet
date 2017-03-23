@@ -367,7 +367,7 @@
     (create-instance 'TOP-WIN inter:interactor-window
         (:left 40) (:top 40)
         (:double-buffered-p double-buffered-p)
-        (:width 542) (:height 800)
+        (:width 542) (:height 850)
         (:title "GARNET Unistrokes-based Editor")
         (:icon-title "Unistrokes")
         (:background-color opal:motif-gray))

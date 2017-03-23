@@ -14,15 +14,10 @@
 (in-package "LAPIDARY")
 
 ;;; This file uses the following objects:
-;;;     TEXT-BUTTON-PANEL from package GARNET-GADGETS
+;;;     MOTIF-TEXT-BUTTON-PANEL from package GARNET-GADGETS
 ;;;     MULTI-TEXT from package OPAL
-;;;     RADIO-BUTTON-PANEL from package GARNET-GADGETS
+;;;     MOTIF-RADIO-BUTTON-PANEL from package GARNET-GADGETS
 ;;;     RECTANGLE from package OPAL
-(dolist (gadget '("radio-buttons-loader"
-		  "text-buttons-loader"
-		  ))
-  (load (merge-pathnames gadget
-			 common-lisp-user::Garnet-Gadgets-PathName)))
 ;;;
 ;;;     Functions needed from Gilt
 (common-lisp-user::garnet-load "gilt:gilt-functions-loader")
@@ -34,107 +29,106 @@
   (s-value (g-value gadget :parent) :value value))
 
 (setf common-lisp-user::*Garnet-Object-Just-Created* 
-(create-instance 'draw-fct-gadget OPAL:AGGREGADGET
-  (:value nil)
-  (:WINDOW-LEFT 0)
-  (:WINDOW-TOP 0)
-  (:WINDOW-WIDTH 435)
-  (:WINDOW-HEIGHT 300)
-  (:FUNCTION-FOR-OK `LAPIDARY::DRAW-FCT-HANDLER)
-  (:EXPORT-P T)
-  (:WINDOW-TITLE "draw-function")
-  (:PACKAGE-NAME "LAPIDARY")
-  (:LEFT 0)
-  (:TOP 0)
-  (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 435))
-  (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 300))
-  (:parts `(
-    (nil ,OPAL:RECTANGLE
-      (:constant (t))
-      (:LEFT 13)
-      (:TOP 110)
-      (:WIDTH 409)
-      (:HEIGHT 169))
-    (:primary ,GARNET-GADGETS:RADIO-BUTTON-PANEL
-      (:constant (t))
-      (:INDENT 0)
-      (:H-SPACING 5)
-      (:GRAY-WIDTH 3)
-      (:TEXT-ON-LEFT-P T)
-      (:V-SPACING 5)
-      (:FIXED-HEIGHT-P T)
-      (:DIRECTION :HORIZONTAL)
-      (:PIXEL-MARGIN NIL)
-      (:RANK-MARGIN NIL)
-      (:TEXT-OFFSET 5)
-      (:selection-function draw-fct-sel-fct)
-      (:value ,(o-formula (when (member (gvl :parent :value)
-					(g-value kr::*schema-self* :items))
-				(gvl :parent :value))))
-      (:SHADOW-OFFSET 5)
-      (:BUTTON-DIAMETER 23)
-      (:FONT ,OPAL:DEFAULT-FONT)
-      (:FIXED-WIDTH-P T)
-      (:ITEMS (:COPY :XOR :AND :OR ))
-      (:LEFT 10)
-      (:TOP 61))
-    (:other ,GARNET-GADGETS:RADIO-BUTTON-PANEL
-      (:constant (t))
-      (:INDENT 0)
-      (:value ,(o-formula (when (null (gvl :parent :primary :value))
-				(gvl :parent :value))))
-      (:selection-function draw-fct-sel-fct)
-      (:H-SPACING 5)
-      (:GRAY-WIDTH 3)
-      (:TEXT-ON-LEFT-P T)
-      (:V-SPACING 5)
-      (:FIXED-HEIGHT-P T)
-      (:DIRECTION :HORIZONTAL)
-      (:PIXEL-MARGIN NIL)
-      (:RANK-MARGIN 3)
-      (:TEXT-OFFSET 5)
-      (:SHADOW-OFFSET 5)
-      (:BUTTON-DIAMETER 23)
-      (:FONT ,OPAL:DEFAULT-FONT)
-      (:FIXED-WIDTH-P T)
-      (:ITEMS (:CLEAR :SET :NO-OP :COPY-INVERTED :INVERT :EQUIV :NAND :NOR :AND-INVERTED :AND-REVERSE :OR-INVERTED :OR-REVERSE ))
-      (:LEFT 20)
-      (:TOP 130))
-    (NIL ,OPAL:TEXT
-      (:constant (t))
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :VERY-LARGE)
-            (:FACE :BOLD-ITALIC)
-            (:FAMILY :SERIF)))
-      (:STRING "Draw Function")
-      (:LEFT 10)
-      (:TOP 15))
-    (NIL ,OPAL:RECTANGLE
-      (:constant (t))
-      (:FILLING-STYLE ,OPAL:WHITE-FILL)
-      (:LINE-STYLE NIL)
-      (:LEFT 45)
-      (:TOP 98)
-      (:WIDTH 52)
-      (:HEIGHT 24))
-    (NIL ,OPAL:TEXT
-      (:constant (t))
-      (:STRING "Others")
-      (:LEFT 50)
-      (:TOP 102))
-    (NIL ,GARNET-GADGETS:TEXT-BUTTON-PANEL
-      (:constant (t))
-      (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
-      (:ITEMS ("OK" "Apply" "Cancel" ))
-      (:GRAY-WIDTH 3)
-      (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
-      (:DIRECTION :HORIZONTAL)
-       (:LEFT 197)
-      (:TOP 13)))))
-
-)
+      (create-instance 'draw-fct-gadget OPAL:AGGREGADGET
+	(:value nil)
+	(:WINDOW-LEFT 0)
+	(:WINDOW-TOP 0)
+	(:WINDOW-WIDTH 525)
+	(:WINDOW-HEIGHT 300)
+	(:FUNCTION-FOR-OK 'DRAW-FCT-HANDLER)
+	(:EXPORT-P T)
+	(:WINDOW-TITLE "draw-function")
+	(:PACKAGE-NAME "LAPIDARY")
+	(:LEFT 0)
+	(:TOP 0)
+	(:WIDTH (o-formula (GVL :WINDOW :WIDTH) 435))
+	(:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 300))
+	(:parts
+	 `((:frame ,OPAL:RECTANGLE
+	       (:constant (t))
+	       (:LEFT 13)
+	       (:TOP 110)
+	       (:WIDTH ,(o-formula (- (gvl :parent :width) 25) 500))
+	       (:line-style ,*misc-frame-line-style*)
+	       (:HEIGHT 169))
+	  (:primary ,GARNET-GADGETS:MOTIF-RADIO-BUTTON-PANEL
+	       (:constant (t))
+	       (:INDENT 0)
+	       (:H-SPACING 5)
+	       (:TEXT-ON-LEFT-P T)
+	       (:V-SPACING 5)
+	       (:FIXED-HEIGHT-P T)
+	       (:DIRECTION :HORIZONTAL)
+	       (:PIXEL-MARGIN NIL)
+	       (:RANK-MARGIN NIL)
+	       (:selection-function draw-fct-sel-fct)
+	       (:value ,(o-formula (when (member (gvl :parent :value)
+						 (g-value kr::*schema-self* :items))
+				     (gvl :parent :value))))
+	       (:FONT ,*radio-button-font*)
+	       (:FIXED-WIDTH-P T)
+	       (:ITEMS (:COPY :XOR :AND :OR ))
+	       (:LEFT ,(o-formula (ceiling (- (gvl :parent :width) (gvl :width)) 2) 50))
+	       (:TOP 61))
+	   (:other ,GARNET-GADGETS:MOTIF-RADIO-BUTTON-PANEL
+	       (:constant (t))
+	       (:INDENT 0)
+	       (:value ,(o-formula (when (null (gvl :parent :primary :value))
+				     (gvl :parent :value))))
+	       (:selection-function draw-fct-sel-fct)
+	       (:H-SPACING 5)
+	       (:TEXT-ON-LEFT-P T)
+	       (:V-SPACING 5)
+	       (:FIXED-HEIGHT-P T)
+	       (:DIRECTION :HORIZONTAL)
+	       (:PIXEL-MARGIN NIL)
+	       (:RANK-MARGIN 3)
+	       (:FONT ,*radio-button-font*)
+	       (:FIXED-WIDTH-P T)
+	       (:ITEMS (:CLEAR 
+			:SET
+			:NO-OP 
+			:COPY-INVERTED
+			:INVERT
+			:EQUIV
+			:NAND
+			:NOR
+			:AND-INVERTED
+			:AND-REVERSE
+			:OR-INVERTED
+			:OR-REVERSE ))
+	       (:LEFT 20)
+	       (:TOP 130))
+	   (:title ,OPAL:TEXT
+		   (:constant (t))
+		   (:FONT ,*title-font*)
+		   (:STRING "Draw Function")
+		   (:LEFT 10)
+		   (:TOP 15))
+	   (:label-backing ,OPAL:RECTANGLE
+		   (:constant (t))
+		   (:FILLING-STYLE ,OPAL:WHITE-FILL)
+		   (:LINE-STYLE NIL)
+		   (:LEFT 45)
+		   (:TOP 98)
+		   (:WIDTH 68)
+		   (:HEIGHT 24))
+	   (:label-text ,OPAL:TEXT
+		   (:constant (t))
+		   (:font ,*bold-font*)
+		   (:STRING "Others")
+		   (:LEFT 50)
+		   (:TOP 102))
+	  (:finish-button-panel ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
+	       (:constant (t))
+	       (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
+	       (:font ,*text-button-font*)
+	       (:ITEMS ("OK" "Apply" "Cancel" ))
+	       (:FINAL-FEEDBACK-P NIL)
+	       (:DIRECTION :HORIZONTAL)
+	       (:LEFT ,(o-formula (- (gvl :parent :width) (gvl :width) 10) 197))
+	       (:TOP 13))))
+	))
 
 
 ;;; ===============================

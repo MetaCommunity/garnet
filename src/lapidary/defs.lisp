@@ -115,7 +115,8 @@
 (defconstant *min-leaf-size* (+ (* 2 sel-box-size) 4))
 
 ;; error gadget to display error messages
-(create-instance '*lapidary-error-window* garnet-gadgets:error-gadget)
+(create-instance '*lapidary-error-window* garnet-gadgets:motif-error-gadget
+  (:foreground-color opal:motif-gray))
 
 ;; create a general purpose query gadget
 (create-instance 'lapidary-query-gadget GARNET-GADGETS:query-gadget
@@ -143,7 +144,7 @@
   "number of windows created")
 
 (defvar *prop-sheet*
-  (create-instance NIL garnet-gadgets:prop-sheet-for-obj-with-OK
+  (create-instance NIL garnet-gadgets:motif-prop-sheet-for-obj-with-OK
 		   (:OK-Function 'Aggrelist-Prop-Sheet-Finish)
 		   (:Apply-Function 'Aggrelist-Prop-Sheet-Finish)))
 

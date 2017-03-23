@@ -15,7 +15,7 @@
 ;;; 16-Jan-93 Mickish - Changed :value of labeled-boxes from NIL to "";
 ;;;             Correspondingly set :value to "" in Wipe-File-Panel and
 ;;;             selection-function.
-;;; 12-May-92 ECP  Added :ok-cancel to text-properties-menu
+;;; 12-May-92 ECP  Added :ok-cancel to text-properties-dialog
 ;;;
 
 (in-package "LAPIDARY")
@@ -64,11 +64,11 @@
 ;;;****************************************
 
 (defmacro FORMULA-BUTTON ()
-  `(g-value TEXT-PROPERTIES-MENU :font-agg :contents :formula-button))
+  `(g-value TEXT-PROPERTIES-DIALOG :font-agg :contents :formula-button))
 (defmacro STANDARD-FONT-PANEL ()
-  `(g-value TEXT-PROPERTIES-MENU :font-agg :contents :standard-font-panel))
+  `(g-value TEXT-PROPERTIES-DIALOG :font-agg :contents :standard-font-panel))
 (defmacro FONT-FROM-FILE-PANEL ()
-  `(g-value TEXT-PROPERTIES-MENU :font-agg :contents :font-from-file-panel))
+  `(g-value TEXT-PROPERTIES-DIALOG :font-agg :contents :font-from-file-panel))
 (defmacro FONT-NAME ()
   `(g-value (FONT-FROM-FILE-PANEL) :name-box))
 (defmacro FONT-PATH ()
@@ -77,21 +77,21 @@
   `(g-value (FONT-FROM-FILE-PANEL) :default-button))
 
 (defun WIPE-STANDARD-PANEL ()
-  (declare (special text-properties-menu))
+  (declare (special text-properties-dialog))
   (let ((panels (cdr (g-value (STANDARD-FONT-PANEL) :components))))
     (mapcar #'(lambda (panel)
 		(s-value panel :value NIL))
 	    panels)))
 
 (defun WIPE-FILE-PANEL ()
-  (declare (special text-properties-menu))
+  (declare (special text-properties-dialog))
   (let ((components (cdr (g-value (FONT-FROM-FILE-PANEL) :components))))
     (mapcar #'(lambda (component)
 		(s-value component :value ""))
 	    components)))
 
 (defun WIPE-FORMULA-BUTTON ()
-  (declare (special text-properties-menu))
+  (declare (special text-properties-dialog))
   (s-value (FORMULA-BUTTON) :value NIL))
 
 
@@ -100,10 +100,10 @@
 
   (create-instance 'TEXT-PROPERTIES-WIN inter:interactor-window
    (:title "text properties")
-   (:left 550) (:top 100) (:width 470) (:height 380) 
+   (:left 550) (:top 100) (:width 535) (:height 380) 
    (:visible nil))
 
-  (create-instance 'TEXT-PROPERTIES-MENU opal:aggregadget
+  (create-instance 'TEXT-PROPERTIES-DIALOG opal:aggregadget
    (:left 10) (:top 10)
    (:constant '(:left top))
    (:parts
@@ -112,15 +112,12 @@
           (:left ,(o-formula (gvl :parent :left)))
 	  (:top ,(o-formula (gvl :parent :top)))
 	  (:string "Text-Properties")
-	  (:font ,*very-large-bold-italic-serif-font*))
-      (:ok ,garnet-gadgets:text-button
+	  (:font ,*dialog-title-font*))
+      (:ok ,garnet-gadgets:motif-text-button
         (:constant (t))
 	(:button-width 44)
-	(:left ,(o-formula (- (opal:gv-right (gvl :parent :font-agg))
-			      (gvl :width))))
+	(:left ,(o-formula (- (g-value text-properties-win :width) (+ (gvl :width) 20))))
         (:top 10)
-        (:gray-width 3) (:shadow-offset 5) 
-	(:text-offset 2)
         (:selection-function
            ,#'(lambda (button string)
                 (declare (ignore string))
@@ -130,12 +127,16 @@
       (:font-agg ,opal:aggregadget
 	  (:left ,(o-formula (+ 10 (gvl :parent :left))))
 	  (:top ,(o-formula (+ 10 (opal:gv-bottom (gvl :parent :title)))))
+	  (:width ,(o-formula (- (gvl :parent :width) 40)))
 	  (:parts
 	   ((:font-box ,TITLED-FRAME
 		(:constant (t))
 		(:string ":font")
+		#-(and)
 		(:width ,(o-formula (gvl :parent :parent :string-agg
-					 :string-box :width))))
+					 :string-box :width)))
+		(:width ,(o-formula (- (g-value text-properties-win :width) 40)))
+		)
 
     ;; This :contents is a part of the :font-agg, and its parts are all of
     ;; the panels used to generate new fonts.
@@ -158,7 +159,7 @@
 	      (:parts
 	       ((:title ,opal:text
 		    (:constant (t))
-		    (:left ,(o-formula (gvl :parent :left)))
+		    (:left ,(o-formula (+ 10 (gvl :parent :left))))
 		    (:top ,(o-formula (gvl :parent :top)))
 		    (:string "Standard Fonts")
 		    (:font ,*bold-font*))
@@ -194,7 +195,7 @@
       (:parts
        ((:title ,opal:text
 	    (:constant (t))
-	    (:left ,(o-formula (gvl :parent :left)))
+	    (:left ,(o-formula (+ 10 (gvl :parent :left))))
 	    (:top ,(o-formula (gvl :parent :top)))
 	    (:string "Font From File")
 	    (:font ,*bold-font*))
@@ -205,7 +206,7 @@
 	    (:width ,(o-formula (+ (gvl :min-frame-width)
 		      (gvl :label-offset) (gvl :label-text :width))))
 	    (:label-string "Font-Name")
-	    (:label-font ,opal:default-font)
+	    (:label-font ,*labeled-box-label-font*)
 	    (:min-frame-width 100)
 	    (:value "")
 	    (:selection-function
@@ -228,7 +229,7 @@
 			      (apply-font font)
 			      (s-value text-properties-win :value font))))))))
 			
-	(:default-button ,garnet-gadgets:radio-button
+	(:default-button ,garnet-gadgets:motif-radio-button
 	    (:constant (t))
 	    (:left ,(o-formula (+ 20 (gvl :parent :left))))
 	    (:top ,(o-formula (+ 10 (opal:gv-bottom (gvl :parent :name-box)))))
@@ -259,7 +260,7 @@
 	    (:width ,(o-formula (+ (gvl :min-frame-width)
 				(gvl :label-offset) (gvl :label-text :width))))
 	    (:label-string "or  Font-Path")
-	    (:label-font ,opal:default-font)
+	    (:label-font ,*labeled-box-label-font*)
 	    (:min-frame-width 100)
 	    (:value "")
 	    (:selection-function
@@ -281,20 +282,20 @@
 			    (s-value text-properties-win :value font)))))))))))
 
 
-  (:formula-button ,garnet-gadgets:radio-button
+  (:formula-button ,garnet-gadgets:motif-radio-button
 	      (:constant (t))
-	      (:left ,(o-formula (gvl :parent :left)))
+	      (:left ,(o-formula (+ 10 (gvl :parent :left))))
 	      (:top ,(o-formula (+ 10 (opal:gv-bottom
 				       (gvl :parent :font-from-file-panel)))))
 	      (:string "<Formula>")
-	      (:font ,*bold-font*)
+	      (:font ,*radio-button-font*)
 	      (:selection-function
 	       ,#'(lambda (gadget value)
 		    (declare (ignore value))
 ;		    (reset-undo)
 		    (if (g-value *selection-info* :selected)
 			(progn
-			  (gg:c32 (car (g-value *selection-info* :selected))
+			  (lapidary-dialogs:c32 (car (g-value *selection-info* :selected))
 			       :font)
 			  ;; White-out other panels
 			  (wipe-standard-panel) (wipe-file-panel))
@@ -302,17 +303,17 @@
 		        ;; first
 		        (progn
 			  (s-value gadget :value nil)
-			  (lapidary-error "make make a selection first"))))))
+			  (lapidary-error "Please make make a selection first."))))))
 
 
-  (:unconstrain-font-button ,garnet-gadgets:text-button
+  (:unconstrain-font-button ,garnet-gadgets:motif-text-button
 ;	      (:constant (t))
 	      (:left ,(o-formula (+ 15 (opal:gv-right
 					(gvl :parent :formula-button)))))
 	      (:top ,(o-formula (+ 10 (opal:gv-bottom
 				       (gvl :parent :font-from-file-panel)))))
-	      (:gray-width 3) (:shadow-offset 5) (:text-offset 2)
 	      (:final-feedback-p NIL)
+	      (:font ,*text-button-font*)
 	      (:string "Unconstrain")
 	      (:selection-function
 	       ,#'(lambda (gadget value)
@@ -341,24 +342,24 @@
 	   ((:string-box ,TITLED-FRAME
 		(:constant (t))
 		(:string ":string"))
-	    (:contents ,garnet-gadgets:text-button-panel
+	    (:contents ,garnet-gadgets:motif-text-button-panel
 		(:constant (t))
                 (:left ,(o-formula (+ 20 (gvl :parent :left))))
 		(:top ,(o-formula (+ 20 (gvl :parent :top))))
 		(:direction :horizontal)
-		(:gray-width 3) (:shadow-offset 5) (:text-offset 2)
 		(:final-feedback-p NIL)
+		(:font ,*text-button-font*)
 		(:items (("Generate Text from Formula"
 			  ,#'(lambda (gadget value)
 			       (declare (ignore value))
 		    (if (g-value *selection-info* :selected)
-			(gg:c32 (car (g-value *selection-info* :selected))
+			(lapidary-dialogs:c32 (car (g-value *selection-info* :selected))
 			     :string)
 		        ;; else, tell the user there must be a selection
 		        ;; first
 		        (progn
 			  (s-value gadget :value nil)
-			  (lapidary-error "make make a selection first")))))
+			  (lapidary-error "Please make make a selection first.")))))
 
 			 ("Remove Text Formula"
 			  ,#'(lambda (gadget value)
@@ -366,13 +367,13 @@
 			       (unconstrain-fn :string :type opal:text))))))
 	    ))))))
 
-;; initialize the value slot of text-properties-win
-(s-value text-properties-win :value 
-	 (get-font-from-spec
-	  (g-value text-properties-menu :font-agg :contents
-			       :standard-font-panel :font-spec)))
+  ;; initialize the value slot of text-properties-win
+  (s-value text-properties-win :value 
+	   (get-font-from-spec
+	    (g-value text-properties-dialog :font-agg :contents
+		     :standard-font-panel :font-spec)))
 
-(create-instance 'TEXT-PROPERTIES-TOP-AGG opal:aggregate)
-(opal:add-component TEXT-PROPERTIES-TOP-AGG TEXT-PROPERTIES-MENU)
-(s-value TEXT-PROPERTIES-WIN :aggregate TEXT-PROPERTIES-TOP-AGG)
-(opal:update TEXT-PROPERTIES-WIN))
+  (create-instance 'TEXT-PROPERTIES-TOP-AGG opal:aggregate)
+  (opal:add-component TEXT-PROPERTIES-TOP-AGG TEXT-PROPERTIES-DIALOG)
+  (s-value TEXT-PROPERTIES-WIN :aggregate TEXT-PROPERTIES-TOP-AGG)
+  (opal:update TEXT-PROPERTIES-WIN))

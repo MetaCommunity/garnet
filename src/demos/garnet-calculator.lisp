@@ -49,11 +49,11 @@
 			   :string :font)
 	    (:ignored-slots :depended-slots :update-slots :update-slots-values
 			    :xfont :text-extents))
-    (:string        "none")
-    (:font          default-font)
+  (:string        "none")
+  (:font          default-font)
 
   ;; Do not change the following line!
-    (:actual-height-p NIL)
+  (:actual-height-p NIL)
   )
 
 (define-method :draw opal:k-framed-text (gob a-window)
@@ -149,18 +149,18 @@
 
 (defconstant +main-win-top+      10)
 (defconstant +main-win-left+    700)
-(defconstant +main-win-width+   235)
-(defconstant +main-win-height+  245)
+(defconstant +main-win-width+   255)
+(defconstant +main-win-height+  250)
 (defvar      *main-win-color*   opal:motif-green)
 
 (defconstant +frame-top+              5)
 (defconstant +frame-left+             10)
-(defconstant +frame-width+            158)
+(defconstant +frame-width+            183)
 (defconstant +frame-height+           45)
 (defvar      *frame-line-style*       opal:line-4)
 (defconstant +frame-filling-style+    opal:motif-gray-fill)
 (defconstant +result-top+             5)
-(defconstant +result-right+           150)
+(defconstant +result-right+           181)
 (defvar      *result-font*            (opal:get-standard-font
 					:fixed :bold :large))
 (defconstant +drg-left+               10)
@@ -170,13 +170,14 @@
 
 (defconstant +button-top+            60)
 (defconstant +button-left+           10)
-(defconstant +button-width+          30)
+(defconstant +button-width+          35)
 (defconstant +button-height+         20)
 (defconstant +button-h-spacing+       4)
 (defconstant +button-v-spacing+       3)
 (defvar      *button-filling-style*  opal:motif-gray-fill)
 (defvar      *button-line-style*     opal:default-line-style)
-(defvar      *button-font*           opal:default-font)
+;;(defvar      *button-font*           opal:default-font)
+(defvar      *button-font*           (opal:get-standard-font :serif :bold :small))
 
 (defvar      *greeting-font*         (opal:get-standard-font
                                       :serif :italic :very-large))

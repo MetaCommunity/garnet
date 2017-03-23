@@ -4,8 +4,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
+;;; domain.                                                         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; $Id$
@@ -20,9 +19,7 @@
 (in-package "LAPIDARY")
 
 (defvar *bold-font* (create-instance NIL opal:font (:face :bold)))
-(defvar *very-large-bold-italic-serif-font*
-  (create-instance NIL opal:font
-     (:size :very-large) (:face :bold-italic) (:family :serif)))
+
 
 (declaim (special text-properties-win name-box titled-frame text-box
 		  select-box act-buttons font-parameter-panel))
@@ -84,7 +81,7 @@
 
 (create-instance 'NAME-BOX garnet-gadgets:labeled-box
    (:left (o-formula (+ 10 (gvl-fixnum :parent :left))))
-   (:top (o-formula (+ 10 (opal:gv-bottom (gvl-fixnum :parent :title)))))
+   (:top (o-formula (+ 10 (opal:gv-bottom (gvl :parent :title)))))
    (:label-string "Interactor Name:")
    (:value "")
    (:min-frame-width 150))
@@ -106,10 +103,10 @@
    (:parts
     `((:frame ,opal:rectangle
 		(:left ,(o-formula (gvl-fixnum :parent :left)))
-		(:top ,(o-formula (opal:gv-center-y (gvl-fixnum :parent :text))))
+		(:top ,(o-formula (opal:gv-center-y (gvl :parent :text))))
 		(:width ,(o-formula (gvl-fixnum :parent :width)))
-		(:height ,(o-formula (+ 20 (gvl-fixnum :parent :parent :contents
-						:height)))))
+		(:height ,(o-formula (+ 20 (gvl-fixnum :parent :parent :contents :height))))
+		(:line-style ,*slot-frame-line-style*))
       (:text-frame ,opal:rectangle
 		   (:left ,(o-formula (+ (gvl-fixnum :parent :left) 10)))
 		   (:top ,(o-formula (gvl-fixnum :parent :text :top)))
@@ -151,57 +148,53 @@
 	     (:draw-function :xor) (:fast-redraw-p T)))))
 
 
-;;;************************************************************
-;;;      SELECT-BOX   (a labeled radio-button with framed-text)
+;;;******************************************************************
+;;;      SELECT-BOX   (a labeled motif-radio-button with framed-text)
 ;;;  and SELECT-BOX-PANEL
 ;;;
 ;;;  note: Text-interactor is disabled for Lapidary demo!
-;;;************************************************************
+;;;******************************************************************
 
 
+;; Box around radio button. 
 (create-instance 'BUTTON-BOUND-BOX opal:rectangle
-   (:left (o-formula (gv (kr-path 0 :parent) :button-left)))
-   (:top (o-formula (gv (kr-path 0 :parent) :button-top)))
-   (:width (o-formula (gv (kr-path 0 :parent) :button-unit-width)))
-   (:height (o-formula (gv (kr-path 0 :parent) :button-unit-height)))
-   (:line-style NIL) (:hit-threshold 0))
+   (:left (o-formula (gv-fixnum (kr-path 0 :parent) :button-left)))
+   (:top (o-formula (gv-fixnum (kr-path 0 :parent) :button-top)))
+   (:width (o-formula (gv-fixnum (kr-path 0 :parent) :button-width)))
+   (:height (o-formula (gv-fixnum (kr-path 0 :parent) :button-width))) ; button is symmetrical
+   (:line-style nil) (:hit-threshold 0))
 
 
-(create-instance 'SELECT-BOX garnet-gadgets:RADIO-BUTTON
+(create-instance 'SELECT-BOX garnet-gadgets:MOTIF-RADIO-BUTTON
    (:left 0) (:top 0)
-   (:width (o-formula (+ (gvl-fixnum :text-width) (gvl-fixnum :text-offset)
-			 10 (gvl-fixnum :button-unit-width)
-			 (gvl-fixnum :text-box :width))))
-   (:height (o-formula (the fixnum (MAX (gvl-fixnum :button-unit-height)
+   (:width (o-formula (+ 10
+			 (gvl-fixnum :text-width)
+			 (gvl-fixnum :button-width)
+			 (gvl-fixnum :text-box :width)) 
+		      100))
+   (:height (o-formula (the fixnum (MAX (gvl-fixnum :button-width)
 					(gvl-fixnum :text-box :height)
 					(gvl-fixnum :text :height)))))
-   (:floating-left (o-formula (+ (gvl-fixnum :button-left)
-				 (if (gvl :button-bound-box :interim-selected)
-				     (gvl-fixnum :shadow-offset)
-				     0))))
-   (:floating-top (o-formula (+ (gvl-fixnum :button-top)
-				 (if (gvl :button-bound-box :interim-selected)
-				     (gvl-fixnum :shadow-offset)
-				     0))))
-   (:text-visible (o-formula (not (string= (gvl :string)
-					    "Start Anywhere in Window"))))
+   (:floating-left (o-formula (gvl-fixnum :button-left)))
+   (:floating-top (o-formula (+ (gvl-fixnum :button-top))))
+   (:text-visible (o-formula (not (string= (gvl :string) "Start Anywhere in Window"))))
    (:string "string")
    (:field-string (o-formula (if (gvl :selected)
 				  (gvl :parent :field-string))))
    (:selected (o-formula (string= (gvl :string) (gvl :parent :value))))
    (:min-frame-width 125)
    (:parts
-    `(:shadow :gray-outline :white-field :text :feedback-obj
+    `(:text  ;; :feedback-obj
       (:button-bound-box ,BUTTON-BOUND-BOX)
       (:text-box ,TEXT-BOX
 	  (:visible ,(o-formula (gvl :parent :text-visible)))
-          (:left ,(o-formula (+ 10 (opal:gv-right (gvl-fixnum :parent :shadow)))))
+          (:left ,(o-formula (+ 55 (gvl :parent :text-width) (gvl :parent :button-width)) 200))
 	  (:top ,(o-formula (- (gvl-fixnum :parent :center-y)
 			       (floor (gvl-fixnum :height) 2))))
 	  (:string ,(o-formula (gvl :parent :field-string)))
 	  (:min-frame-width ,(o-formula (gvl-fixnum :parent :min-frame-width))))))
    (:interactors
-    `((:radio-button-press :omit)
+    `((:press :omit)
       (:select-box-press ,inter:button-interactor
         (:window ,(o-formula (gv-local :self :operates-on :window)))
 	(:start-where ,(o-formula (list :in-box
@@ -218,11 +211,11 @@
 
 
 (create-instance 'SELECT-BOX-PANEL opal:aggrelist
-   (:left (o-formula (+ 15 (gvl :parent :parent :left))))
-   (:top (o-formula (+ 20 (gvl :parent :parent :top))))
+   (:left (o-formula (+ 15 (gvl-fixnum :parent :parent :left))))
+   (:top (o-formula (+ 20 (gvl-fixnum :parent :parent :top))))
    (:items (o-formula (gvl :parent :parent :items)))
-   (:v-spacing (o-formula (gvl :parent :or-1 :height)))
-   (:type (o-formula (gvl :parent :parent :type)))
+   (:v-spacing (o-formula (gvl-fixnum :parent :or-1 :height)))
+   (:type (o-formula (gvl (kr-path 0 :parent :parent) :type)))
    (:type-restriction (o-formula (gvl :parent :parent :type-restriction)))
    (:value (o-formula (gvl :parent :value)))
    (:field-string (o-formula (gvl :parent :field-string))) 
@@ -230,14 +223,8 @@
    (:selected NIL)			; Set by interactor
    (:item-prototype
     `(,SELECT-BOX
-      (:floating-left ,(o-formula (+ (gvl :button-left)
-				     (if (gvl :interim-selected)
-					 (gvl :shadow-offset)
-					 0))))
-      (:floating-top ,(o-formula (+ (gvl-fixnum :button-top)
-				    (if (gvl :interim-selected)
-					(gvl :shadow-offset)
-					0))))
+      (:floating-left ,(o-formula (+ (gvl :button-left))))
+      (:floating-top ,(o-formula (+ (gvl-fixnum :button-top))))
       (:min-frame-width ,(o-formula (gvl-fixnum :parent :min-frame-width)))
       (:string ,(o-formula (let* ((items (gv (kr-path 0 :parent) :items))
 				  (item (nth (gvl :rank) items)))
@@ -271,21 +258,21 @@
 ;;;  ACT BUTTONS
 ;;
 
-(create-instance 'ACT-BUTTONS garnet-gadgets:text-button-panel
+(create-instance 'ACT-BUTTONS garnet-gadgets:motif-text-button-panel
    (:top (o-formula (gvl :parent :top)))
-   (:width (o-formula (+ (gvl :fixed-width-size) (gvl :shadow-offset))))
+   (:width (o-formula (gvl :fixed-width-size)))
    (:height (o-formula (+ (* 4 (gvl :v-spacing))
-			  (* 5 (+ (gvl :fixed-height-size)
-				  (gvl :shadow-offset))))))
-   (:text-offset 3) (:shadow-offset 5) (:gray-width 4)
+			  (* 5 (gvl :fixed-height-size)))))
    (:final-feedback-p NIL)
    (:inter (o-formula (gvl :window :inter)))
-   (:items '(("CREATE INSTANCE" create-interactor)
-	     ("MODIFY" modify-interactor)
-	     ("DESTROY" destroy-interactor)
-	     ("SAVE" write-interactor)
+   (:h-align :center)
+   (:font *text-button-font*)
+   (:items '(("Create Instance" create-interactor)
+	     ("Modify" modify-interactor)
+	     ("Destroy" destroy-interactor)
+	     ("Save" write-interactor)
 	     ("C32" display-interactor-properties)
-	     ("CANCEL" cancel-interactor-changes))))
+	     ("Cancel" cancel-interactor-changes))))
 
 
 ;;;************************
@@ -302,16 +289,15 @@
 				(gvl :parent :panel))))
 	     (:string ,(o-formula (gvl :parent :title)))
 	     (:font ,*bold-font*))
-      (:panel ,garnet-gadgets:radio-button-panel
-;	      (:constant ,(o-formula (gvl :parent :constant)))
+      (:panel ,garnet-gadgets:motif-radio-button-panel
 	      (:constant (t :except :left :top :width :height :items))
               (:left ,(o-formula (+ 15 (opal:gv-right (gvl :parent :text)))))
               (:top ,(o-formula (gvl-fixnum :parent :top)))
 	      (:width ,(o-formula
                         (let ((width 0)
                               (h-spacing (gvl :h-spacing)))
-                          (gvl :radio-button-list :components)
-                          (opal:do-components (gvl :radio-button-list)
+                          (gvl :button-list :components)
+                          (opal:do-components (gvl :button-list)
                              #'(lambda (button)
                                  (setf width (+ width h-spacing
                                                 (g-value-fixnum button :width)))))
@@ -385,7 +371,7 @@
 		(:string "or"))
 
 
-	    (:other-button ,garnet-gadgets:text-button
+	    (:other-button ,garnet-gadgets:motif-text-button
 ;;		(:constant ,(o-formula (when (gvl :parent :parent :constant)
 ;;					     '(t :queue))))
 		(:constant (t))
@@ -393,32 +379,32 @@
 		(:inter ,(o-formula (gvl :window :inter)))
 		(:left ,(o-formula (+ 15 (gvl-fixnum :parent :parent :left))))
 		(:top ,(o-formula (+ 5 (opal:gv-bottom (gvl :parent :or-2)))))
+		(:font ,*text-button-nonbold-font*)
 		(:string "Other")
 		(:selected ,(o-formula (string= (gvl :string)
 						(gvl :parent :select-box-panel :value))))
-		(:gray-width 3) (:shadow-offset 5) (:text-offset 3)
 		(:selection-function show-start-where-win)
 		(:final-feedback-p t))
 	    (:other-box ,text-box
 		(:left ,(o-formula (+ 10 (opal:gv-right
-					  (gvl-fixnum :parent :other-button)))))
+					  (gvl :parent :other-button)))))
 		(:top ,(o-formula (opal:gv-center-y-is-center-of
 				   (gvl :parent :other-button))))
 		(:string ,(o-formula (if (gvl :parent :other-button :selected)
 					       (gvl :parent :select-box-panel :field-string)))))
-	    (:type-restrict ,garnet-gadgets:x-button
+	    (:type-restrict ,garnet-gadgets:motif-check-button
 ;;;		(:constant ,(o-formula (when (gvl :parent :parent :constant)
 ;;;					     '(t :queue))))
 		(:constant (t))
 		(:value ,(o-formula (gvl :parent :select-box-panel :type)))
 	        (:left ,(o-formula (+ 10 (opal:gv-right
-					  (gvl-fixnum :parent :other-box)))))
+					  (gvl :parent :other-box)))))
 		(:top ,(o-formula (gv-center-my-top
 				   (gvl :parent :other-button))))
 		(:selection-function prompt-for-type-restrict)
 		(:queue ,(o-formula (gvl :window :queue)))
 		(:inter ,(o-formula (gvl :window :inter)))
-		(:string "Type restriction:"))))))))
+		(:string "Type restriction"))))))))
 
 
 (create-instance 'lap-radio-button-feedback opal:circle
@@ -457,12 +443,13 @@
       (:LINE-STYLE ,OPAL:LINE-0)
       (:FILLING-STYLE ,OPAL:GRAY-FILL)
       (:DRAW-FUNCTION :COPY)
+      ;; The (values fixnum &optional) declarations are an SBCL workaround.
       (:LEFT ,(formula `(if (gvl :parent :interim-selected)
-			    (gvl-fixnum :parent :shadow :left)
-			    (+ (GVL-FIXNUM :PARENT :SHADOW :LEFT ) -5 )) 265))
+			    (the (values fixnum &optional) (gvl :parent :shadow :left))
+			    (+ (the (values fixnum &optional) (GVL :PARENT :SHADOW :LEFT)) -5 )) 265))
       (:TOP ,(formula `(if (gvl :parent :interim-selected)
-			   (gvl-fixnum :parent :shadow :top)
-			   (+ (GVL-FIXNUM :PARENT :SHADOW :TOP ) -5 )) 49))
+			   (the (values fixnum &optional) (gvl :parent :shadow :top))
+			   (+ (the (values FIXNUM &optional) (gvl :PARENT :SHADOW :TOP )) -5 )) 49))
       (:WIDTH 23)
       (:HEIGHT 23))
     (:WHITE-FRAME ,OPAL:CIRCLE
@@ -484,9 +471,9 @@
 	      (:label ,opal:text
 		     (:constant (t))
 		     (:left ,(o-formula (+ (opal:gv-right 
-					    (gvl-fixnum :parent :shadow)) 10)))
+					    (gvl :parent :shadow)) 10)))
 		     (:top ,(o-formula (opal:gv-center-y-is-center-of 
-					(gvl-fixnum :parent :shadow))))
+					(gvl :parent :shadow))))
 		     (:string ,(o-formula (gvl :parent :string)))))))
 
 

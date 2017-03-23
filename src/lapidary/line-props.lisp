@@ -74,12 +74,14 @@ Change log:
     (:Non ,OPAL:TEXT
       (:constant (t))
       (:STRING "None")
-      (:LEFT 45)
-      (:TOP 162))
+      (:font ,*labeled-box-label-font*)
+      (:LEFT 38)
+      (:TOP 161))
   (:Other-label ,opal:text
       (:constant (t))
-      (:LEFT 38)
-      (:TOP 253)
+      (:LEFT 32)
+      (:TOP 252)
+      (:font ,*labeled-box-label-font*)
       (:string "Other:"))
     (:DOTTED ,line-style-line
       (:LINE-STYLE ,OPAL:DOTTED-LINE)
@@ -130,7 +132,7 @@ Change log:
   (:WINDOW-TITLE "Line Properties")
   (:WINDOW-LEFT 0)
   (:WINDOW-TOP 0)
-  (:WINDOW-WIDTH 250)
+  (:WINDOW-WIDTH 300)
   (:WINDOW-HEIGHT 300)
   (:PACKAGE-NAME "LAPIDARY")
   (:FUNCTION-FOR-OK 'line-prop-ok)
@@ -139,17 +141,15 @@ Change log:
   (:new-color opal:black)
   (:LEFT 0)
   (:TOP 0)
-  (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 450))
+  (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 300))
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 300))
   (:parts `(
 
-    (:OKCANCEL-button ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:OKCANCEL-button ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:constant (t))
       (:DIRECTION :HORIZONTAL)
-      (:SHADOW-OFFSET 5)
-      (:TEXT-OFFSET 2)
       (:FINAL-FEEDBACK-P NIL)
-      (:GRAY-WIDTH 3)
+      (:FONT ,*TEXT-BUTTON-FONT*)
       (:ITEMS ("OK" "Cancel" ))
       (:FIXED-WIDTH-P T)
       (:RANK-MARGIN NIL)
@@ -166,10 +166,8 @@ Change log:
 
     (:LINE-STYLES ,OPAL:MULTI-TEXT
       (:constant (t))
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD-ITALIC)))
-      (:STRING "Line-Style:")
+      (:FONT ,*title-font*)
+      (:STRING "Line Style:")
       (:LEFT 10)
       (:TOP 10))
 
@@ -180,9 +178,9 @@ Change log:
       (:visible ,(o-formula (or (gvl :parent :line-style-boxes :selected)
 				(gvl :parent :line-style-boxes :default))))
       (:x1 165)
-      (:y1 15)
+      (:y1 25)
       (:x2 220)
-      (:y2 15))
+      (:y2 25))
     (:error ,OPAL:text
       (:constant (t :except :visible))
       (:string "Error")
@@ -191,16 +189,14 @@ Change log:
       (:visible NIL)
       (:LEFT 175)
       (:TOP 20))
-    (:constraint-button ,garnet-gadgets:text-button
+    (:constraint-button ,garnet-gadgets:motif-text-button
       (:constant (t))
+      (:FONT ,*TEXT-BUTTON-FONT*)
       (:string "Constraint")
       (:left ,(o-formula (opal:gv-center-x-is-center-of 
 			  (gvl :parent :okcancel-button))))
       (:top ,(o-formula (+ 10 (opal:gv-bottom (gvl :parent :okcancel-button)))))
       (:final-feedback-p t)
-      (:GRAY-WIDTH 3)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:selected ,(o-formula (not (gvl :parent :line-style-boxes :selected))))
       (:selection-function props-constraint-final-fn)
       (:slot :line-style)
@@ -214,15 +210,12 @@ Change log:
       (:TOP 150)
       (:WIDTH 55)
       (:HEIGHT 35))
-    (:COLOR-button ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:COLOR-button ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:constant (t))
+      (:FONT ,*TEXT-BUTTON-FONT*)
       (:ITEMS ("Color" ))
       (:FINAL-FEEDBACK-P NIL)
       (:FIXED-WIDTH-P T)
-      (:GRAY-WIDTH 3)
-      (:TEXT-OFFSET 5)
-      (:FONT ,OPAL:DEFAULT-FONT)
-      (:SHADOW-OFFSET 5)
       (:RANK-MARGIN NIL)
       (:PIXEL-MARGIN NIL)
       (:FIXED-HEIGHT-P T)
@@ -236,7 +229,7 @@ Change log:
       (:LEFT 150)
       (:TOP 200))
     (:line-style-boxes ,style-boxes)
-    (:Other-VAL ,Garnet-gadgets:scrolling-labeled-box
+    (:Other-VAL ,Garnet-gadgets:motif-scrolling-labeled-box
       (:constant (t))
       (:LEFT 85)
       (:TOP 250)

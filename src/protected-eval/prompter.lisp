@@ -229,8 +229,8 @@
 
    (:destroy #'Error-Gadget-Destroy)
 
-   (:waiting NIL)			; if T, then OK should call interaction-complete.
-					; set by display-error
+   (:waiting NIL)	; if T, then OK should call interaction-complete.
+			; set by display-error
    (:button-names (o-formula (if (gvl :modal-p)
 				 '(:Ok :Cancel) 
 			       '(:OK :APPLY :CANCEL))))

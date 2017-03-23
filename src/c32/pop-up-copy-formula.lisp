@@ -80,7 +80,7 @@
       (:item-prototype ,(create-instance NIL one-line-prompt
                            (:middle-string " converted to:")))
       (:items 1))
-    (:okcancel ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:okcancel ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:SELECTION-FUNCTION GILT:OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
       (:ITEMS ("OK" "Cancel" ))

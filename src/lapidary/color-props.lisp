@@ -24,70 +24,68 @@ Change log:
 
 (create-instance 'label-texts opal:aggregadget
   (:parts `(	   
-    (:COLOR-SELECTION ,OPAL:MULTI-TEXT
+    (:COLOR-SELECTION ,OPAL:TEXT
       (:constant (t))
       (:GILT-REF "TYPE-TEXT")
-      (:STRING "Color-Selection")
-      (:FONT ,(create-instance nil OPAL:FONT
-            (:SIZE :LARGE)
-            (:FACE :BOLD)))
+      (:STRING "Color Selection")
+      (:FONT ,*title-font*)
       (:LEFT 10)
-      (:TOP 15))
+      (:TOP 10))
     (:WHITE-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "White")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 42))
+      (:TOP 45))
     (:BLACK-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "Black")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 72))
+      (:TOP 75))
     (:RED-LABEL ,OPAL:MULTI-TEXT
       (:STRING "Red")
       (:constant (t))
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 102))
+      (:TOP 105))
     (:GREEN-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "Green")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 132))
+      (:TOP 135))
     (:BLUE-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "Blue")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 162))
+      (:TOP 165))
     (:YELLOW-LABEL ,OPAL:MULTI-TEXT
       (:STRING "Yellow")
       (:constant (t))
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 192))
+      (:TOP 195))
     (:PURPLE-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "Purple")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 222))
+      (:TOP 225))
     (:CYAN-LABEL ,OPAL:MULTI-TEXT
       (:STRING "Cyan")
       (:constant (t))
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 252))
+      (:TOP 255))
     (:ORANGE-LABEL ,OPAL:MULTI-TEXT
       (:constant (t))
       (:STRING "Orange")
       (:GILT-REF "TYPE-TEXT")
       (:LEFT 100)
-      (:TOP 282))
-    (:red-slider-label ,OPAL:MULTI-TEXT
+      (:TOP 285))
+    (:red-slider-label ,OPAL:TEXT
       (:GILT-REF "TYPE-TEXT")
       (:constant (t))
       (:STRING "RED")
@@ -95,7 +93,7 @@ Change log:
             (:FACE :BOLD)))
       (:LEFT 202)
       (:TOP 290))
-    (:green-slider-label ,OPAL:MULTI-TEXT
+    (:green-slider-label ,OPAL:TEXT
       (:GILT-REF "TYPE-TEXT")
       (:constant (t))
       (:STRING "GREEN")
@@ -103,7 +101,7 @@ Change log:
             (:FACE :BOLD)))
       (:LEFT 275)
       (:TOP 290))
-    (:blue-slider-label ,OPAL:MULTI-TEXT
+    (:blue-slider-label ,OPAL:TEXT
       (:GILT-REF "TYPE-TEXT")
       (:constant (t))
       (:STRING "BLUE")
@@ -167,7 +165,7 @@ Change log:
   (:WINDOW-TITLE "Color Properties")
   (:WINDOW-LEFT 0)
   (:WINDOW-TOP 0)
-  (:WINDOW-WIDTH 450)
+  (:WINDOW-WIDTH 475)
   (:WINDOW-HEIGHT 330)
   (:PACKAGE-NAME "LAPIDARY")
   (:FUNCTION-FOR-OK `color-prop-ok)
@@ -176,7 +174,7 @@ Change log:
   (:WIDTH (o-formula (GVL :WINDOW :WIDTH) 450))
   (:HEIGHT (o-formula (GVL :WINDOW :HEIGHT) 330))
   (:parts `(
-    (:OKCANCEL-BUTTON ,GARNET-GADGETS:TEXT-BUTTON-PANEL
+    (:OKCANCEL-BUTTON ,GARNET-GADGETS:MOTIF-TEXT-BUTTON-PANEL
       (:constant (t))
       (:SELECTION-FUNCTION OKCANCEL-FUNCTION)
       (:GILT-REF "TYPE-OKCANCEL")
@@ -190,14 +188,12 @@ Change log:
       (:RANK-MARGIN NIL)
       (:FIXED-WIDTH-P T)
       (:SELECT-FUNCTION OKCANCEL-FUNCTION)
+      (:FONT ,*TEXT-BUTTON-FONT*)
       (:ITEMS ("OK" "Cancel" ))
-      (:GRAY-WIDTH 3)
       (:FINAL-FEEDBACK-P NIL)
-      (:TEXT-OFFSET 2)
-      (:SHADOW-OFFSET 5)
       (:DIRECTION :HORIZONTAL)
       (:LEFT 300)
-      (:TOP 30))
+      (:TOP 10))
 
     (:CURRENT-COLOR ,OPAL:RECTANGLE
       (:constant (t :except :filling-style))
@@ -205,11 +201,11 @@ Change log:
       (:FILLING-STYLE ,my-filling1)
       (:OTHER-FILLING-STYLE ,my-filling2)
       (:LEFT 200)
-      (:TOP 20)
+      (:TOP 10)
       (:WIDTH 55)
       (:HEIGHT 35))
 
-    (:RED-SLIDER ,GARNET-GADGETS:V-SLIDER
+    (:RED-SLIDER ,GARNET-GADGETS:MOTIF-SLIDER
       (:constant (t))
       (:selection-function slider-value)
       (:color-type :red)
@@ -221,7 +217,7 @@ Change log:
       (:LEFT 180)
       (:TOP 80)
       (:HEIGHT 205))
-    (:GREEN-SLIDER ,GARNET-GADGETS:V-SLIDER
+    (:GREEN-SLIDER ,GARNET-GADGETS:MOTIF-SLIDER
       (:constant (t))
       (:selection-function slider-value)
       (:color-type :GREEN)
@@ -233,7 +229,7 @@ Change log:
       (:LEFT 260)
       (:TOP 80)
       (:HEIGHT 205))
-    (:BLUE-SLIDER ,GARNET-GADGETS:V-SLIDER
+    (:BLUE-SLIDER ,GARNET-GADGETS:MOTIF-SLIDER
       (:constant (t))
       (:selection-function slider-value)
       (:color-type :BLUE)

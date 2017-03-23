@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LAPIDARY-DIALOGS; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -18,7 +18,16 @@
 ;;; 5/10/93 bvz Created
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "GARNET-GADGETS")
+(in-package "LAPIDARY-DIALOGS")
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export '(*x1-to-box-left* *x1-to-box-center* *x1-to-box-right*
+	    *x2-to-box-left* *x2-to-box-center* *x2-to-box-right*
+	    *y1-to-box-top* *y1-to-box-center* *x1-to-box-bottom*
+	    *y2-to-box-top* *y2-to-box-center* *x2-to-box-bottom*
+	    *x1-to-circle-left-corner* *x1-to-circle-right-corner*
+	    *x2-to-circle-left-corner* *x2-to-circle-right-corner*)))
+
 
 ;; line-to-line constraints 
 (defvar *x1-to-x1* (o-formula (+ (gvl :x1-over :x1) (gvl :x1-offset))
@@ -640,278 +649,282 @@
   (make-array 2 :initial-contents (list *y2-to-y1* *y2-to-y2*)))
 
 (defvar *line-to-box*
-  (make-array '(3 2) :initial-contents
-	      (list (list (cons (list *x1-to-circle-left-corner*
-				      *x1-to-box-left*
-				      *x1-to-circle-left-corner*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-circle-right-corner*
-				      *x1-to-box-right*
-				      *x1-to-circle-right-corner*)
-				(list *y1-to-circle-top-corner*
-				      *y1-to-box-center*
-				      *y1-to-circle-bottom-corner*
-				      *y1-to-box-top*
-				      *y1-to-box-center*
-				      *y1-to-box-bottom*
-				      *y1-to-circle-top-corner*
-				      *y1-to-box-center*
-				      *y1-to-circle-bottom-corner*))
-			  (cons (list *x2-to-circle-left-corner*
-				      *x2-to-box-left*
-				      *x2-to-circle-left-corner*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-circle-right-corner*
-				      *x2-to-box-right*
-				      *x2-to-circle-right-corner*)
-				(list *y2-to-circle-top-corner*
-				      *y2-to-box-center*
-				      *y2-to-circle-bottom-corner*
-				      *y2-to-box-top*
-				      *y2-to-box-center*
-				      *y2-to-box-bottom*
-				      *y2-to-circle-top-corner*
-				      *y2-to-box-center*
-				      *y2-to-circle-bottom-corner*)))
-		    (list (cons (list *x1-to-roundtangle-left-corner*
-				      *x1-to-box-left*
-				      *x1-to-roundtangle-left-corner*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-roundtangle-right-corner*
-				      *x1-to-box-right*
-				      *x1-to-roundtangle-right-corner*)
-				(list *y1-to-roundtangle-top-corner*
-				      *y1-to-box-center*
-				      *y1-to-roundtangle-bottom-corner*
-				      *y1-to-box-top*
-				      *y1-to-box-center*
-				      *y1-to-box-bottom*
-				      *y1-to-roundtangle-top-corner*
-				      *y1-to-box-center*
-				      *y1-to-roundtangle-bottom-corner*))
-			  (cons (list *x2-to-roundtangle-left-corner*
-				      *x2-to-box-left*
-				      *x2-to-roundtangle-left-corner*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-roundtangle-right-corner*
-				      *x2-to-box-right*
-				      *x2-to-roundtangle-right-corner*)
-				(list *y2-to-roundtangle-top-corner*
-				      *y2-to-box-center*
-				      *y2-to-roundtangle-bottom-corner*
-				      *y2-to-box-top*
-				      *y2-to-box-center*
-				      *y2-to-box-bottom*
-				      *y2-to-roundtangle-top-corner*
-				      *y2-to-box-center*
-				      *y2-to-roundtangle-bottom-corner*)))
-		    (list (cons (list *x1-to-box-left*
-				      *x1-to-box-left*
-				      *x1-to-box-left*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-box-center*
-				      *x1-to-box-right*
-				      *x1-to-box-right*
-				      *x1-to-box-right*)
-				(list *y1-to-box-top*
-				      *y1-to-box-center*
-				      *y1-to-box-bottom*
-				      *y1-to-box-top*
-				      *y1-to-box-center*
-				      *y1-to-box-bottom*
-				      *y1-to-box-top*
-				      *y1-to-box-center*
-				      *y1-to-box-bottom*))
-			  (cons (list *x2-to-box-left*
-				      *x2-to-box-left*
-				      *x2-to-box-left*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-box-center*
-				      *x2-to-box-right*
-				      *x2-to-box-right*
-				      *x2-to-box-right*)
-				(list *y2-to-box-top*
-				      *y2-to-box-center*
-				      *y2-to-box-bottom*
-				      *y2-to-box-top*
-				      *y2-to-box-center*
-				      *y2-to-box-bottom*
-				      *y2-to-box-top*
-				      *y2-to-box-center*
-				      *y2-to-box-bottom*))))))
+  (make-array '(3 2) 
+	      :initial-contents
+	      `((((,*x1-to-circle-left-corner*
+		   ,*x1-to-box-left*
+		   ,*x1-to-circle-left-corner*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-circle-right-corner*
+		   ,*x1-to-box-right*
+		   ,*x1-to-circle-right-corner*)
+		  ,*y1-to-circle-top-corner*
+		  ,*y1-to-box-center*
+		  ,*y1-to-circle-bottom-corner*
+		  ,*y1-to-box-top*
+		  ,*y1-to-box-center*
+		  ,*y1-to-box-bottom*
+		  ,*y1-to-circle-top-corner*
+		  ,*y1-to-box-center*
+		  ,*y1-to-circle-bottom-corner*)
+		 ((,*x2-to-circle-left-corner*
+		   *x2-to-box-left*
+		   *x2-to-circle-left-corner*
+		   *x2-to-box-center*
+		   *x2-to-box-center*
+		   *x2-to-box-center*
+		   *x2-to-circle-right-corner*
+		   *x2-to-box-right*
+		   *x2-to-circle-right-corner*)
+		  ,*y2-to-circle-top-corner*
+		  *y2-to-box-center*
+		  *y2-to-circle-bottom-corner*
+		  *y2-to-box-top*
+		  *y2-to-box-center*
+		  *y2-to-box-bottom*
+		  *y2-to-circle-top-corner*
+		  *y2-to-box-center*
+		  *y2-to-circle-bottom-corner*))
+		(((,*x1-to-roundtangle-left-corner*
+		   ,*x1-to-box-left*
+		   ,*x1-to-roundtangle-left-corner*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-roundtangle-right-corner*
+		   ,*x1-to-box-right*
+		   ,*x1-to-roundtangle-right-corner*)
+		  ,*y1-to-roundtangle-top-corner*
+		  ,*y1-to-box-center*
+		  ,*y1-to-roundtangle-bottom-corner*
+		  ,*y1-to-box-top*
+		  ,*y1-to-box-center*
+		  ,*y1-to-box-bottom*
+		  ,*y1-to-roundtangle-top-corner*
+		  ,*y1-to-box-center*
+		  ,*y1-to-roundtangle-bottom-corner*)
+		 ((,*x2-to-roundtangle-left-corner*
+		   ,*x2-to-box-left*
+		   ,*x2-to-roundtangle-left-corner*
+		   ,*x2-to-box-center*
+		   ,*x2-to-box-center*
+		   ,*x2-to-box-center*
+		   ,*x2-to-roundtangle-right-corner*
+		   ,*x2-to-box-right*
+		   *x2-to-roundtangle-right-corner*)
+		  ,*y2-to-roundtangle-top-corner*
+		  ,*y2-to-box-center*
+		  ,*y2-to-roundtangle-bottom-corner*
+		  ,*y2-to-box-top*
+		  ,*y2-to-box-center*
+		  ,*y2-to-box-bottom*
+		  ,*y2-to-roundtangle-top-corner*
+		  ,*y2-to-box-center*
+		  *y2-to-roundtangle-bottom-corner*))
+		(((,*x1-to-box-left*
+		   ,*x1-to-box-left*
+		   ,*x1-to-box-left*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-center*
+		   ,*x1-to-box-right*
+		   ,*x1-to-box-right*
+		   ,*x1-to-box-right*)
+		  ,*y1-to-box-top*
+		  ,*y1-to-box-center*
+		  ,*y1-to-box-bottom*
+		  ,*y1-to-box-top*
+		  ,*y1-to-box-center*
+		  ,*y1-to-box-bottom*
+		  ,*y1-to-box-top*
+		  ,*y1-to-box-center*
+		  ,*y1-to-box-bottom*)
+		 ((,*x2-to-box-left*
+		   ,*x2-to-box-left*
+		   ,*x2-to-box-left*
+		   ,*x2-to-box-center*
+		   ,*x2-to-box-center*
+		   ,*x2-to-box-center*
+		   ,*x2-to-box-right*
+		   ,*x2-to-box-right*
+		   ,*x2-to-box-right*)
+		  ,*y2-to-box-top*
+		  ,*y2-to-box-center*
+		  ,*y2-to-box-bottom*
+		  ,*y2-to-box-top*
+		  ,*y2-to-box-center*
+		  ,*y2-to-box-bottom*
+		  ,*y2-to-box-top*
+		  ,*y2-to-box-center*
+		  ,*y2-to-box-bottom*)))))
 
 (defvar *box-to-line*
-  (make-array '(3 3) :initial-contents
-	      (list (list (cons (list *circle-left-corner-to-x1*
-				      *box-left-to-x1*
-				      *circle-left-corner-to-x1*
-				      *circle-center-to-x1*
-				      *circle-center-to-x1*
-				      *circle-center-to-x1*
-				      *circle-right-corner-to-x1*
-				      *box-right-to-x1*
-				      *circle-right-corner-to-x1*)
-				(list *circle-top-corner-to-y1*
-				      *circle-center-to-y1*
-				      *circle-bottom-corner-to-y1*
-				      *box-top-to-y1*
-				      *circle-center-to-y1*
-				      *box-bottom-to-y1*
-				      *circle-top-corner-to-y1*
-				      *circle-center-to-y1*
-				      *circle-bottom-corner-to-y1*))
-			  (cons (list *circle-left-corner-to-line-center*
-				      *box-left-to-line-center*
-				      *circle-left-corner-to-line-center*
-				      *circle-center-x-to-line-center*
-				      *circle-center-x-to-line-center*
-				      *circle-center-x-to-line-center*
-				      *circle-right-corner-to-line-center*
-				      *box-right-to-line-center*
-				      *circle-right-corner-to-line-center*)
-				(list *circle-top-corner-to-line-center*
-				      *circle-center-y-to-line-center*
-				      *circle-bottom-corner-to-line-center*
-				      *box-top-to-line-center*
-				      *circle-center-y-to-line-center*
-				      *box-bottom-to-line-center*
-				      *circle-top-corner-to-line-center*
-				      *circle-center-y-to-line-center*
-				      *circle-bottom-corner-to-line-center*))
-			  (cons (list *circle-left-corner-to-x2*
-				      *box-left-to-x2*
-				      *circle-left-corner-to-x2*
-				      *circle-center-to-x2*
-				      *circle-center-to-x2*
-				      *circle-center-to-x2*
-				      *circle-right-corner-to-x2*
-				      *box-right-to-x2*
-				      *circle-right-corner-to-x2*)
-				(list *circle-top-corner-to-y2*
-				      *circle-center-to-y2*
-				      *circle-bottom-corner-to-y2*
-				      *box-top-to-y2*
-				      *circle-center-to-y2*
-				      *box-bottom-to-y2*
-				      *circle-top-corner-to-y2*
-				      *circle-center-to-y2*
-				      *circle-bottom-corner-to-y2*)))
-		    (list (cons (list *roundtangle-left-corner-to-x1*
-				      *box-left-to-x1*
-				      *roundtangle-left-corner-to-x1*
-				      *box-center-to-x1*
-				      *box-center-to-x1*
-				      *box-center-to-x1*
-				      *roundtangle-right-corner-to-x1*
-				      *box-right-to-x1*
-				      *roundtangle-right-corner-to-x1*)
-				(list *roundtangle-top-corner-to-y1*
-				      *box-center-to-y1*
-				      *roundtangle-bottom-corner-to-y1*
-				      *box-top-to-y1*
-				      *box-center-to-y1*
-				      *box-bottom-to-y1*
-				      *roundtangle-top-corner-to-y1*
-				      *box-center-to-y1*
-				      *roundtangle-bottom-corner-to-y1*))
-			  (cons (list *roundtangle-left-corner-to-line-center*
-				      *box-left-to-line-center*
-				      *roundtangle-left-corner-to-line-center*
-				      *box-center-x-to-line-center*
-				      *box-center-x-to-line-center*
-				      *box-center-x-to-line-center*
-				      *roundtangle-right-corner-to-line-center*
-				      *box-right-to-line-center*
-				      *roundtangle-right-corner-to-line-center*)
-				(list *roundtangle-top-corner-to-line-center*
-				      *box-center-y-to-line-center*
-				      *roundtangle-bottom-corner-to-line-center*
-				      *box-top-to-line-center*
-				      *box-center-y-to-line-center*
-				      *box-bottom-to-line-center*
-				      *roundtangle-top-corner-to-line-center*
-				      *box-center-y-to-line-center*
-				      *roundtangle-bottom-corner-to-line-center*))
-			  (cons (list *roundtangle-left-corner-to-x2*
-				      *box-left-to-x2*
-				      *roundtangle-left-corner-to-x2*
-				      *box-center-to-x2*
-				      *box-center-to-x2*
-				      *box-center-to-x2*
-				      *roundtangle-right-corner-to-x2*
-				      *box-right-to-x2*
-				      *roundtangle-right-corner-to-x2*)
-				(list *roundtangle-top-corner-to-y2*
-				      *box-center-to-y2*
-				      *roundtangle-bottom-corner-to-y2*
-				      *box-top-to-y2*
-				      *box-center-to-y2*
-				      *box-bottom-to-y2*
-				      *roundtangle-top-corner-to-y2*
-				      *box-center-to-y2*
-				      *roundtangle-bottom-corner-to-y2*)))
-		    (list (cons (list *box-left-to-x1*
-				      *box-left-to-x1*
-				      *box-left-to-x1*
-				      *box-center-to-x1*
-				      *box-center-to-x1*
-				      *box-center-to-x1*
-				      *box-right-to-x1*
-				      *box-right-to-x1*
-				      *box-right-to-x1*)
-				(list *box-top-to-y1*
-				      *box-center-to-y1*
-				      *box-bottom-to-y1*
-				      *box-top-to-y1*
-				      *box-center-to-y1*
-				      *box-bottom-to-y1*
-				      *box-top-to-y1*
-				      *box-center-to-y1*
-				      *box-bottom-to-y1*))
-			  (cons (list *box-left-to-line-center*
-				      *box-left-to-line-center*
-				      *box-left-to-line-center*
-				      *box-center-x-to-line-center*
-				      *box-center-x-to-line-center*
-				      *box-center-x-to-line-center*
-				      *box-right-to-line-center*
-				      *box-right-to-line-center*
-				      *box-right-to-line-center*)
-				(list *box-top-to-line-center*
-				      *box-center-y-to-line-center*
-				      *box-bottom-to-line-center*
-				      *box-top-to-line-center*
-				      *box-center-y-to-line-center*
-				      *box-bottom-to-line-center*
-				      *box-top-to-line-center*
-				      *box-center-y-to-line-center*
-				      *box-bottom-to-line-center*))
-			  (cons (list *box-left-to-x2*
-				      *box-left-to-x2*
-				      *box-left-to-x2*
-				      *box-center-to-x2*
-				      *box-center-to-x2*
-				      *box-center-to-x2*
-				      *box-right-to-x2*
-				      *box-right-to-x2*
-				      *box-right-to-x2*)
-				(list *box-top-to-y2*
-				      *box-center-to-y2*
-				      *box-bottom-to-y2*
-				      *box-top-to-y2*
-				      *box-center-to-y2*
-				      *box-bottom-to-y2*
-				      *box-top-to-y2*
-				      *box-center-to-y2*
-				      *box-bottom-to-y2*))))))
+  (make-array '(3 3)
+	      :initial-contents
+	      `((((,*circle-left-corner-to-x1*
+		   ,*box-left-to-x1*
+		   ,*circle-left-corner-to-x1*
+		   ,*circle-center-to-x1*
+		   ,*circle-center-to-x1*
+		   ,*circle-center-to-x1*
+		   ,*circle-right-corner-to-x1*
+		   ,*box-right-to-x1*
+		   ,*circle-right-corner-to-x1*)
+		  ,*circle-top-corner-to-y1*
+		  ,*circle-center-to-y1*
+		  ,*circle-bottom-corner-to-y1*
+		  ,*box-top-to-y1*
+		  ,*circle-center-to-y1*
+		  ,*box-bottom-to-y1*
+		  ,*circle-top-corner-to-y1*
+		  ,*circle-center-to-y1*
+		  ,*circle-bottom-corner-to-y1*)
+		 ((,*circle-left-corner-to-line-center*
+		   ,*box-left-to-line-center*
+		   ,*circle-left-corner-to-line-center*
+		   ,*circle-center-x-to-line-center*
+		   ,*circle-center-x-to-line-center*
+		   ,*circle-center-x-to-line-center*
+		   ,*circle-right-corner-to-line-center*
+		   ,*box-right-to-line-center*
+		   ,*circle-right-corner-to-line-center*)
+		  ,*circle-top-corner-to-line-center*
+		  ,*circle-center-y-to-line-center*
+		  ,*circle-bottom-corner-to-line-center*
+		  ,*box-top-to-line-center*
+		  ,*circle-center-y-to-line-center*
+		  ,*box-bottom-to-line-center*
+		  ,*circle-top-corner-to-line-center*
+		  ,*circle-center-y-to-line-center*
+		  ,*circle-bottom-corner-to-line-center*)
+		 ((,*circle-left-corner-to-x2*
+		   ,*box-left-to-x2*
+		   ,*circle-left-corner-to-x2*
+		   ,*circle-center-to-x2*
+		   ,*circle-center-to-x2*
+		   ,*circle-center-to-x2*
+		   ,*circle-right-corner-to-x2*
+		   ,*box-right-to-x2*
+		   ,*circle-right-corner-to-x2*)
+		  ,*circle-top-corner-to-y2*
+		  ,*circle-center-to-y2*
+		  ,*circle-bottom-corner-to-y2*
+		  ,*box-top-to-y2*
+		  ,*circle-center-to-y2*
+		  ,*box-bottom-to-y2*
+		  ,*circle-top-corner-to-y2*
+		  ,*circle-center-to-y2*
+		  ,*circle-bottom-corner-to-y2*))
+		(((,*roundtangle-left-corner-to-x1*
+		   ,*box-left-to-x1*
+		   ,*roundtangle-left-corner-to-x1*
+		   ,*box-center-to-x1*
+		   ,*box-center-to-x1*
+		   ,*box-center-to-x1*
+		   ,*roundtangle-right-corner-to-x1*
+		   ,*box-right-to-x1*
+		   ,*roundtangle-right-corner-to-x1*)
+		  ,*roundtangle-top-corner-to-y1*
+		  ,*box-center-to-y1*
+		  ,*roundtangle-bottom-corner-to-y1*
+		  ,*box-top-to-y1*
+		  ,*box-center-to-y1*
+		  ,*box-bottom-to-y1*
+		  ,*roundtangle-top-corner-to-y1*
+		  ,*box-center-to-y1*
+		  ,*roundtangle-bottom-corner-to-y1*)
+		 ((,*roundtangle-left-corner-to-line-center*
+		   ,*box-left-to-line-center*
+		   ,*roundtangle-left-corner-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*roundtangle-right-corner-to-line-center*
+		   ,*box-right-to-line-center*
+		   ,*roundtangle-right-corner-to-line-center*)
+		  ,*roundtangle-top-corner-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*roundtangle-bottom-corner-to-line-center*
+		  ,*box-top-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*box-bottom-to-line-center*
+		  ,*roundtangle-top-corner-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*roundtangle-bottom-corner-to-line-center*)
+		 ((,*roundtangle-left-corner-to-x2*
+		   ,*box-left-to-x2*
+		   ,*roundtangle-left-corner-to-x2*
+		   ,*box-center-to-x2*
+		   ,*box-center-to-x2*
+		   ,*box-center-to-x2*
+		   ,*roundtangle-right-corner-to-x2*
+		   ,*box-right-to-x2*
+		   ,*roundtangle-right-corner-to-x2*)
+		  ,*roundtangle-top-corner-to-y2*
+		  ,*box-center-to-y2*
+		  ,*roundtangle-bottom-corner-to-y2*
+		  ,*box-top-to-y2*
+		  ,*box-center-to-y2*
+		  ,*box-bottom-to-y2*
+		  ,*roundtangle-top-corner-to-y2*
+		  ,*box-center-to-y2*
+		  ,*roundtangle-bottom-corner-to-y2*))
+		(((,*box-left-to-x1*
+		   ,*box-left-to-x1*
+		   ,*box-left-to-x1*
+		   ,*box-center-to-x1*
+		   ,*box-center-to-x1*
+		   ,*box-center-to-x1*
+		   ,*box-right-to-x1*
+		   ,*box-right-to-x1*
+		   ,*box-right-to-x1*)
+		  ,*box-top-to-y1*
+		  ,*box-center-to-y1*
+		  ,*box-bottom-to-y1*
+		  ,*box-top-to-y1*
+		  ,*box-center-to-y1*
+		  ,*box-bottom-to-y1*
+		  ,*box-top-to-y1*
+		  ,*box-center-to-y1*
+		  ,*box-bottom-to-y1*)
+		 ((,*box-left-to-line-center*
+		   ,*box-left-to-line-center*
+		   ,*box-left-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*box-center-x-to-line-center*
+		   ,*box-right-to-line-center*
+		   ,*box-right-to-line-center*
+		   ,*box-right-to-line-center*)
+		  ,*box-top-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*box-bottom-to-line-center*
+		  ,*box-top-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*box-bottom-to-line-center*
+		  ,*box-top-to-line-center*
+		  ,*box-center-y-to-line-center*
+		  ,*box-bottom-to-line-center*)
+		 ((,*box-left-to-x2*
+		   ,*box-left-to-x2*
+		   ,*box-left-to-x2*
+		   ,*box-center-to-x2*
+		   ,*box-center-to-x2*
+		   ,*box-center-to-x2*
+		   ,*box-right-to-x2*
+		   ,*box-right-to-x2*
+		   ,*box-right-to-x2*)
+		  ,*box-top-to-y2*
+		  ,*box-center-to-y2*
+		  ,*box-bottom-to-y2*
+		  ,*box-top-to-y2*
+		  ,*box-center-to-y2*
+		  ,*box-bottom-to-y2*
+		  ,*box-top-to-y2*
+		  ,*box-center-to-y2*
+		  ,*box-bottom-to-y2*)))))
+
+
 

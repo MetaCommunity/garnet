@@ -112,8 +112,11 @@ to make it more debuggable.")
 
 (defvar Garnet-Compile-Debug-Settings
   '(optimize (speed 2) (safety 3) (debug 3) 
-    #-(or ccl sbcl) (space 2.5) #+(or ccl sbcl) (space 2)
-    #+ccl (compilation-speed 3))
+    #+sbcl (compilation-speed 2) 
+    #+ccl (compilation-speed 0)
+    #-(or ccl sbcl) (space 2.5)
+    #+(or ccl sbcl) (space 2)
+    )
   "Use these settings for globally debugging the system or for debugging
 a specific module. They emphasize debuggability at the cost of some speed.
 
@@ -129,9 +132,11 @@ With SBCL:
 
 (defvar Garnet-Compile-Production-Settings
   '(optimize (speed 3) 
-    #+allegro (safety 1) #-allegro (safety 0)
+    #+allegro (safety 1)
+    #-allegro (safety 0)
     (space 1)
-    #-cmu (debug 1) #+cmu (debug 0.5)
+    #-cmu (debug 1)
+    #+cmu (debug 0.5)
     (compilation-speed 0)
     #+cmu (ext:inhibit-warnings 3))
   "Production compiler policy settings. Emphasize speed, de-emphasize debugging.")
@@ -173,7 +178,8 @@ With SBCL:
    (defpackage :GARNET-DEBUG (:use :COMMON-LISP :KR :OPAL) (:nicknames :GD))
    (defpackage :GILT (:use :COMMON-LISP :KR))
    (defpackage :C32 (:use :COMMON-LISP :KR))
-   (defpackage :LAPIDARY (:use :COMMON-LISP :KR))
+   (defpackage :LAPIDARY-DIALOGS (:use :COMMON-LISP :KR))
+   (defpackage :LAPIDARY (:use :COMMON-LISP :KR :LAPIDARY-DIALOGS))
    (defpackage :AGATE (:use :COMMON-LISP :KR))
 
    (defpackage :DEMO-3D (:use :COMMON-LISP :KR) (:export DO-GO DO-STOP))
@@ -852,6 +858,7 @@ may help in troubleshooting."
 (defvar *kr-only* nil
   "Only loading KR so don't need to open displays.")
 
+#-(and)
 (unless *kr-only*
   (verify-display-can-be-opened))
 

@@ -8,8 +8,8 @@
 ;;;
 ;;; $Id::                                                    $
 
-;; (declaim (optimize (speed 2) (safety 3) (space 2) (debug 3) (compilation-speed 0)))
-(declaim (optimize (speed 3) (safety 1) (space 0) (debug 1) (compilation-speed 0)))
+(declaim (optimize (speed 2) (safety 3) (space 2) (debug 3) (compilation-speed 0)))
+;;(declaim (optimize (speed 3) (safety 1) (space 0) (debug 1) (compilation-speed 0)))
 
 (defpackage "FMAND"
   (:use :common-lisp :kr)
@@ -29,6 +29,7 @@
       (cl-user::garnet-load (second pair))))
 )
 
+
 ;;;
 ;;; Window variables.
 ;;;
@@ -40,6 +41,7 @@
 	  *gw-agg*              ; Gadget window aggregate.
 	  *pixmap*              ; Pixmap of mandelbrot set.
 	  *pixarray*            ; Array we plot points into.
+	  *pixmap-mouseline*
 	  *image*
 	  *box-list*            ; x, y, width, height of outline rectangle.
 	  *moving-rectangle*    ; Feedback for selecting enlargement.
@@ -55,7 +57,7 @@
 	  *colormap*))
 
 (declaim (fixnum *plot-xy*))
-(defparameter *plot-xy* 650)
+(defparameter *plot-xy* 1024)
 
 (declaim (fixnum +black-index+ +white-index+))
 
@@ -75,15 +77,27 @@
 ;;;
 ;;; Plot parameters.
 ;;;
-(declaim (long-float *real-center* *imaginary-center* *radius*))
+#+cmu
+(declaim (type ext:double-double-float *real-center* *imaginary-center* *radius*))
+#-cmu
+(declaim (type long-float *real-center* *imaginary-center* *radius*))
+#-cmu
 (defvar *real-center*     -0.5l0)
+#+cmu
+(defvar *real-center*     -0.5w0)
+#-cmu
 (defvar *imaginary-center* 0.0l0)
+#+cmu
+(defvar *imaginary-center* 0.0w0)
+#-cmu
 (defvar *radius*           2.0l0)
+#+cmu
+(defvar *radius*           2.0w0)
 
 ;;;
 ;;; For balloon help.
 ;;;
-(defparameter pixmap-balloon-help
+(defparameter *pixmap-balloon-help*
   "Click left mouse button and drag to select region.
 Click middle mouse button to zoom in to selected region.
 Click right mouse button to zoom out by a factor of 2.")
@@ -370,13 +384,14 @@ Click right mouse button to zoom out by a factor of 2.")
     (setf (aref *colormap* i)
 	  (get-color-index-of-color-values i *default-color-values*))))
 
+
 ;;;
 ;;; Initialize a plot window.
 ;;;
-(defun init (&optional (title "Plot") (width *plot-xy*) (height *plot-xy*))
+(defun init (&optional (title "Plot") (size *plot-xy*))
   (unless (and (boundp '*w*) *w*)       ; Only do it once.
 
-    (create-plot-window title width height)
+    (create-plot-window title size)
     (create-control-panel)
     (create-dialogs)
 
@@ -483,7 +498,7 @@ Click right mouse button to zoom out by a factor of 2.")
 (defun zoom-out (int obj)
   (declare (ignore int obj))
   (s-value *outline-rectangle* :visible nil)
-  (setf *radius* (* *radius* 2.0l0))
+  (setf *radius* (* *radius* #-cmu 2.0l0 #+cmu 2.0w0))
   (mm))
 
 
@@ -505,12 +520,32 @@ Radius --- the radius of the plot around the center.")
 (defparameter indicator-help "Displays percentage of plot that has been completed.")
 
 
-(defun create-plot-window (title xSize ySize)
+(defun create-pixmap (size)
+  ;; Set up pixmap and pixarray
+  (let ((width size)
+	(height size))
+    (setf *pixmap*
+	  (create-instance nil opal:pixmap
+	    (:image (opal:create-pixmap-image width height)))))
+  (opal:add-component *w-agg* *pixmap* :where :back)
+  (setf *pixarray* (g-value *pixmap* :pixarray))
+
+  ;; Set up balloon help.
+  (s-value *pixmap* :help-string *pixmap-balloon-help*))
+
+
+(defun create-pixmap-mouseline ()
+  (setf *pixmap-mouseline*
+	(create-instance nil gg:mouselinepopup (:wait-amount 1)))
+  (opal:add-component *w-agg* *pixmap-mouseline*))
+
+(defun create-plot-window (title size)
   ;; Create window and aggregate.
   (setf *w* (create-instance nil inter:interactor-window
 	      (:title title)
-	      (:width xSize) (:height ySize)
-	      (:left (floor (- gem:*screen-width* xSize) 2)) (:top 350)
+	      (:width size)
+	      (:height (o-formula (gvl :width) size))
+	      (:left (floor (- gem:*screen-width* size) 2)) (:top 350)
 	      (:double-buffered-p t)
 	      (:foreground-color opal:blue)
 	      (:background-color opal:white))
@@ -518,137 +553,127 @@ Radius --- the radius of the plot around the center.")
     
   (s-value *w* :aggregate *w-agg*)
   (opal:update *w*)
-
   (setf *depth* (gem::x-window-depth *w*))
 
-  ;; Set up pixmap and pixarray
-  (let ((width (g-value *w* :width))
-	(height (g-value *w* :height)))
-    (setf *pixmap*
-	  (create-instance nil opal:pixmap
-	    (:image (opal:create-pixmap-image width height)))))
-  (opal:add-component *w-agg* *pixmap*)
-  (setf *pixarray* (g-value *pixmap* :pixarray))
-
-  ;; Set up balloon help.
-  (s-value *pixmap* :help-string pixmap-balloon-help)
-  (create-instance 'pixmap-mouseline gg:mouselinepopup (:wait-amount 4))
-  (opal:add-component *w-agg* pixmap-mouseline)
-  )
+  (create-pixmap size)
+  (create-pixmap-mouseline))
 
 
 (defun create-control-panel ()
-  (setf *gw* (create-instance nil inter:interactor-window
-		(:title "Control Window")
-		(:width 500) (:height 300)
-		(:left (floor (- gem:*screen-width* 500) 2)) (:top 20)
-		(:foreground-color opal:black)
-		(:background-color opal:motif-blue))
-	*gw-agg* (create-instance nil opal:aggregate))
-  (s-value *gw* :aggregate *gw-agg*)
-  (opal:update *gw*)
+  (unless (and (boundp '*gw*) *gw* (not (eq *gw* 'kr::*destroyed*)))
+    (setf *gw* (create-instance nil inter:interactor-window
+		 (:title "Control Window")
+		 (:width 500) (:height 300)
+		 (:left (floor (- gem:*screen-width* 500) 2)) (:top 20)
+		 (:foreground-color opal:black)
+		 (:background-color opal:motif-blue))
+	  *gw-agg* (create-instance nil opal:aggregate))
+    (s-value *gw* :aggregate *gw-agg*)
+    (opal:update *gw*)
 
-  (setf *banner*
-	(create-instance 'BANNER opal:text
-	  (:string "Mandelbrot Set Explorer")))
+    (setf *banner*
+	  (create-instance 'BANNER opal:text
+	    (:string "Mandelbrot Set Explorer")))
   
-  (setf *buttons*
-	(create-instance 'BUTTONS gg:motif-text-button-panel
-           ;; can't be constant since we want to center it.
-           (:items '(("Reset Plot" reset-plot)
-		     ("Re-do Plot" do-plot)
-		     ("Save Image" do-save)
-		     ("Load Colors" do-load-colors)
-		     ("Quit" do-quit)))
-	   (:left (o-formula (- (round (gvl :parent :window :width) 2)
-				(round (gvl :width) 2))))
-	   (:top 5)
-	   (:h-align :center)
-	   (:direction :horizontal)
-	   ))
+    (setf *buttons*
+	  (create-instance 'BUTTONS gg:motif-text-button-panel
+;;;	    (:font (opal:get-standard-font nil :bold :small))
+	    (:font (opal:get-standard-font :sans-serif :roman :small))
+	    ;; can't be constant since we want to center it.
+	    (:items '(("Reset Plot" reset-plot)
+		      ("Re-do Plot" do-plot)
+		      ("Save Image" do-save)
+		      ("Load Colors" do-load-colors)
+		      ("Quit" do-quit)))
+	    (:left (o-formula (- (round (gvl :parent :window :width) 2)
+				 (round (gvl :width) 2))))
+	    (:top 5)
+	    (:h-align :center)
+	    (:direction :horizontal)
+	    ))
 
-  (s-value *gw* :width (+ 5 (g-value *buttons* :width)))
-  (opal:update *gw*)
+    (s-value *gw* :width (+ 5 (g-value *buttons* :width)))
+    (opal:update *gw*)
   
-  ;; set up help strings for the mouseline gadget.
-  (dolist (button (g-value buttons :button-list :components))
-    (s-value button :help-string (cadr (assoc (g-value button :string)
-					      button-help
-					      :test #'string=))))
-  (create-instance 'slider-label opal:text
-     (:left (o-formula (- (round (gvl :parent :window :width) 2)
-			  (round (gvl :width) 2))))
-     (:top (o-formula (+ (opal:gv-bottom buttons) 15)))
-     (:string "Iterations"))
+    ;; set up help strings for the mouseline gadget.
+    (dolist (button (g-value buttons :button-list :components))
+      (s-value button :help-string (cadr (assoc (g-value button :string)
+						button-help
+						:test #'string=))))
+    (create-instance 'slider-label opal:text
+      (:left (o-formula (- (round (gvl :parent :window :width) 2)
+			   (round (gvl :width) 2))))
+      (:top (o-formula (+ (opal:gv-bottom buttons) 15)))
+      (:string "Iterations"))
 
-  (setf *slider*
-	(create-instance 'SLIDER gg:motif-h-scroll-bar
-           (:constant T :except :foreground-color)
-	   (:left (o-formula (- (round (gvl :parent :window :width) 2)
-				(round (gvl :width) 2))))
-	   (:top (o-formula (+ (opal:gv-bottom slider-label) 5)))
-	   (:h-align :center)
-	   (:val-1 *max-colors*)
-	   (:val-2 *max-iterations*)
-	   (:scr-incr 100)
-	   (:percent-visible .05)
-	   (:active-p T)
-	   (:selection-function
-	    #'(lambda (gadget value)
-		(declare (ignore gadget))
-		(setf *iterations* value)))))
+    (setf *slider*
+	  (create-instance 'SLIDER gg:motif-h-scroll-bar
+	    (:constant T :except :foreground-color)
+	    (:left (o-formula (- (round (gvl :parent :window :width) 2)
+				 (round (gvl :width) 2))))
+	    (:top (o-formula (+ (opal:gv-bottom slider-label) 5)))
+	    (:h-align :center)
+	    (:val-1 *max-colors*)
+	    (:val-2 *max-iterations*)
+	    (:scr-incr 100)
+	    (:percent-visible .05)
+	    (:active-p T)
+	    (:selection-function
+	     #'(lambda (gadget value)
+		 (declare (ignore gadget))
+		 (setf *iterations* value)))))
 
-  (s-value slider :help-string iter-help)
+    (s-value slider :help-string iter-help)
 
-  (create-instance 'iteration-text opal:text
-     (:left (o-formula (- (round (gvl :parent :window :width) 2)
-			  (round (gvl :width) 2))))
-     (:top (o-formula (+ (opal:gv-bottom slider) 5)))
-     (:string (o-formula (format nil "~D" (gv slider :value)))))
+    (create-instance 'iteration-text opal:text
+      (:left (o-formula (- (round (gvl :parent :window :width) 2)
+			   (round (gvl :width) 2))))
+      (:top (o-formula (+ (opal:gv-bottom slider) 5)))
+      (:string (o-formula (format nil "~D" (gv slider :value)))))
      
-  (setf *prop*
-	(create-instance 'PROP gg:prop-sheet
-	   (:left (o-formula (ceiling (gvl :parent :window :width) 4)))
-	   (:width (o-formula (- (gvl :parent :window :width) 150)))
-	   (:top (o-formula (+ (opal:gv-bottom iteration-text) 15)))
-	   (:items
-	    `(("Real Center" ,(o-formula (format nil "~A" *real-center*)))
-	     ("Imaginary Center" ,(o-formula (format nil "~A" *imaginary-center*)))
-	     ("Radius" ,(o-formula (format nil "~A" *radius*)))))))
+    (setf *prop*
+	  (create-instance 'PROP gg:prop-sheet
+	    (:left (o-formula (ceiling (gvl :parent :window :width) 10)))
+	    (:width (o-formula (- (gvl :parent :window :width) 50)))
+	    (:top (o-formula (+ (opal:gv-bottom iteration-text) 15)))
+	    (:items
+	     `(("Real Center" ,(o-formula (format nil "~A" *real-center*)))
+	       ("Imaginary Center" ,(o-formula (format nil "~A" *imaginary-center*)))
+	       ("Radius" ,(o-formula (format nil "~A" *radius*)))))))
 
-  (s-value prop :help-string prop-help)
+    (s-value prop :help-string prop-help)
   
-  (setf *indicator*
-	(create-instance 'indicator gg:motif-h-scroll-bar
-	   (:left (o-formula (- (round (gvl :parent :window :width) 2)
-				(round (gvl :width) 2))))
-	   (:top (o-formula (+ (opal:gv-bottom prop) 15)))
-	   (:h-align :center)
-	   (:val-1 0)
-	   (:val-2 *plot-xy*)
-	   (:scr-incr 100)
-	   (:scr-trill-p nil)
-	   (:percent-visible 0.0)
-	   (:active-p T)))
+    (setf *indicator*
+	  (create-instance 'indicator gg:motif-h-scroll-bar
+	    (:left (o-formula (- (round (gvl :parent :window :width) 2)
+				 (round (gvl :width) 2))))
+	    (:top (o-formula (+ (opal:gv-bottom prop) 15)))
+	    (:h-align :center)
+	    (:val-1 0)
+	    (:val-2 *plot-xy*)
+	    (:scr-incr 100)
+	    (:scr-trill-p nil)
+	    (:percent-visible 0.0)
+	    (:active-p T)))
 
-  (s-value indicator :help-string indicator-help)
+    (s-value indicator :help-string indicator-help)
 
-  (setf *indicator-text*
-	(create-instance 'indicator-text opal:text
-	   (:left (o-formula (- (round (gvl :parent :window :width) 2)
-				(round (gvl :width) 2))))
-	   (:top (o-formula (+ (opal:gv-bottom indicator) 5)))
-	   (:string "Percent Complete: 0")))
+    (setf *indicator-text*
+	  (create-instance 'indicator-text opal:text
+	    (:left (o-formula (- (round (gvl :parent :window :width) 2)
+				 (round (gvl :width) 2))))
+	    (:top (o-formula (+ (opal:gv-bottom indicator) 5)))
+	    (:string "Percent Complete: 0")))
 
-  (create-instance 'control-mouseline gg:mouselinepopup (:wait-amount 2))
+    (create-instance 'control-mouseline gg:mouselinepopup (:wait-amount .1))
 
-  (opal:add-components *gw-agg*
-		       *buttons*
-		       slider-label *slider* iteration-text
-		       *prop*
-		       *indicator* *indicator-text*
-		       control-mouseline)
-  (opal:update *gw*))
+    (opal:add-components *gw-agg*
+			 *buttons*
+			 slider-label *slider* iteration-text
+			 *prop*
+			 *indicator* *indicator-text*
+			 control-mouseline)
+    (opal:update *gw*)))
 
 
 (defun create-dialogs ()
@@ -712,6 +737,7 @@ Radius --- the radius of the plot around the center.")
   #+(and :cmu :garnet-processes) (mp:make-process #'m)
   #+:allegro (mp:process-run-function "Plotter" #'m)
   #+:sb-thread (sb-thread:make-thread #'m :name "Plotter")
+  #+:ccl (ccl:process-run-function "Plotter" #'m)
   #-:garnet-processes (m)
 )
 
@@ -731,22 +757,31 @@ Radius --- the radius of the plot around the center.")
 (declaim (inline f))
 (defun f (i)
   (declare (fixnum i))
-  (declare (values fixnum))
+#+cmu  (declare (values fixnum))
   (let ((scale (/ *iterations* *max-colors*)))
     (aref *colormap* (floor i scale ))))
 
 (defun tst (k rec imc)
   (declare (fixnum k)
-	   (long-float rec imc))
-  (declare (values fixnum))
+	   #-cmu
+	   (long-float rec imc)
+	   #+cmu
+	   (type ext:double-double-float rec imc))
+#+cmu  (declare (values fixnum))
   (declare (optimize (speed 3) (safety 0) (space 0)))
   (let ((re rec)
 	(im imc))
+    #-cmu
     (declare (long-float re im))
+    #+cmu
+    (declare (type ext:double-double-float re im))
     (dotimes (j (- k 2) 0)
       (declare (fixnum j))
       (let ((re2 (* re re))
 	    (im2 (* im im)))
+	#-cmu
+	(declare (long-float re2 im2))
+	#+cmu
 	(declare (long-float re2 im2))
 	(when (> (+ re2 im2) 256)
 	  (return-from tst (f j)))
@@ -762,7 +797,7 @@ Radius --- the radius of the plot around the center.")
 (defun M ()
   (declare (optimize (speed 3) (safety 0) (space 0)))
   ;; Set up window stuff.
-  (init "Mandelbrot Plot" *plot-xy* *plot-xy*)
+  (init "Mandelbrot Plot" *plot-xy*)
   (opal:raise-window *w*)
 
   ;; Do the plot.
@@ -770,12 +805,15 @@ Radius --- the radius of the plot around the center.")
    (let* ((w *plot-xy*)
 	  (half-w (truncate w 2))
 	  (r *radius*)
-	  (s (* 2.0l0 (/ r w)))
+	  (s (* #-cmu 2.0l0 #+cmu 2.0w0 (/ r w)))
 	  (recen *real-center*)
 	  (imcen *imaginary-center*)
 	  (k *iterations*))
      (declare (fixnum w k)
-	      (long-float r s recen imcen))
+	      #-cmu
+	      (long-float r s recen imcen)
+	      #+cmu
+	      (type ext:double-double-float r s recen imcen))
 
      (update-iterations-scroll)
      (update-propsheet)
@@ -790,7 +828,10 @@ Radius --- the radius of the plot around the center.")
 	 (declare (fixnum x))
 	 (let ((rec (+ (* s (- x half-w)) recen))
 	       (imc (+ (* s (- y half-w)) imcen)))
+	   #-cmu
 	   (declare (long-float rec imc))
+	   #+cmu
+	   (declare (type ext:double-double-float rec imc))
 	   (plot-point x y (tst k rec imc))))))
    (opal:update *w* t)
    (opal:update *gw* t)))
@@ -811,6 +852,7 @@ Radius --- the radius of the plot around the center.")
   (declare (ignore g v))
   (opal:destroy *gw*)
   (opal:destroy *w*)
+  (setf *gw* nil)
   (setf *w* nil)
   (setf *moving-rectangle* nil)
   #+cmu
@@ -822,15 +864,14 @@ Radius --- the radius of the plot around the center.")
 
 (defun start (&optional (size *plot-xy* argsupplied))
   (when argsupplied
-    (setf *w* nil)
     (setf *plot-xy* size))
   (reset-plot))
 
 (defun reset-plot (&optional g v)
   (declare (ignore g v))
-  (setf *radius* 2.0l0)
-  (setf *real-center* -0.5l0)
-  (setf *imaginary-center* 0.0l0)
+  (setf *radius* #-cmu 2.0l0 #+cmu 2.0w0)
+  (setf *real-center* #-cmu -0.5l0 #+cmu -0.5w0)
+  (setf *imaginary-center* #-cmu 0.0l0 #+cmu 0.0w0)
   (setf *iterations* *initial-iterations*)
   (mm)
 )

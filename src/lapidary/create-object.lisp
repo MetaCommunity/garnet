@@ -62,7 +62,7 @@
     ;; interactor is being used and there was no selection
     (when (null item-prototype)
 	  (inter:abort-interactor inter)
-	  (lapidary-error "You must select a prototype object before creating a list")
+	  (lapidary-error "You must select a prototype object before creating a list.")
 	  (return-from initialize-list-feedback))
     (when (and two-point-p (cdr (g-value *selection-info* :selected)))
 	  (lapidary-error "You cannot select more than one prototype object.
@@ -82,7 +82,7 @@ one selection, then try again.")
     (when (and (not two-point-p) (cdr (g-value *selection-info* :selected)))
 	  (lapidary-error "Only the list may be selected when resizing a list.
 Please deselect all other objects and then
-try again")
+try again.")
 	  (inter:abort-interactor inter)
 	  (return-from initialize-list-feedback))
 
@@ -229,7 +229,7 @@ try again")
     (when (eq line-style :none) (setf line-style nil))
     (when *test-debug* (format T "creating ~S; ~s~%" object-type point-list))
     (when (and (line-p object-type) (eq line-style nil))
-	  (lapidary-error "a line must be created with a line-style other than \"none\"")
+	  (lapidary-error "A line must be created with a line-style other than \"none\".")
 	  (return-from create-new-obj))
 
     (setf obj

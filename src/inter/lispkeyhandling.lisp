@@ -152,7 +152,7 @@
 	       (do* ((my-frag frag (opal::frag-prev frag))
 		     (pos frag-pos (opal::frag-length frag)))
 		    ((> pos 0) (schar (opal::frag-string frag) (1- pos)))
-		 (declare (ignore my-frag))))
+		 #-(and) (declare (ignore my-frag)))) ; Declaration is wrong since my-frag gets assigned to.
 	      char)
 	  (if (member prev-char '(#\\ #\-))
 	      (progn

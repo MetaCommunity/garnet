@@ -7,50 +7,44 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; -*- Mode: Lisp; Package: LAPIDARY -*-
-;;;
-#|
-========================================================================
-Change log:
-         8/24/92 Andrew Mickish - Removed declaration of agg-name in
-                   Make-Aggregate.
-         5/22/92 Brad Vander Zanden - fixed ungroup so that it handles
-                   single objects in a-formula-depends-on
-========================================================================
-|#
-;;; This file provides the functions that handle aggregadgets in Lapidary
-;;; Lapidary supports the operations "make aggregate", "ungroup", 
-;;; "send-to-back", and "bring-to-front". Ungroup can only be applied
-;;; to top-level aggregates. This simplifies the handling of link slots,
-;;; as explained below.
-;;;
-;;; Handling of constraints: In lapidary, constraints alway reference
-;;;   other objects indirectly through links. If a constraint references
-;;;   an object in the same aggregadget, the link contains a formula that
-;;;   traverses the aggregate hierarchy to find the object. If a constraint
-;;;   references an object outside the aggregadget, the link directly points
-;;;   at the object (no formula is involved). 
-;;;
-;;; Rationale for ungroup: By only permitting ungroup on top-level
-;;;   aggregadgets, we can avoid having to translate formulas, which
-;;;   is messy and error-prone. Ungroup changes the aggregate hierarchy,
-;;;   and therefore, formulas which traverse the aggregate hierarchy must
-;;;   be translated. The one exception is if the top-level aggregadget
-;;;   is destroyed, since formulas that went through the componets of this
-;;;   aggregadget should be destroyed rather than translated (the components 
-;;;   are no longer part of the same aggregadget, and therefore, links should 
-;;;   point directly at these objects). Destroying formulas is manageable,
-;;;   so ungroup is permitted at the top level (indeed, it is necessary to
-;;;   provide some sort of ungroup!).
-;;;
+;;
+;; $Id$
+
+;; This file provides the functions that handle aggregadgets in
+;; Lapidary Lapidary supports the operations "make aggregate",
+;; "ungroup", "send-to-back", and "bring-to-front". Ungroup can only
+;; be applied to top-level aggregates. This simplifies the handling of
+;; link slots, as explained below.
+;;
+;; Handling of constraints: In lapidary, constraints alway reference
+;;   other objects indirectly through links. If a constraint
+;;   references an object in the same aggregadget, the link contains a
+;;   formula that traverses the aggregate hierarchy to find the
+;;   object. If a constraint references an object outside the
+;;   aggregadget, the link directly points at the object (no formula
+;;   is involved).
+;;
+;; Rationale for ungroup: By only permitting ungroup on top-level
+;;   aggregadgets, we can avoid having to translate formulas, which is
+;;   messy and error-prone. Ungroup changes the aggregate hierarchy,
+;;   and therefore, formulas which traverse the aggregate hierarchy
+;;   must be translated. The one exception is if the top-level
+;;   aggregadget is destroyed, since formulas that went through the
+;;   componets of this aggregadget should be destroyed rather than
+;;   translated (the components are no longer part of the same
+;;   aggregadget, and therefore, links should point directly at these
+;;   objects). Destroying formulas is manageable, so ungroup is
+;;   permitted at the top level (indeed, it is necessary to provide
+;;   some sort of ungroup!).
+;;
 
 (in-package "LAPIDARY")
       
-;;; =====================================================
-;;; add a list of selected objects to an aggregate. if
-;;; the aggregate does not already exist, create it. the
-;;; objects must be at the top-level.
-;;; =====================================================
+;; =====================================================
+;; add a list of selected objects to an aggregate. if
+;; the aggregate does not already exist, create it. the
+;; objects must be at the top-level.
+;; =====================================================
 
 (defun make-aggregate (&optional selected-objects)
   
@@ -60,7 +54,7 @@ Change log:
 
   (when (not selected-objects)
 	(lapidary-error "You must have one or more objects selected
-before creating an aggregate")
+before creating an aggregate.")
 	(return-from make-aggregate))
 
   (let* (new-agg
@@ -69,16 +63,17 @@ before creating an aggregate")
 	 (current-agg-components 
 	  (copy-list (g-value current-agg :components))))
     
-    ; determine if the selected-objects all belong to the top-level aggregate.
-    ; if they don't, print an error message and return
+    ;; determine if the selected-objects all belong to the top-level
+    ;; aggregate. if they don't, print an error message and return
   
     (if (not (top-level-aggregate-p selected-objects))
 	(return-from make-aggregate))
     
-    ;; compute the bounding box of the new aggregate--while computing the
-    ;; bounding box, determine if all of its components have formulas in
-    ;; the :left and :top slots. If they do, then leave the default formula
-    ;; for computing the :left and :top slots in the aggregate
+    ;; compute the bounding box of the new aggregate--while computing
+    ;; the bounding box, determine if all of its components have
+    ;; formulas in the :left and :top slots. If they do, then leave
+    ;; the default formula for computing the :left and :top slots in
+    ;; the aggregate
     (let ((left most-positive-fixnum)
 	  (right 0)
 	  (top most-positive-fixnum)
@@ -120,7 +115,7 @@ before creating an aggregate")
     ;; generate a name for the new object
     (name-lapidary-obj new-agg)
 
-    ; add the aggregate to the children's previous parent
+    ;; add the aggregate to the children's previous parent
     (opal:add-component current-agg new-agg)
 
     ;; add the selected objects to the new aggregate in the order in
@@ -129,29 +124,29 @@ before creating an aggregate")
       (when (member item selected-objects)
 	(lapidary-add-component new-agg item current-agg)))
 
-    ;; if link slots in the selected objects point to each other, insert
-    ;; formulas in the link slots that will reach these objects by 
-    ;; traversing the aggregate hierarchy
+    ;; if link slots in the selected objects point to each other,
+    ;; insert formulas in the link slots that will reach these objects
+    ;; by traversing the aggregate hierarchy
     (install-formulas-in-links (get-all-objects selected-objects))
 
-    ; deselect the selected items and select the new aggregate
+    ;; deselect the selected items and select the new aggregate
     (deselect-objects)
     (primary-select new-agg)
     
     new-agg))
 
-;;; ===================================================== 
-;;; if an object's left, top, width, or height slots
-;;; are unconstrained, constrain them to the aggregate's
-;;; slots so that they maintain their current offsets
-;;; with respect to the aggregate's left, top, width
-;;; and height slots. also recompute the bounding boxes 
-;;; of the components' old and new aggregates 
-;;; ===================================================== 
+;; ===================================================== 
+;; if an object's left, top, width, or height slots
+;; are unconstrained, constrain them to the aggregate's
+;; slots so that they maintain their current offsets
+;; with respect to the aggregate's left, top, width
+;; and height slots. also recompute the bounding boxes 
+;; of the components' old and new aggregates 
+;; ===================================================== 
 
 (defun attach-agg-constraints (aggregate item)
-  ;; only constrain the components if their new aggregate is
-  ;; not the editor aggregate
+  ;; only constrain the components if their new aggregate is not the
+  ;; editor aggregate
   (when (not (eq aggregate (g-value aggregate :window :editor-agg)))
     (if (is-a-line-p item)
 	(progn
@@ -163,11 +158,11 @@ before creating an aggregate")
 		(s-value item :y1-offset (- (g-value item :y1)
 					    (g-value aggregate :top)))
 		(s-value item :x1 (kr::make-into-o-formula
-				   (formula gg::*x1-to-box-left* 0
+				   (formula lapidary-dialogs::*x1-to-box-left* 0
 					   (:links (list :x1-over))
 					   (:offset :x1-offset))))
 		(s-value item :y1 (kr::make-into-o-formula
-				   (formula gg::*y1-to-box-top* 0
+				   (formula lapidary-dialogs::*y1-to-box-top* 0
 					   (:links (list :y1-over))
 					   (:offset :y1-offset)))))
 
@@ -179,11 +174,11 @@ before creating an aggregate")
 		(s-value item :y2-offset (- (g-value item :y2)
 					    (g-value aggregate :top)))
 		(s-value item :x2 (kr::make-into-o-formula
-				   (formula gg::*x2-to-box-left* 0
+				   (formula lapidary-dialogs::*x2-to-box-left* 0
 					   (:links (list :x2-over))
 					   (:offset :x2-offset))))
 		(s-value item :y2 (kr::make-into-o-formula
-				   (formula gg::*y2-to-box-top* 0
+				   (formula lapidary-dialogs::*y2-to-box-top* 0
 					   (:links (list :y2-over))
 					   (:offset :y2-offset))))))
 
@@ -193,7 +188,7 @@ before creating an aggregate")
 	      (s-value item :left-offset
 		       (- (g-value item :left) (g-value aggregate :left)))
 	      (s-value item :left (kr::make-into-o-formula
-				   (formula gg::*left-inside-formula* 0
+				   (formula lapidary-dialogs::*left-inside-formula* 0
 					   (:links (list :left-over))
 					   (:offset :left-offset)))))
 	(when (not (formula-p (get-value item :top)))
@@ -201,7 +196,7 @@ before creating an aggregate")
 	      (s-value item :top-offset
 		       (- (g-value item :top) (g-value aggregate :top)))
 	      (s-value item :top (kr::make-into-o-formula
-				  (formula gg::*top-inside-formula* 0
+				  (formula lapidary-dialogs::*top-inside-formula* 0
 					  (:links (list :top-over))
 					  (:offset :top-offset)))))))))
 #|
@@ -218,14 +213,14 @@ before creating an aggregate")
 		       (- (g-value item :height) (g-value aggregate :height)))
 	      (s-value item :height (formula gg::*height-formula*)))))))
 |#
-;;; ===================================================== 
-;;; remove the components from an aggregate and destroy
-;;; the aggregate
-;;; =====================================================
+;; ===================================================== 
+;; remove the components from an aggregate and destroy
+;; the aggregate
+;; =====================================================
 
 (defun ungroup (&optional (aggregate nil))
 
-  ; determine the aggregates that must be destroyed
+  ;; determine the aggregates that must be destroyed
   (let ((selected-objects (if aggregate
 			      (cons aggregate nil)
 			      (g-value *selection-info* :selected)))
@@ -245,7 +240,7 @@ before creating an aggregate")
 		   (dovalues (inst aggregate :is-a-inv :local t)
 			     (destroy-lapidary-object inst))
 
-		   ;; smash any formulas that are in link slots that 
+		   ;; smash any formulas that are in link slots that
 		   ;; point to objects which will no longer be in the
 		   ;; same aggregadget. these formulas must go through
 		   ;; the :parent slot of one of the top-level
@@ -255,11 +250,11 @@ before creating an aggregate")
 		   ;; needs to have these link slots cleaned out
 		   (dolist (item components)
 		     (dolist (formula (kr::get-dependents item :parent))
-			   (gg:cg-destroy-constraint (kr::on-schema formula)
+			   (lapidary-dialogs:cd-destroy-constraint (kr::on-schema formula)
 					       (kr::on-slot formula)))
 		   
-		   ;; smash any formulas in the position or size slots that
-		   ;; depend on the parent
+		   ;; smash any formulas in the position or size slots
+		   ;; that depend on the parent
 		     (dolist (slot (if (is-a-line-p item)
 				     '(:x1 :x2 :y1 :y2)
 				     '(:left :top :width :height)))
@@ -270,13 +265,13 @@ before creating an aggregate")
 							(kr::a-formula-depends-on value)))
 					      (and (listp depends-on)
 						   (member aggregate depends-on))))
-				   (gg:cg-destroy-constraint item slot)))))
+				   (lapidary-dialogs:cd-destroy-constraint item slot)))))
 		   
 		   ;; remove all formulas in the aggregate's interactors
 		   ;; that depend on the aggregate
 		   (dolist (item (g-value aggregate :behaviors))
 		     (dolist (formula (kr::get-dependents item :operates-on))
-			   (gg:cg-destroy-constraint (kr::on-schema formula)
+			   (lapidary-dialogs:cd-destroy-constraint (kr::on-schema formula)
 					       (kr::on-slot formula))))
 
 
@@ -287,47 +282,49 @@ before creating an aggregate")
 
 		   ;; destroy the aggregate
 		   (destroy-lapidary-object aggregate))
-	       ; else 
-	       ;; signal an error--object is not a top-level aggregate and thus
-	       ;; cannot be ungrouped
-	       (format t "~% object ~S is not a top-level aggregate and thus cannot be ungrouped" aggregate)))
+		 ;; else 
+		 ;; signal an error--object is not a top-level aggregate and thus
+		 ;; cannot be ungrouped
+		 (format t "~% object ~S is not a top-level aggregate and thus cannot be ungrouped" aggregate)))
 	    (t
 	     (lapidary-beeps 1)
 	     (format t "~% object ~S is not an aggregate--it cannot be ungrouped ~%"
 		     aggregate))))))
 					 
 
-;;; ===================================================== 
-;;; bring a component to the front or back of an aggregate
-;;; =====================================================
+;; ===================================================== 
+;; bring a component to the front or back of an aggregate
+;; =====================================================
 
 (defun change-covering-order (where)
 
   (let ((selected-objects (g-value *selection-info* :selected)))
     (when (null selected-objects)
-	  (lapidary-error "You must first select one or more objects")
+	  (lapidary-error "You must first select one or more objects.")
 	  (return-from change-covering-order))
     
     (let* ((aggregate (g-value (car selected-objects) :parent))
 	   (aggregate-components (copy-list (g-value aggregate :components))))
     
-    ; if there is only one selected object, we can simply move the
-    ; object to the front of the aggregate; otherwise we have to
-    ; move objects in the order in which they appear in the aggregate
+      ;; if there is only one selected object, we can simply move the
+      ;; object to the front of the aggregate; otherwise we have to
+      ;; move objects in the order in which they appear in the
+      ;; aggregate
     
     (cond ((null (cdr selected-objects))
 	     (opal:move-component aggregate (car selected-objects) 
 				  :where where))
 	  
 	  (t
-	   ; determine if the selected-objects all belong to the same aggregate.
-	   ; if they don't, print an error message and return
+	   ;; determine if the selected-objects all belong to the same
+	   ;; aggregate. if they don't, print an error message and
+	   ;; return
 	   
 	   (when (not (same-aggregate-p aggregate selected-objects))
 	       (return-from change-covering-order))
 	   
-	   ; send the selected objects to the front of the aggregate in the
-	   ; order that they appear in the aggregate
+	   ;; send the selected objects to the front of the aggregate
+	   ;; in the order that they appear in the aggregate
 	   
 	   (dolist (item (if (eq where :front)
 			     aggregate-components
@@ -336,9 +333,9 @@ before creating an aggregate")
 	       (opal:move-component aggregate item :where where))))))))
 
 #|
-;;; =====================================================
-;;; add a list of selected objects to an aggregate.
-;;; =====================================================
+;; =====================================================
+;; add a list of selected objects to an aggregate.
+;; =====================================================
 
 (defun lapidary-add-components ()
   
@@ -472,38 +469,37 @@ before creating an aggregate")
 
 (defun top-level-aggregate-p (objects)
   (let ((agg (g-value (car objects) :window :editor-agg)))
-    (cond ((not (subsetp objects (g-value agg :components)))
-	 (lapidary-error "The selected objects must all
-belong to the top-level aggregate but they do not")
-	 nil)
-	(t t))))
+    (cond ((subsetp objects (g-value agg :components)) t)
+	  (t (lapidary-error "The selected objects must all
+belong to the top-level aggregate but they do not") ; XXX which ones do not?
+	     nil))))
 
-;;; ===================================================== 
-;;; determine if a group of items belong to the same
-;;; aggregate. If they don't, beep three times and print
-;;; an error message.
-;;; =====================================================
+
+;; ===================================================== 
+;; determine if a group of items belong to the same
+;; aggregate. If they don't, beep three times and print
+;; an error message.
+;; =====================================================
 
 (defun same-aggregate-p (aggregate objects)
   (cond ((not (subsetp objects (g-value aggregate :components)))
+	 ;; XXX Which ones cause the problem?
 	 (lapidary-error "The selected objects must all
 belong to the same aggregate but they do not")
 	 nil)
 	(t t)))
 
-;;; =========================================================
-;;; move a component from the aggregate it currently
-;;; belongs to to the specified aggregate. The object's old
-;;; aggregate must be passed in because if the object
-;;; is an instance of a prototype, and the prototype and
-;;; the object both are being added to the new aggregate, and
-;;; the prototype is removed from the old aggregate before
-;;; the object, than the object will be removed when the
-;;; prototype is removed and thus will no longer belong
-;;; to the old aggregate. Thus to ensure that we know which
-;;; aggregate an object belonged to, we must pass in the
-;;; old aggregate.
-;;; =========================================================
+;; =========================================================
+;; move a component from the aggregate it currently belongs to to the
+;; specified aggregate. The object's old aggregate must be passed in
+;; because if the object is an instance of a prototype, and the
+;; prototype and the object both are being added to the new aggregate,
+;; and the prototype is removed from the old aggregate before the
+;; object, than the object will be removed when the prototype is
+;; removed and thus will no longer belong to the old aggregate. Thus
+;; to ensure that we know which aggregate an object belonged to, we
+;; must pass in the old aggregate.
+;; =========================================================
 
 (defun lapidary-add-component (agg item old-agg &key (where nil) (behind nil))
 
@@ -529,10 +525,10 @@ belong to the same aggregate but they do not")
   (attach-agg-constraints agg item))
 
 
-;;; =========================================================
-;;; remove any links in item that point to agg (the links 
-;;; old parent)
-;;; =========================================================
+;; =========================================================
+;; remove any links in item that point to agg (the links 
+;; old parent)
+;; =========================================================
 
 (defun remove-agg-formulas (agg item)
   (doslots (slot item)
@@ -541,10 +537,10 @@ belong to the same aggregate but they do not")
 		 (destroy-slot item slot))))
 
 
-;;; =================================================================
-;;; return a list of all components in the passed objects, including 
-;;; the objects themselves
-;;; =================================================================
+;; =================================================================
+;; return a list of all components in the passed objects, including 
+;; the objects themselves
+;; =================================================================
 (defun get-all-objects (objs)
   (let (components)
     (dolist (obj objs)
@@ -555,12 +551,12 @@ belong to the same aggregate but they do not")
 	    (push obj components))
     components))
 
-;;; =================================================================
-;;; Examine the link slots in each of the passed objects. If a link
-;;; slot references another of the passed objects, place a formula
-;;; in the slot that traverses the aggregate hierarchy in order to 
-;;; reach the object it references
-;;; =================================================================
+;; =================================================================
+;; Examine the link slots in each of the passed objects. If a link
+;; slot references another of the passed objects, place a formula
+;; in the slot that traverses the aggregate hierarchy in order to 
+;; reach the object it references
+;; =================================================================
 
 (defun install-formulas-in-links (objs)
   (declare (special save-time-do-not-dump-slots))

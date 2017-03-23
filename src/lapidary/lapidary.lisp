@@ -64,16 +64,16 @@
   (text-do-go)
   (create-object-do-go)
   (format t "Setting up box constraint menus~%")
-  (gg:box-constraint-do-go)
+  (lapidary-dialogs:box-constraint-do-go)
   (format t "Setting up line constraint menus~%")
-  (gg:line-constraint-do-go)
+  (lapidary-dialogs:line-constraint-do-go)
 
   ;; connect lapidary to the constraint gadget
-  (s-value gg::*constraint-gadget* :obj-to-constrain 
+  (s-value lapidary-dialogs::*constraint-dialog* :obj-to-constrain 
 	   (o-formula (car (gv lapidary::*selection-info* :p-selected))))
-  (s-value gg::*constraint-gadget* :obj-to-reference 
+  (s-value lapidary-dialogs::*constraint-dialog* :obj-to-reference 
 	   (o-formula (car (gv lapidary::*selection-info* :s-selected))))
-  (s-value gg::*constraint-gadget* :top-level-agg 
+  (s-value lapidary-dialogs::*constraint-dialog* :top-level-agg 
 	   (o-formula (gvl :obj-to-constrain :window :editor-agg)))
 ;  (box-constraint-do-go)
 ;  (line-constraint-do-go)

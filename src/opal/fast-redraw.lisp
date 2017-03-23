@@ -105,8 +105,9 @@
 	 (line-style (aref update-vals +line-lstyle+))
 	 (projecting-p (when line-style
 			 (eq (g-value line-style :cap-style) :projecting)))
-	 (line-thickness (q-max 1 (and line-style
-				       (g-value line-style :line-thickness))))
+	 (line-thickness (q-max 1 (or (and line-style
+					   (g-value line-style :line-thickness))
+				      0)))
 	 (lt/2 (floor line-thickness 2))
 	 (left (- (q-min x1 x2)
 		  (if projecting-p line-thickness lt/2)))
@@ -137,8 +138,9 @@
   (let* ((update-vals (g-local-value obj :update-slots-values))
 	 (point-list (aref update-vals +multi-point-list+))
 	 (line-style (g-value obj :line-style))
-	 (line-thickness (q-max 1 (and line-style
-				       (g-value line-style :line-thickness))))
+	 (line-thickness (q-max 1 (or (and line-style
+					   (g-value line-style :line-thickness))
+				      0)))
 	 (2lt (* line-thickness 2)) (4lt (* line-thickness 4))
 	 (left (do ((min-x 9999)
 		    (point point-list (cddr point)))

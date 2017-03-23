@@ -21,8 +21,10 @@
 ;;
 
 (defun fixed-path-accessor (schema slots path-number)
+  (declare (fixnum path-number))
   (let* ((current (a-formula-path *current-formula*))
 	 (length (length current)))
+    (declare (fixnum length))
     (or (and (< path-number length)
 	     (elt current path-number))
 	(progn
@@ -513,7 +515,6 @@ accessing slots until the end of the link."
 	  (setf schema *schema-self*))
 	;; There was no schema.  If we are in the middle, this is a broken link.
 	(when (cdr s)
-
 	  (return (broken-link-throw schema (car s))))))
   schema)
 

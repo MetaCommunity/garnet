@@ -64,7 +64,7 @@ MCL 3.0 and greater  ***
     (create-instance 'TOP-WIN inter:interactor-window
        (:left 500) (:top 100)
        (:double-buffered-p double-buffered-p)
-       (:width 300) (:height 200)
+       (:width 350) (:height 200)
        (:title "GARNET Animator Demo")
        (:icon-title "Animator"))
     (s-value top-win :aggregate
@@ -95,17 +95,22 @@ MCL 3.0 and greater  ***
 		     (:width 30)(:height 30)
 		     (:obj-to-change wrapping-circle)
 		     (:x-inc -2)(:y-inc 3)
-		     (:timer-repeat-wait 0.1)) ;seconds
+		     (:timer-repeat-wait 0.1) ;seconds
+;;		     (:timer-repeat-wait 0.05) ;seconds
+		     ) 
 		     
     (create-instance 'animator-button inter:animator-bounce
 		     (:window TOP-WIN)
 		     (:x-inc 5)(:y-inc 5)
-		     (:timer-repeat-wait 0.25))
+		     (:timer-repeat-wait 0.25)
+;;		     (:timer-repeat-wait 0.125)
+		     )
 
     (create-instance 'animator-pixmap inter:animator-interactor
 		     (:window TOP-WIN)
 		     (:moving-right T)
 		     (:timer-repeat-wait 0.1)
+;;		     (:timer-repeat-wait 0.05)
 		     (:timer-handler
 		      #'(lambda(inter)
 			  (let ((moving-right (g-value inter :moving-right))

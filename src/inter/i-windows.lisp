@@ -54,6 +54,7 @@
 
 ;; Just a wrapper around Transcript-Events-To-File to supply defaults.
 (defun Transcribe-Session ()
+  "A wrapper around Transcript-Events-To-File to supply defaults."
   (let ((transcript-pathname (merge-pathnames *Garnet-Default-Transcript-Filename*))
 	(window-list opal:*garnet-windows*))
     (format t "Transcribing session to ~A~%" transcript-pathname)
@@ -61,7 +62,15 @@
     (format t "Transcription session finished at ~A~%" (time-to-string))))
 
 (defun Transcript-Events-To-File (filename window-list &key (motion T)
-					   (if-exists :supersede))
+							 (if-exists :supersede))
+  "Transcribe events to file for replay.
+Arguments:
+
+     filename    --- file to save the event transcriptions
+     window-list --- list of windows and subwindows to transcribe
+     motion      --- transcribe motion events (default T)
+     if-exists   --- as in the OPEN function. Default: SUPERSEDE."
+  
   (when *trans-to-file* (error "Already transcripting to ~s" *trans-to-file*))
   (when *trans-from-file* (error "Can't send to a file when events from a file: ~s"
 				 *trans-from-file*))
@@ -335,8 +344,8 @@
 
 (define-method :update interactor-window (window &optional (total nil))
   (opal::update-method-window window total) ; just call directly rather
-  ;; than using call-prototype-method
-  (Check-and-handle-changed-inters)	; if any interactors need fixing
+					    ; than using call-prototype-method
+  (Check-and-handle-changed-inters)	    ; if any interactors need fixing
   ;; next make sure event mask is set correctly
   (let ((drawable (get-local-value window :drawable))
 	(event-mask (get-local-value window :event-mask))
@@ -346,7 +355,7 @@
 	(new-modal-and-visible (and (g-value window :modal-p)
 				    (Win-Visible window))))
 
-    ;;; handle when window changes :visible and :modal-p
+    ;; handle when window changes :visible and :modal-p
     (unless (eq old-modal-and-visible new-modal-and-visible)
       (s-value window :old-modal-and-visible new-modal-and-visible)
       (if new-modal-and-visible		; then becoming modal and visible
@@ -647,7 +656,8 @@
 	#+allegro mp:*current-process*
 	#+(and cmu mp) mp:*current-process*
 	#+sb-thread sb-thread:*current-thread*
-	#-(or allegro sb-thread (and cmu mp)) NIL)
+	#+ccl ccl:*current-process*
+	#-(or allegro sb-thread ccl (and cmu mp)) NIL)
   (gem:event-handler root-window NIL))
 
 
@@ -707,7 +717,27 @@ by the protected-eval code."
 	     (default-event-handler
 		 (g-value gem:DEVICE-INFO :current-root)))
 	  ))))
-  
+
+;;;
+;; This implements modal windows. It does so as follows.
+;;
+;; 1. If the main event loop process is running in another process,
+;;    kill it so we have exclusive control of event handling.
+;; 2. Raise the modal window if supplied.
+;; 3. Start an event loop that has a catch tag called
+;;    EXIT-WAIT-INTERACTION-COMPLETE.
+;; 4. The modal window pops up and when the user performs whatever
+;;    action required, the final function calls INTERACTION-COMPLETE,
+;;    which throws to the EXIT-WAIT-INTERACTION-COMPLETE tag.
+;;
+;; XXX FMG There is a reference count that is supposed to prevent
+;; throwing to the EXIT-WAIT-INTERACTION-COMPLETE tag if not waiting.
+;; This seems to be fragile. This whole approach is actually a
+;; home-grown implementation of JOIN, and probably a better approach
+;; using PROCESS-WAIT should be implemented. Unfortunately that's a
+;; big job....
+;;
+
 (defun Wait-Interaction-Complete (&optional window-to-raise)
   "Processes events, but this procedure does not exit unless the
   Interaction-Complete procedure is called.  The value returned by

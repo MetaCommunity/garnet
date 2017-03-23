@@ -24,21 +24,21 @@
 	(opal:destroy MOVE-GROW-INTER-AGG)))
 
 (defmacro MOVE-GROW-START-WHERE ()
-  `(g-value MOVE-GROW-INTER-MENU :start-where))
+  `(g-value MOVE-GROW-INTER-DIALOG :start-where))
 (defmacro MOVE-GROW-OBJ-PROTOTYPES ()
-  `(g-value MOVE-GROW-INTER-MENU :prototype-objs :obj-prototypes))
+  `(g-value MOVE-GROW-INTER-DIALOG :prototype-objs :obj-prototypes))
 (defmacro MOVE-GROW-FEEDBACK-PROTOTYPES ()
-  `(g-value MOVE-GROW-INTER-MENU :prototype-objs :feedback-prototypes))
+  `(g-value MOVE-GROW-INTER-DIALOG :prototype-objs :feedback-prototypes))
 (defmacro MOVE-GROW-FEEDBACK-OBJ ()
-  `(g-value MOVE-GROW-INTER-MENU :feedback-obj))
+  `(g-value MOVE-GROW-INTER-DIALOG :feedback-obj))
 (defmacro MOVE-GROW-GROW-PARM ()
-  `(g-value MOVE-GROW-INTER-MENU :grow-parm))
+  `(g-value MOVE-GROW-INTER-DIALOG :grow-parm))
 (defmacro MOVE-GROW-MOVE-PARM ()
-  `(g-value MOVE-GROW-INTER-MENU :move-parm))
+  `(g-value MOVE-GROW-INTER-DIALOG :move-parm))
 (defmacro MOVE-GROW-OTHER-BOX ()
-  `(g-value MOVE-GROW-INTER-MENU :start-where :contents :other-box))
+  `(g-value MOVE-GROW-INTER-DIALOG :start-where :contents :other-box))
 (defmacro MOVE-GROW-OTHER-BUTTON ()
-  `(g-value MOVE-GROW-INTER-MENU :start-where :contents :other-button))
+  `(g-value MOVE-GROW-INTER-DIALOG :start-where :contents :other-button))
 
 ;;; determine which slots in the feedback object and the objects that
 ;;; the interactor operates on should be tied to the :box slot
@@ -95,7 +95,7 @@
 
 ;;;    :start-where is in an aggregate of items
 (defun MOVE-GROW-ONE-THIS-AGG-FN (agg-box button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (declare (ignore agg-box))
   (let ((selection (car (g-value *SELECTION-INFO* :selected)))
 	(start-where (MOVE-GROW-START-WHERE)))
@@ -115,7 +115,7 @@
 
 ;;;    :start-where is in a single object
 (defun MOVE-GROW-OBJ-PRESS-OVER-FN (obj-box button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (declare (ignore obj-box))
   (let ((selection (car (g-value *SELECTION-INFO* :selected)))
 	(start-where (MOVE-GROW-START-WHERE)))
@@ -133,7 +133,7 @@
 	  (s-value start-where :type nil)))))
 
 (defun move-grow-obj-prototypes-fn (inter button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (declare (ignore inter button-label))
   (let ((selection (g-value *SELECTION-INFO* :selected)))
     (if selection
@@ -149,7 +149,7 @@
 	  (s-value (MOVE-GROW-OBJ-PROTOTYPES) :value nil)))))
 
 (defun move-grow-feedback-prototypes-fn (inter button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (declare (ignore inter button-label))
   (let ((selection (g-value *SELECTION-INFO* :selected)))
     (if selection
@@ -186,7 +186,7 @@
 (defun grow-parms-final-fn (gadget value)
   (if (string= value "<Formula>")
       (progn
-	(lapidary-error (format nil "~%the formula must return a value that is valid for :slots-to-set"))
+	(lapidary-error (format nil "~%The formula must return a value that is valid for :slots-to-set."))
 	(create-custom-inter-constraint (g-value gadget :window :inter) 
 					:grow-box-parms 
 					'*move-grow-inter-queue*))
@@ -202,7 +202,7 @@
 (defun move-parms-final-fn (gadget value)
   (if (string= value "<Formula>")
       (progn
-	(lapidary-error (format nil "~%the formula must return a value that is valid for :slots-to-set"))
+	(lapidary-error (format nil "~%The formula must return a value that is valid for :slots-to-set."))
 	(create-custom-inter-constraint (g-value gadget :window :inter) 
 					:move-box-parms 
 					'*move-grow-inter-queue*))
@@ -232,13 +232,13 @@
     ;; first make sure that there is a selection and that it is
     ;; a member of the objects acted on by this interactor
     (when (null obj-to-change)
-	  (lapidary-error "Must select an object to change")
+	  (lapidary-error "Must select an object to change.")
 	  (return-from move-grow-infer-obj-to-change))
 
     (setf start-where (get-start-where *move-grow-inter-queue*
 				       (g-value gadget :window :inter)))
     (when (eq start-where :not-supplied)
-	  (lapidary-error "Must supply a start-where before selecting an object to change")
+	  (lapidary-error "Must supply a start-where before selecting an object to change.")
 	  (return-from move-grow-infer-obj-to-change))
     (multiple-value-setq (parent children)
 			 (find-start-where-objs-for-obj-to-change start-where))
@@ -356,7 +356,7 @@
 	   (values nil nil)))))
 					
 (defun MOVE-GROW-OBJ-TO-CHANGE-FN (panel value)
-  (declare (special move-grow-inter-menu lapidary-query-gadget))
+  (declare (special move-grow-inter-dialog lapidary-query-gadget))
   (s-value (g-value panel :parent) :value value) 
   (cond ((string= value "<Formula>")
 	 (create-custom-inter-constraint (g-value panel :window :inter) 
@@ -369,7 +369,7 @@
 	       ;; first make sure that there is a selection and that it is
 	       ;; a member of the objects acted on by this interactor
 	   (when (null obj-to-change)
-		 (lapidary-error "Must select an object to change")
+		 (lapidary-error "Must select an object to change.")
 		 (return-from move-grow-obj-to-change-fn))
 
 	   (setf formula (move-grow-infer-obj-to-change panel value))
@@ -417,13 +417,13 @@ start-where objects.")
 		      *MOVE-GROW-INTER-QUEUE*))))
   
 (defun MOVE-GROW-FEEDBACK-OBJ-FN (feedback-obj-box button-label)
-  (declare (special move-grow-inter-menu *selection-info*))
+  (declare (special move-grow-inter-dialog *selection-info*))
   (let ((selection (g-value *SELECTION-INFO* :selected)))
     (cond ((null selection)
 	   (s-value (MOVE-GROW-FEEDBACK-OBJ) :field-string nil)
 	   (s-value (MOVE-GROW-FEEDBACK-OBJ) :value nil)
 	   (lapidary-error "please make a selection, then press the
-interim feedback button again"))
+interim feedback button again."))
 	((null (cdr selection)) ; only one selection
 	 (s-value (MOVE-GROW-FEEDBACK-OBJ) :field-string
 		  (name-for-schema (car selection)))
@@ -441,14 +441,14 @@ interim feedback button again"))
 				     '*move-grow-inter-queue*)))))
 
 (defun MOVE-GROW-NIL-FEEDBACK-OBJ-FN (button button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (declare (ignore button))
   (dialog-enqueue :feedback-obj NIL *MOVE-GROW-INTER-QUEUE*)
   (s-value (MOVE-GROW-FEEDBACK-OBJ) :field-string nil)
   (s-value (MOVE-GROW-FEEDBACK-OBJ) :value button-label))
 
 (defun MOVE-GROW-FORMULA-FEEDBACK-OBJ-FN (button button-label)
-  (declare (special move-grow-inter-menu))
+  (declare (special move-grow-inter-dialog))
   (create-custom-inter-constraint (g-value button :window :inter) 
 				  :feedback-obj
 				  '*MOVE-GROW-INTER-QUEUE*)

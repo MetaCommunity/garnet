@@ -13,11 +13,11 @@
 (in-package "GARNET-DEBUG")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (export '(explain-short explain-slot explain-nil
-	    fix-up-window flash ident invert 
-	    is-a-tree kids look look-inter 
-	    uninvert what where #-apple windows break-on-slot-set
-	    notify-on-slot-set clear-slot-set call-func-on-slot-set)))
+  (export '(Explain-Short Explain-Slot Explain-Nil
+	    Fix-Up-Window FLASH IDENT INVERT 
+	    Is-A-Tree KIDS LOOK Look-Inter 
+	    UNINVERT WHAT WHERE #-apple WINDOWS Break-On-Slot-Set
+	    Notify-On-Slot-Set Clear-Slot-Set Call-Func-On-Slot-Set)))
 
 
 (defvar flash-object)
@@ -29,7 +29,7 @@
 ;;
 (defun blink-rectangle (number-of-blinks win agg left top width height)
   "Used to flash objects."
-  (declare (ignore agg))
+  #-(and) (declare (ignore agg))
   (let ((window (g-value win :drawable)))
     (unless window
       (format t "No :drawable for ~A~%" win)
@@ -95,7 +95,7 @@
 
 ;; EXPLAIN-SHORT -- tell what a slot depends upon
 ;;
-(defun explain-short (object slot)
+(defun Explain-Short (object slot)
   "Explains the dependencies of a slot."
   (explain-slot object slot 0 nil 2))
 
@@ -106,7 +106,7 @@
 
 ;; EXPLAIN-SLOT -- tell why a slot has a value
 ;;
-(defun explain-slot (object slot
+(defun Explain-Slot (object slot
 		     &optional
 		       (indent 0)
 		       (use-inverse-method nil) 
@@ -179,7 +179,7 @@
 
 ;; EXPLAIN-NIL -- why did the update fail?
 ;;
-(defun explain-nil ()
+(defun Explain-Nil ()
   "Explain why an update failed."
   (let (schema
 	slot)

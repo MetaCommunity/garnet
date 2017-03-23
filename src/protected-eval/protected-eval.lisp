@@ -205,11 +205,11 @@ should never return."
     (when allow-debugger
       (setq option-list (cons '(:Debug . "Invoke LISP debugger.") option-list)))
     (when use-restart
-      (setq option-list (cons (cons :use-value use-restart) option-list)))
+      (setq option-list (cons `(:use-value ,use-restart) option-list)))
     (when store-restart
-      (setq option-list (cons (cons :store-value store-restart) option-list)))
+      (setq option-list (cons `(:store-value ,store-restart) option-list)))
     (when continue-restart
-      (setq option-list (cons (cons :continue continue-restart) option-list)))
+      (setq option-list (cons `(:continue ,continue-restart) option-list)))
     (format *debug-io* "While ~A~& I generated the error~&~A~%"
 	    context condition)
     (loop
@@ -268,11 +268,11 @@ the option of invoking the debugger."
     (when allow-debugger
       (setq option-list (cons '(:Debug "Invoke LISP debugger.") option-list)))
     (when use-restart
-      (setq option-list (cons (list :use-value use-restart) option-list)))
+      (setq option-list (cons `(:use-value ,use-restart) option-list)))
     (when store-restart
-      (setq option-list (cons (list :store-value store-restart) option-list)))
+      (setq option-list (cons  `(:store-value ,store-restart) option-list)))
     (when continue-restart
-      (setq option-list (cons (list :continue continue-restart) option-list)))
+      (setq option-list (cons  `(:continue ,continue-restart) option-list)))
     (loop
        (setq option
 	     (with-normal-cursor
@@ -591,13 +591,13 @@ test fails, the user is prompted again."
 	 (apply #'Display-prompt-and-Wait Error-Prompter-Gadget
 		(format nil "~A" prompt)
 		:eval? allow-eval?
-		(if dv? (list :default-value default-value) '()))))
+		(if dv? `(:default-value ,default-value) '()))))
      (unless (eq flag :ABORT)
        (if eval-input?
 	   (multiple-value-setq (val flag)
 	     (apply #'garnet-protected-eval form 
 		    :local-abort local-abort :abort-val abort-val
-		    (if dv? (list :default-value default-value) '())))
+		    (if dv? `(:default-value ,default-value) '())))
 	   (setq val form)))
      (if (eq flag :ABORT)
 	 (if local-abort (return-from do-prompt (values abort-val :ABORT)))

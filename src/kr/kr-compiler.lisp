@@ -17,6 +17,7 @@
 
 (defvar *debug-kr-mode* nil)
 
+#+(and)
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (proclaim
    (if *debug-kr-mode*
@@ -25,6 +26,12 @@
        ;; Global default settings.
        (and (boundp 'Default-Garnet-Proclaim) 
 	    Default-Garnet-Proclaim))))
+
+#-(and)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim '(optimize (speed 3) (safety 0) (debug 1) (compilation-speed 0))))
+
+
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-KR-Pathname))

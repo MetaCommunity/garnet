@@ -320,6 +320,6 @@ Change log:
 	  (gilt::standard-cancel-function (g-value gadget :parent))
 
 	  ;; get the custom constraint
-	  (gg:c32 (car selected) slot))
+	  (lapidary-dialogs:c32 (car selected) slot))
         ;; else there is no selection--deselect the constraint button
         (s-value gadget :selected nil))))
