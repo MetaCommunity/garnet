@@ -137,70 +137,24 @@
 
 ;;; Verify-Binding implementation
 ;;
-
-;; Keep --- a demo uses this
-(defun VERIFY-BINDING (string)
-  "Takes a string and returns the symbol coercion of the string if the
-symbol is bound.  Note: The suffix of the string is converted to all
-uppercase characters before checking if it is bound in the package."
-  (let ((result-1 (verify-binding-aux string 0)))
-    (when result-1
-      (let* ((colon-p (first result-1))
-	     (prefix (second result-1))
-	     (symbol-1 (values (read-from-string prefix)))
-	     (index (third result-1)))
-	(declare (fixnum index))
-	(when colon-p
-	  ;; Then symbol-1 indicates a package name
-	  (when (find-package symbol-1)
-	    ;; Then symbol-1 is a valid package name
-	    (let ((result-2 (verify-binding-aux string (+ 1 index))))
-	      (when result-2
-		;; Then suffix indicates a var in the package symbol-1
-		(let* ((suffix (string-upcase (second result-2)))
-		       (access-internal-p (fourth result-2)))
-		  (multiple-value-call
-		      #'(lambda (symbol-2 access)
-			  (if symbol-2
-			      (if (or (eq access :external)
-				      access-internal-p)
-				  ;; verify that symbol-2 is not a function
-				  (when (boundp symbol-2) 
-				    (values (read-from-string string)))
-				  )))
-		    (find-symbol suffix symbol-1))))))
-	  ;; Then symbol indicates a var in the working package
-	  (when (and (not (numberp symbol-1)) (boundp symbol-1)) symbol-1))))))
-
-
-
-
-(defun VERIFY-BINDING-AUX (string start)
-  "Split the string at the colon(s) to return either the package name 
-or the symbol name if called where the first character is a colon."
-  (declare (simple-string string)
-	   (fixnum start))
-  (let ((str-len (length string)))
-    (when (> str-len start)
-      ;; Skip second colon if there is a double colon between package and var
-      (let ((access-internal-p (when (and (char= (char string start) #\:)
-                                          (/= start 0))
-                                 (incf start))))
-        ;; Abort if a special character begins the string
-        (unless (or (char= (char string start) #\:)
-                    (char= (char string start) #\#))
-          ;; Return the part of the string up to but not including the colon
-          ;; and the index of the last character checked
-          ;; FMG --- Just use lisp utilities to do this stuff.
-          (let* ((colon (position #\: string :start start :test #'char=))
-                 (new-string (subseq string start colon)))
-            (values (not (null colon)) 
-		    new-string
-		    (or colon (1- str-len)) 
-		    access-internal-p)))))))
-
-;;;
-;;; (end) Verify-Binding
+;; Right now only used by demo-schema-browser.
+(defun verify-binding (string)
+  "Look up string as symbol name. Return symbol if the symbol is found
+  and bound. Note that if the symbol name does not have a package
+  prefix, it will be looked up in the \"current package\"."
+  (declare (simple-string string))
+  (let* ((upstring (string-upcase string))
+	 (package-name
+	  (let ((colon-start (position #\: upstring)))
+	    (if colon-start
+		(subseq upstring 0 colon-start)
+		(package-name *package*))))
+	 (symbol-name
+	  (let ((colon-end (position #\: upstring :from-end t)))
+	    (subseq upstring (if colon-end (1+ colon-end) 0))))
+	 (symbol (find-symbol symbol-name (find-package package-name))))
+    (and symbol (boundp symbol) symbol)))
+    
 
 (defun safe-functionp (fn)
   (or (functionp fn)
