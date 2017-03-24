@@ -56,6 +56,53 @@
 ;; because spaces that are garbage and spaces that are data tend to look
 ;; similar.
 
+;;;;
+;; "XPM3" format
+;;
+;; Adds hot spot, symbolic color names etc.
+;;
+;; Format looks like this (from Wikipedia):
+;;
+;; static char* <variable_name>[] = {
+;; <Values>
+;; <Colors>
+;; <Pixels>
+;; <Extensions>
+;; };
+;;
+;; 
+;;
+;;  Example XPM3 file:
+;;
+;; /* XPM */
+;; static char * roundb_xpm[] = {
+;; /* <Values>: width height ncolors cpp [x_hot y_hot] */
+;; "13 13 5 2 7 7",
+;; /* <Colors> */
+;; "  s none	m none	c none",
+;; ". s topShadowColor m white c lightblue",
+;; "X s iconColor1 m black c black",
+;; "o s bottomShadowColor m black c #646464646464",
+;; "O s selectColor m white c red",
+;; /* <Pixels> */
+;; "                          ",
+;; "          . . .           ",
+;; "      . . X X X o o       ",
+;; "    . X X X X X X X o     ",
+;; "    . X X X X X X X o     ",
+;; "  . X X X X O X X X X o   ",
+;; "  . X X X O O O X X X o   ",
+;; "  . X X X X O X X X X o   ",
+;; "    . X X X X X X X o     ",
+;; "    . X X X X X X X o     ",
+;; "      o o X X X o o       ",
+;; "          o o o           ",
+;; "                          "
+;; /* <Extensions> (none in this case) */
+;; }; 
+;;
+
+
 
 (defun read-xpm-file (pathname &optional root-window)
   (declare (type (or pathname string stream) pathname))

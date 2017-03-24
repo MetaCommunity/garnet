@@ -1,38 +1,20 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base:
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 
 
-;;; This file contains the commands to allow the text interactor's keyboard
-;;; bindings to be changed.
-;;; This should be loaded before Textinter.
+;;;; This file contains the commands to allow the text interactor's
+;;;  keyboard bindings to be changed.
 ;;;
-;;; Designed and implemented by Brad A. Myers
+;;;  This should be loaded before Textinter.
+;;;
+;;;  Designed and implemented by Brad A. Myers
 
-#|
-============================================================
-Change log:
-         6/15/93 Brad Myers - safe-functionp
-         5/26/93 Mickish/Goldberg - Fixed get-or-make-local-key-table to copy
-                   both standard and lisp translation tables
-         3/19/93 Brad Myers - added ^k and ^o
-        12/24/92 Brad Myers - allow binding of mouse events
-	 3/20/92 Ed Pervin - Changed all control characters to keywords,
-				got rid of those :num-pad keywords.
-         1/21/92 Ed Pervin - adjusted for CMUCL on Sparc
-	 3/27/91 Greg Sylvain - adjusted for kcl
-	 8/22/90 Brad Myers - remove #+cmu #\leftarrow kinds of things
-	 4/9/90 Pervin/Cook - changed eq to eql
-         4/9/90 Brad Myers - New functions: Unbind-All-Keys, Insert-Text-Into-String
-         3/14/90 Brad Myers - Created.
-============================================================
-|#
 
 (in-package "INTERACTORS")
 

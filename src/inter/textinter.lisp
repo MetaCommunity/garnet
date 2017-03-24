@@ -1,13 +1,11 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 
 ;;; This file contains the mouse and keyboard interactors to input an
 ;;; edited line of text.
@@ -15,67 +13,7 @@
 ;;;
 ;;; Designed and implemented by Brad A. Myers
 
-#|
-============================================================
-Change log:
-
- 1/18/93  Brad Myers - stop when press outside object, unless
-             :button-outside-stop? is NIL (default T)
- 1/12/93  Brad Myers - made more robust when :continuous NIL
-07/14/92  Brad Myers - fixed bug in auto-scroll call
-06/19/92  Rajan Parthasarathy - Added auto-scroll
-06/4/92   Brad Myers - added :input-filter like movegrow.  Used when create
-                    new object (feedback object)
-04/01/92  Andrew Mickish - kr::*debug-switch* ---> #-garnet-debug
-03/18/92  Ed Pervin - Changed all control characters to keywords.
-02/24/92  Andrew Mickish - Replaced previous s-value's of :visible slot with
-            s-value's of :obj-over slot
-02/12/92  Andrew Mickish - Removed s-value of :visible slot
-01/21/92  Ed Pervin - Changes for CMUCL on Sparc
-03/26/91  Greg Sylvain - changes for kcl
-10/11/90  Brad Myers - added explicit Stop-Interactor code
-06/18/90  Brad Myers - When starts, sets feedback-obj's :obj-over slot
-06/01/90  Brad Myers - change so edit function is a method
-03/14/90  Brad Myers - change to new key translation mechanism -- much code
-            moved to textkeybindings.lisp
-03/07/90  Brad Myers - Allow change of cursor position using the mouse while
-            editing; ^C copies string to X cut buffer; ^W does delete-back-
-            word; added new function Insert-Text-Into-String
-12/11/89  Brad Myers - Fixed translate-event so no errors for uparrow, etc.
-            on Sun
-11/01/89  Ed Pervin - Altered Translate-event to handle symbol characters like
-            :leftarrow on Sun.  Beep now beeps on Sun.
-10/05/89  Brad Myers - Added Final-Function;  Removed :new-obj-over
-            (use :first-obj-over)
-10/04/89  Roger Dannenberg - Change debugging output
-09/22/89  Brad Myers - Made more robust when :start-where = T
-09/11/89  Brad Myers - Fixed for multi-line text
-08/14/89  Brad Myers - Fixed for multiple priority levels
-07/27/89  Brad Myers - Cursor goes where press by default
-06/26/89  Brad Myers - Fixed to have quote for create-schema; changed to have
-            obj-to-change
-06/19/89  Brad Myers - Copy cut buffer into string if use ^y or INSERT
-06/07/89  Brad Myers - Fixed to work with lucid lisp also
-05/30/89  Brad Myers - Call-method -> kr-send; allow running-where to be set
-            after initialized
-04/20/89  Brad Myers - schema-call -> call-method
-04/14/89  Brad Myers - fixed self-deactivate
-04/07/89  Brad Myers and Dario Giuse - fixed for new KR
-03/01/89  Brad Myers - radically change behavior
-02/10/89  Lynn Baumeister - added do-xxx and text-int-xxx funcs
-01/09/89  Lynn Baumeister - made sure that top 3 funcs worked
-11/29/88  Brad Myers - started
-
-
-============================================================
-|#
-
 (in-package "INTERACTORS")
-
-;;;============================================================
-;;;============================================================
-;;;============================================================
-
 
 ;;;============================================================
 ;;; Helper procedures for the default procedures to go into the slots
@@ -88,8 +26,6 @@ Change log:
 ;;;        so have to disallow them
 
 
-
- 
 ;; edit either the feedback object or the main object
 (defun obj-or-feedback-edit (an-interactor obj-over feedback-obj event)
   ;; the function used as :edit-func is edit-string which is in the file
@@ -144,7 +80,7 @@ Change log:
 
 (defun Text-Interactor-Initialize (new-Text-schema)
   (if-debug new-Text-schema (format T "Text initialize ~s~%" new-Text-schema))
-  (Check-Interactor-Type new-Text-schema inter:text-interactor)
+  (Check-Interactor-Type new-Text-schema text-interactor)
   (Check-Required-Slots new-Text-schema)
   (Set-Up-Defaults new-Text-schema)
   ) ;end initialize procedure
@@ -367,7 +303,7 @@ Change log:
 ;;; Text schema
 ;;;============================================================
 
-(Create-Schema 'inter:text-interactor (:is-a inter:interactor)
+(Create-Schema 'text-interactor (:is-a inter:interactor)
   (:start-action 'Text-Int-Start-Action)
   (:running-action 'Text-Int-Running-Action)
   (:obj-to-change NIL)			;supply if don't want to affect
@@ -397,4 +333,4 @@ Change log:
   (:initialize 'Text-Interactor-Initialize)) ;proc to call
 							   ; when created
 
-(Set-Default-Key-Translations inter:text-interactor)
+(Set-Default-Key-Translations text-interactor)

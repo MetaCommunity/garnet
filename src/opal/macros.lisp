@@ -47,34 +47,34 @@
 
 (defmacro remove-component (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :remove-component the-schema ,@args)))
+     (kr-send the-schema :remove-component the-schema ,@args)))
 
 (defmacro move-component (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :move-component the-schema ,@args)))
+     (kr-send the-schema :move-component the-schema ,@args)))
 
 (defmacro do-all-components (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :do-all-components the-schema ,@args)))
+     (kr-send the-schema :do-all-components the-schema ,@args)))
 
 (defmacro do-components (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :do-components the-schema ,@args)))
+     (kr-send the-schema :do-components the-schema ,@args)))
 
 ;; Added do-items because it would be very helpful to operate over the
 ;; items of a virtual-aggregate or an aggrelist. [2003/09/16:rpg]
 
 (defmacro do-items (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :do-items the-schema ,@args)))
+     (kr-send the-schema :do-items the-schema ,@args)))
 
 (defmacro point-to-component (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :point-to-component the-schema ,@args)))
+     (kr-send the-schema :point-to-component the-schema ,@args)))
 
 (defmacro point-to-leaf (schema &rest args)
   `(let ((the-schema ,schema))
-    (kr-send the-schema :point-to-leaf the-schema ,@args)))
+     (kr-send the-schema :point-to-leaf the-schema ,@args)))
 
 (defmacro fix-update-slots (schema &rest args)
   `(let ((the-schema ,schema))
@@ -122,17 +122,19 @@
        (tagname   (gensym "TOP-TAG"))
        (countname (gensym "COUNT"))
        case-entries)
-  (dolist (thing things)
-    (push (list (decf count) thing) case-entries))
-  (setq case-entries (nreverse case-entries))
-  `(let ((,countname ,(length things))
-         ,varname)
-    (tagbody
-      ,tagname
-      (unless (zerop ,countname)
-	(setq ,varname (case (decf ,countname) ,@case-entries))
-        ,@body
-        (go ,tagname))))))
+   (declare (fixnum count))
+   (dolist (thing things)
+     (push (list (decf count) thing) case-entries))
+   (setq case-entries (nreverse case-entries))
+   `(let ((,countname ,(length things))
+	  ,varname)
+      (declare (fixnum ,countname))
+      (tagbody
+	 ,tagname
+	 (unless (zerop ,countname)
+	   (setq ,varname (case (decf ,countname) ,@case-entries))
+	   ,@body
+	   (go ,tagname))))))
 
 
 ;;; For "objects.lisp"
@@ -141,7 +143,7 @@
 (declaim (inline get-thickness))	   
 (defun get-thickness (gob)
   (let* ((line-style (g-value gob :line-style))
-	 (thickness  (and line-style (g-value line-style :line-thickness))))
+	 (thickness  (and line-style (g-value-fixnum line-style :line-thickness))))
     (if thickness (max thickness 1) 0)))
 
 ;; This version of get-thickness AREFs the update-vals array for the
@@ -151,11 +153,13 @@
 (defun get-old-thickness (gob line-style-index update-vals)
   (declare (ignore gob))
   (let* ((line-style (aref update-vals line-style-index))
-	 (thickness  (and line-style (g-value line-style :line-thickness))))
+	 (thickness  (and line-style (g-value-fixnum line-style :line-thickness))))
+    (declare (type (or fixnum null) thickness))
     (if thickness (max thickness 1) 0)))
 
 (declaim (inline point-in-rectangle))
 (defun point-in-rectangle (x y left top right bottom)
+  (declare (fixnum left top right bottom))
   (and (<= left x right)
        (<= top y bottom)))
 
@@ -339,3 +343,34 @@ the item that was previously in the specified position.
 ;; Utility
 
 (defmacro swap(a b) `(rotatef ,a ,b))
+
+;; This seems useful....
+(defmacro half(n)
+  `(round (/ ,n 2.0)))
+
+;;; Some premature optimization.
+(declaim (inline q-min))
+(defun q-min (x y)
+  "Two-argument fixnum version of min."
+  #+cmu
+  (declare (values fixnum))
+  (declare (fixnum x y))
+  (if (< x y) x y))
+
+
+(declaim (inline q-max))
+(defun q-max (x y)
+  "Two-argument fixnum version of max."
+  #+cmu 
+  (declare (values fixnum))
+  (declare (fixnum x y))
+  (if (< x y) y x))
+
+
+(declaim (inline q-abs))
+(defun q-abs (x)
+  "Fixnum version of abs."
+  #+cmu
+  (declare (values fixnum))
+  (declare (fixnum x))
+  (if (< x 0) (- x) x))

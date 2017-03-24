@@ -58,7 +58,11 @@
 ;;;       (unless (find :lazy *features*)
 ;;;         (pushnew :eager *features*)))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *kr-bits-type* '(unsigned-byte 32)))
 
+
+#+cmu (declaim (ext:freeze-type schema))
 ;;; Internal structures.
 
 ;; The internal representation of a schema is as a structure, where the
@@ -84,12 +88,18 @@
 ;;
 (declaim (inline schema-p))
 (defun schema-p (obj)
-  (locally (declare #.*special-kr-optimization*)
+  (locally (declare (optimize (speed 3) (safety 0)))
     (and (is-schema obj)
-	 ;; make sure it's not a formula, and it's not deleted.
+       	;; make sure it's not a formula, and it's not deleted.
+	 #+GARNET-BINS
+	 (arrayp (schema-bins obj))
+	 #-GARNET-BINS
 	 (hash-table-p (schema-bins obj))
-	 T)))
+       T)))
 
+
+
+#+cmu (declaim (ext:freeze-type a-formula))
 ;; This structure is similar to a schema, but is used to store formulas.
 ;; It prints out with an F instead of an S, and it uses the same positions for
 ;; different functions.
@@ -125,14 +135,16 @@
   )
 
 
+#+cmu (declaim (ext:freeze-type sl))
 ;; The value in a slot is represented as a structure of this type.
 ;;
 (defstruct (sl (:print-function print-the-slot))
   name
   value
-  (bits 0 :type fixnum))
+  (bits 0 :type #.*kr-bits-type*))
 
 
+#+cmu (declaim (ext:freeze-type full-sl))
 ;; This is similar; it includes room to store dependent formulas.
 ;;
 (defstruct (full-sl (:include sl))
@@ -142,6 +154,12 @@
 
 
 ;;; Variables, etc.
+
+#+GARNET-BINS
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (declaim (fixnum *bins-length*))
+  (defparameter *bins-length* 8))
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *store-lambdas* T
@@ -236,50 +254,65 @@
 ;; conditionalization here, but where else to put it?
 ;;
 
-(defvar *formula-pool* nil)
-#+ccl
-(defvar *formula-lock* (ccl:make-lock))
-#+sbcl
-(defvar *formula-lock* (sb-thread:make-mutex))
+;;;; (defvar *formula-pool* nil)
+;;;; #+ccl
+;;;; (defvar *formula-lock* (ccl:make-lock))
+;;;; #+sbcl
+;;;; (defvar *formula-lock* (sb-thread:make-mutex))
+;;;; #+(and cmu mp)
+;;;; (defvar *formula-lock* (mp:make-lock "Formula Lock"))
 
-#+(and cmu mp)
-(defun formula-push (f)
-  (mp:atomic-push f *formula-pool*))
-#+(and cmu mp)
-(defun formula-pop ()
-  (and *formula-pool* (mp:atomic-pop *formula-pool*)))
-#+(and cmu (not mp))
-(defun formula-push (f)
-  (system:without-interrupts
-    (push f *formula-pool*)))
-#+(and cmu (not mp))
-(defun formula-pop ()
-  (system:without-interrupts
-    (pop *formula-pool*)))
-#+sb-thread
-(defun formula-push (f)
-  (sb-thread:with-mutex (*formula-lock*)
-    (push f *formula-pool*)))
-#+sb-thread
-(defun formula-pop ()
-  (sb-thread:with-mutex (*formula-lock*)
-    (and *formula-pool* (pop *formula-pool*))))
-#+ccl
-(defun formula-push (f)
-  (ccl:with-lock-grabbed (*formula-lock*)
-    (push f *formula-pool*)))
-#+ccl
-(defun formula-pop ()
-  (ccl:with-lock-grabbed (*formula-lock*)
-    (pop *formula-pool*)))
-#+allegro
-(defun formula-push (f)
-  (excl:critical-section (:non-smp :without-scheduling)
-   (push f *formula-pool*)))
-#+allegro
-(defun formula-pop ()
-  (excl:critical-section (:non-smp :without-scheduling)
-   (pop *formula-pool*)))
+;;;; #+(and cmu mp)
+;;;; (defun formula-push (f)
+;;;;   (mp:with-lock-held (*formula-lock*)
+;;;;       (push f *formula-pool*)))
+;;;; #+(and cmu mp)
+;;;; (defun formula-pop ()
+;;;;   (mp:with-lock-held (*formula-lock*)
+;;;;     (and *formula-pool* (pop *formula-pool*))))
+;;;; #+(and cmu (not mp))
+;;;; (defun formula-push (f)
+;;;;   (system:without-interrupts
+;;;;     (push f *formula-pool*)))
+;;;; #+(and cmu (not mp))
+;;;; (defun formula-pop ()
+;;;;   (system:without-interrupts
+;;;;     (pop *formula-pool*)))
+;;;; #+sb-thread
+;;;; (defun formula-push (f)
+;;;;   (sb-thread:with-mutex (*formula-lock*)
+;;;;     (push f *formula-pool*)))
+;;;; #+sb-thread
+;;;; (defun formula-pop ()
+;;;;   (sb-thread:with-mutex (*formula-lock*)
+;;;;     (and *formula-pool* (pop *formula-pool*))))
+;;;; #+ccl
+;;;; (defun formula-push (f)
+;;;;   (ccl:with-lock-grabbed (*formula-lock*)
+;;;;     (push f *formula-pool*)))
+;;;; #+ccl
+;;;; (defun formula-pop ()
+;;;;   (ccl:with-lock-grabbed (*formula-lock*)
+;;;;     (pop *formula-pool*)))
+;;;; #+allegro
+;;;; (defun formula-push (f)
+;;;;   (excl:critical-section (:non-smp :without-scheduling)
+;;;;    (push f *formula-pool*)))
+;;;; #+allegro
+;;;; (defun formula-pop ()
+;;;;   (excl:critical-section (:non-smp :without-scheduling)
+;;;;    (pop *formula-pool*)))
+
+(defparameter *reuse-formulas* (make-array 1 :adjustable t :fill-pointer 0)
+  "A list of formulas that have been destroyed and can be reused.  This
+   avoids the need to allocate and deallocate formulas all the time.")
+
+(defparameter *reuse-slots* (make-array 1 :adjustable t :fill-pointer 0)
+  "An array of slot arrays that have been destroyed and can be reused.  This
+   avoids the need to allocate and deallocate arrays all the time.")
+
+(defparameter *reuse-directories* (make-array 1 :adjustable t :fill-pointer 0)
+  "An array of directory arrays that have been destroyed and can be reused..")
 
 
 (defvar *schema-is-new* nil
@@ -307,7 +340,6 @@
 		 *is-local-only-slot-bit* *is-parameter-slot-bit*))
 (eval-when (:execute :compile-toplevel :load-toplevel)
   (defparameter *type-bits* 10)  ;; # of bits for encoding type
-
   (defparameter *type-mask* (1- (expt 2 *type-bits*))) ;; to extract type
 
   ;; bit is 1 if slot contains inherited values, 0 for local values
@@ -318,7 +350,6 @@
   (defparameter *is-update-slot-bit*     (1+ *is-constant-bit*))
   (defparameter *is-local-only-slot-bit* (1+ *is-update-slot-bit*))
   (defparameter *is-parameter-slot-bit*  (1+ *is-local-only-slot-bit*)))
-
 
 (declaim (fixnum *local-mask* *constant-mask* *is-update-slot-mask* 
 		 *inherited-mask* *is-parent-mask* *clear-slot-mask*
@@ -559,53 +590,68 @@
 
 ;; Replace these macros with inline functions.
 
-;; (defmacro deleted-p (schema)
-;;   `(locally (declare ,*special-kr-optimization*)
-;;      (null (schema-bins ,schema))))
+#+use-macros
+(defmacro deleted-p (schema)
+  `(locally (declare ,*special-kr-optimization*)
+     (null (schema-bins ,schema))))
 
-;; (defmacro not-deleted-p (schema)
-;;   `(locally (declare ,*special-kr-optimization*)
-;;      (schema-bins ,schema)))
+#+use-macros
+(defmacro not-deleted-p (schema)
+  `(locally (declare ,*special-kr-optimization*)
+     (schema-bins ,schema)))
 
-;; (defmacro is-inherited (bits)
-;;   `(logbitp ,*inherited-bit* ,bits))
+#+use-macros
+(defmacro is-inherited (bits)
+  `(logbitp ,*inherited-bit* ,bits))
 
-;; (defmacro is-parent (bits)
-;;   `(logbitp ,*is-parent-bit* ,bits))
+#+use-macros
+(defmacro is-parent (bits)
+  `(logbitp ,*is-parent-bit* ,bits))
 
-;; (defmacro is-constant (bits)
-;;   `(logbitp ,*is-constant-bit* ,bits))
+#+use-macros
+(defmacro is-constant (bits)
+  `(logbitp ,*is-constant-bit* ,bits))
 
-;; (defmacro is-update-slot (bits)
-;;   `(logbitp ,*is-update-slot-bit* ,bits))
+#+use-macros
+(defmacro is-update-slot (bits)
+  `(logbitp ,*is-update-slot-bit* ,bits))
 
-;; (defmacro set-is-update-slot (bits)
-;;   `(logior ,*is-update-slot-mask* ,bits))
+#+use-macros
+(defmacro set-is-update-slot (bits)
+  `(logior ,*is-update-slot-mask* ,bits))
 
-;; (defmacro is-local-only (bits)
-;;   `(logbitp ,*is-local-only-slot-bit* ,bits))
+#+use-macros
+(defmacro is-local-only (bits)
+  `(logbitp ,*is-local-only-slot-bit* ,bits))
 
-;; (defmacro is-parameter (bits)
-;;   `(logbitp ,*is-parameter-slot-bit* ,bits))
+#+use-macros
+(defmacro is-parameter (bits)
+  `(logbitp ,*is-parameter-slot-bit* ,bits))
 
-;; (defmacro extract-type-code (bits)
-;;   `(logand ,*type-mask* ,bits))
+#+use-macros
+(defmacro extract-type-code (bits)
+  `(logand ,*type-mask* ,bits))
 
-;; (defmacro get-entry-type-code (entry)
-;;   `(locally (declare ,*special-kr-optimization*)
-;;      (extract-type-code (sl-bits ,entry))))
+#+use-macros
+(defmacro get-entry-type-code (entry)
+  `(locally (declare ,*special-kr-optimization*)
+     (extract-type-code (sl-bits ,entry))))
 
-;; (defmacro code-to-type (type-code)
-;;   `(svref types-array ,type-code))
+#+use-macros
+(defmacro code-to-type (type-code)
+  `(svref types-array ,type-code))
 
-;; (defmacro code-to-type-fn (type-code)
-;;   `(svref type-fns-array ,type-code))
+#+use-macros
+(defmacro code-to-type-fn (type-code)
+  `(svref type-fns-array ,type-code))
 
-;; (defmacro code-to-type-doc (type-code)
-;;   `(svref type-docs-array ,type-code))
+#+use-macros
+(defmacro code-to-type-doc (type-code)
+  `(svref type-docs-array ,type-code))
 
-;; (defmacro check-kr-type (value code)
-;;   `(funcall (code-to-type-fn ,code) ,value))
+#+use-macros
+(defmacro check-kr-type (value code)
+  `(funcall (code-to-type-fn ,code) ,value))
 
 
 
@@ -623,57 +669,79 @@
   #-GARNET-DEBUG
   nil)
 
+#-use-macros
 (declaim (inline
 	  formula-p deleted-p not-deleted-p is-inherited is-parent is-constant
 	  is-update-slot set-is-update-slot is-local-only is-parameter
 	  extract-type-code get-entry-type-code))
 
+#-use-macros
 (defun formula-p (thing)
-  (a-formula-p thing))
+  (locally (declare #.*special-kr-optimization*)
+    (a-formula-p thing)))
 
+#-use-macros
 (defun deleted-p (schema)
-  (declare #.*special-kr-optimization*)
-  (null (schema-bins schema)))
+  (locally (declare #.*special-kr-optimization*)
+    (null (schema-bins schema))))
 
+#-use-macros
 (defun not-deleted-p (schema)
-  (declare #.*special-kr-optimization*)
-  (schema-bins schema))
+  (locally (declare #.*special-kr-optimization*)
+    (schema-bins schema)))
 
+#-use-macros
 (defun is-inherited (bits)
-  (declare (fixnum bits))
-  (logbitp *inherited-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *inherited-bit* bits)))
 
+#-use-macros
 (defun is-parent (bits)
-  (declare (fixnum bits))
-  (logbitp *is-parent-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *is-parent-bit* bits)))
 
+#-use-macros
 (defun is-constant (bits)
-  (declare (fixnum bits))
-  (logbitp *is-constant-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *is-constant-bit* bits)))
 
+#-use-macros
 (defun is-update-slot (bits)
-  (declare (fixnum bits))
-  (logbitp *is-update-slot-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *is-update-slot-bit* bits)))
 
+#-use-macros
 (defun set-is-update-slot (bits)
-  (declare (fixnum bits))
-  (logior *is-update-slot-mask* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logior *is-update-slot-mask* bits)))
 
+#-use-macros
 (defun is-local-only (bits)
-  (declare (fixnum bits))
-  (logbitp *is-local-only-slot-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *is-local-only-slot-bit* bits)))
 
+#-use-macros
 (defun is-parameter (bits)
-  (declare (fixnum bits))
-  (logbitp *is-parameter-slot-bit* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logbitp *is-parameter-slot-bit* bits)))
 
+#-use-macros
 (defun extract-type-code (bits)
-  (declare (fixnum bits))
-  (logand *type-mask* bits))
+  (declare (type #.*kr-bits-type* bits))
+  (locally (declare #.*special-kr-optimization*)
+    (logand *type-mask* bits)))
 
+#-use-macros
 (defun get-entry-type-code (entry)
-  (declare #.*special-kr-optimization*)
-  (extract-type-code (sl-bits entry)))
+  (locally (declare #.*special-kr-optimization*)
+    (extract-type-code (sl-bits entry))))
 
 ;; Moved type functions to kr.lisp (to get rid of free variable warnings).
 
@@ -794,43 +862,149 @@ prematurely."
       (full-sl-dependents entry))))
 
 
-(declaim (inline slot-accessor))
-(defun slot-accessor (schema slot)
+
+
+
+;;; -------------------------------------------------- Low-level slot access
+#+garnet-bins
+(defparameter *bin-indices* (make-array 256)
+  "From the first character of a slot name, get the index to the corresponding
+  slots bin.")
+
+#+garnet-bins
+(defparameter *bin-layout* '(	( #\J  #\Y  #\F )
+  				( #\K  #\N  #\A  #\B )
+  				( #\G  #\M  #\P )
+  				( #\O  #\S )
+  				( #\V  #\C )
+  				( #\X  #\L  #\I )
+  				( #\H  #\T  #\D )
+  				( #\*  #\E  #\W  #\U  #\R )
+			    )
+  "After random assignments, letters listed in the *bin-layout* will be
+   re-assigned into the appropriate bin.")
+
+
+;; First assign all letters random bins
+#+garnet-bins
+(dotimes (i 256)
+  (setf (svref *bin-indices* i) (mod i *bins-length*)))
+
+
+;; Then place all the letters in the *bin-layout* where they belong.
+#+garnet-bins
+(when *bin-layout*
+  (let ((bin 0))
+    (declare (fixnum bin))
+    (dolist (bin-letters *bin-layout*)
+      (dolist (bin-letter bin-letters)
+        (setf (svref *bin-indices* (char-code bin-letter)) bin))
+      (incf bin))))
+
+
+;;; This version is an optimization for LISPWORKS.
+#-(and)
+(defmacro slot-to-bin-index (slot)
+  `(locally (declare ,*special-kr-optimization*)
+     (svref (the (simple-array) *bin-indices*)
+	    (the fixnum
+		 ,(if (keywordp slot)
+		      (char-code (schar (symbol-name slot) 0))
+		      `(char-code (schar (symbol-name ,slot) 0)))))))
+
+
+#+garnet-bins
+(defmacro slot-to-bin-index (slot)
+  (if (keywordp slot)
+    `(svref *bin-indices* ,(char-code (schar (symbol-name slot) 0)))
+    `(svref *bin-indices* (char-code (schar (symbol-name ,slot) 0)))))
+
+(defmacro slot-accessor (schema slot)
   "Returns a slot structure, or NIL."
-  (values (gethash slot (schema-bins schema))))
+  #+GARNET-BINS
+  (let ((entry (gensym)))
+    `(locally (declare ,*special-kr-optimization*)
+       (dolist (,entry (svref (schema-bins ,schema) (slot-to-bin-index ,slot)))
+         (when (eq (sl-name ,entry) ,slot)
+	   (return ,entry)))))
+  #-GARNET-BINS
+  `(values (gethash ,slot (schema-bins ,schema)))
+  )
 
+(defmacro set-slot-accessor (schema slot value bits the-dependents)
+  "RETURNS: the slot structure it created or modified.
 
-(defmacro set-slot-accessor (schema slot value bits dependents)
-  "Returns the slot structure it created or modified.
-SIDE EFFECTS: if <dependents> is specified, the slot structure is
+SIDE EFFECTS: if <dependents> is specified, and the slot structure is
 modified to be a full-slot structure."
-  (let ((the-bins (gensym))
+  #+GARNET-BINS
+  (let ((the-index (gensym))
+	(the-bins (gensym))
 	(the-entry (gensym))
-	(the-dependents (gensym)))
-    `(let* ((,the-bins (schema-bins ,schema))
-	    (,the-entry (gethash ,slot ,the-bins))
-	    (,the-dependents ,dependents))
-       (if ,the-entry
-	   (progn
-	     (when (and ,the-dependents (not (full-sl-p ,the-entry)))
-	       ;; Need to use a full slot, only have a short one.
-	       (setf (gethash ,slot ,the-bins) (setf ,the-entry (make-full-sl)))
-	       (setf (sl-name ,the-entry) ,slot))
-	     ;; Slot is present - update it.
-	     (setf (sl-value ,the-entry) ,value)
-	     (setf (sl-bits ,the-entry) ,bits)
-	     (when ,the-dependents
-	       (setf (full-sl-dependents ,the-entry) ,the-dependents))
-	     ,the-entry)
+	(rest (gensym))
+	(dependents (gensym)))
+    `(locally (declare ,*special-kr-optimization*)
+       (let* ((,the-index (slot-to-bin-index ,slot))
+	      (,the-bins (schema-bins ,schema))
+	      (,dependents ,the-dependents))
+	 (unless (do ((,rest (svref ,the-bins ,the-index) (cdr ,rest))
+		      ,the-entry)
+		     ((null ,rest))
+		   (setf ,the-entry (car ,rest))
+		   (when (eq (sl-name ,the-entry) ,slot)
+		     (when (and ,dependents (not (full-sl-p ,the-entry)))
+		       ;; Need to use a full slot, only have a short one.
+		       (setf (car ,rest)
+			     (setf ,the-entry (make-full-sl)))
+		       (setf (sl-name ,the-entry) ,slot))
+		     ;; Slot is present - update it.
+		     (setf (sl-value ,the-entry) ,value)
+		     (setf (sl-bits ,the-entry) ,bits)
+		     (if ,dependents
+			 (setf (full-sl-dependents ,the-entry) ,dependents))
+		     (return ,the-entry)))
 	   ;; Slot is not present - create it.
-	   (progn
-	     (setf ,the-entry (if ,the-dependents (make-full-sl) (make-sl)))
+	   (let ((,the-entry (if ,dependents (make-full-sl) (make-sl))))
 	     (setf (sl-name ,the-entry) ,slot)
 	     (setf (sl-value ,the-entry) ,value)
 	     (setf (sl-bits ,the-entry) ,bits)
-	     (when ,the-dependents
-	       (setf (full-sl-dependents ,the-entry) ,the-dependents))
-	     (setf (gethash ,slot ,the-bins) ,the-entry))))))
+	     (if ,dependents
+		 (setf (full-sl-dependents ,the-entry) ,dependents))
+	     (push ,the-entry (svref ,the-bins ,the-index))
+	     ,the-entry)))))
+  #-GARNET-BINS
+  (let ((the-bins (gensym))
+	(the-entry (gensym))
+	(dependents (gensym)))
+    `(locally (declare ,*special-kr-optimization*)
+       (let* ((,the-bins (schema-bins ,schema))
+	      (,the-entry (gethash ,slot ,the-bins))
+	      (,dependents ,the-dependents))
+	 (if ,the-entry
+	     (progn
+	       (when (and ,dependents (not (full-sl-p ,the-entry)))
+		 ;; Need to use a full slot, only have a short one.
+		 (setf (gethash ,slot ,the-bins) (setf ,the-entry (make-full-sl)))
+		 (setf (sl-name ,the-entry) ,slot))
+	       ;; Slot is present - update it.
+	       (setf (sl-value ,the-entry) ,value)
+	       (setf (sl-bits ,the-entry) ,bits)
+	       (if ,dependents
+		   (setf (full-sl-dependents ,the-entry) ,dependents))
+	       ,the-entry)
+	     ;; Slot is not present - create it.
+	     (progn
+	       (setf ,the-entry (if ,dependents (make-full-sl) (make-sl)))
+	       (setf (sl-name ,the-entry) ,slot)
+	       (setf (sl-value ,the-entry) ,value)
+	       (setf (sl-bits ,the-entry) ,bits)
+	       (if ,dependents
+		   (setf (full-sl-dependents ,the-entry) ,dependents))
+	       (setf (gethash ,slot ,the-bins) ,the-entry))))))
+  )
+
+
+;;; --------------------------------------------------
+
 
 
 ;;; A few specialized accessors for formula slots.
@@ -865,7 +1039,7 @@ modified to be a full-slot structure."
 	(logand (a-formula-number ,thing) ,(lognot 1)))))
 
 (defmacro cache-mark (thing)
-  `(logand (a-formula-number ,thing) (lognot 1)))
+  `(logand (a-formula-number ,thing) ,(lognot 1)))
 
 (defmacro set-cache-mark (thing mark)
   `(set-formula-number 
@@ -884,13 +1058,38 @@ modified to be a full-slot structure."
 
 (defmacro iterate-slot-value ((a-schema inherited everything check-formula-p)
 			      &body body)
-"Iterate the <body> for all the slots in the <schema>, with the variable
+  "Iterate the <body> for all the slots in the <schema>, with the variable
 <slot> bound to each slot in turn and the variable <value> bound to
 the <slot>'s value.
+
 If <everything> is T, even slots which contain *no-value* (but with same
 bit set) are used."
   `(locally (declare ,*special-kr-optimization*)
-     (,@(if check-formula-p `(if (not (formula-p ,a-schema))) '(progn))
+     (,@(if check-formula-p `(unless (formula-p ,a-schema)) '(progn))
+      #+GARNET-BINS
+      ;; Process all bins and all slots within.
+      (let ((bins (schema-bins ,a-schema)))
+       (dotimes (i *bins-length*)
+	 (declare (fixnum i))
+        (dolist (iterate-slot-value-entry (aref bins i))
+         (let ((slot (sl-name iterate-slot-value-entry)) ; name for the slot
+	       (value (sl-value iterate-slot-value-entry)))
+          ;; This slot exists
+          ,@(if inherited
+             ;; Either local or inherited will do.
+             (if everything
+              ;; Execute on a no-value, too.
+              body
+              ;; Only execute on real values.
+              `((unless (eq value *no-value*)
+                 ,@body)))
+             ;; Make sure that the slot is not inherited.
+             `((unless (is-inherited (sl-bits iterate-slot-value-entry))
+                ,@(if everything
+                   body
+                   `((unless (eq value *no-value*)
+                      ,@body))))))))))
+	#-GARNET-BINS
 	(maphash
 	 #'(lambda (iterate-ignored-slot-name iterate-slot-value-entry)
 	     (declare (ignore iterate-ignored-slot-name))
@@ -1133,9 +1332,10 @@ is one."
 
 
 (defmacro run-pre-set-demons (schema slot new-value is-formula reason)
-"Invokes the pre-set demon, if one is defined and if the <slot> is an
+  "Invokes the pre-set demon, if one is defined and if the <slot> is an
 'interesting' slot (i.e., if it is listed in the :update-slots of the
 <schema>).
+
 Also, if *slot-setter-debug* is bound, it invokes it.  This is a debugging
 function that gets called every time a slot is modified, either by s-value
 or as a result of formula evaluation.  The <reason> is given as the fourth
@@ -1164,11 +1364,10 @@ was changed."
 
 
 
-;;; S-VALUE
+;;; S-VALUE & FRIENDS
 
-;; Helper function for multi-level S-VALUE
-;;
 (defun s-value-chain (schema &rest slots)
+  "Helper function for multi-level S-VALUE"
   (locally (declare #.*special-kr-optimization*)
     (if (null schema)
 	(error "S-VALUE on a null object:  (S-VALUE ~S~{ ~S~})" schema slots)
@@ -1193,7 +1392,6 @@ at slot ~S  (non-schema value is ~S, last schema was ~S)"
 
 
 
-;;; S-VALUE & FRIENDS
 
 (defmacro s-value (schema &rest slots)
 "The basic value-setting macro.

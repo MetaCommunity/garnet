@@ -39,9 +39,13 @@ BUT... Leave around the declarations (constant, type, update,...)"
 (defun clear-schema-slots (schema)
   "Completely clear ALL the slots in the <schema>."
   (locally (declare #.*special-kr-optimization*)
+    #+GARNET-BINS
+    (let ((bins (schema-bins schema)))
+      (dotimes (i *bins-length*)
+	(setf (aref bins i) NIL)))
+    #-GARNET-BINS
     (clrhash (schema-bins schema))
     ))
-
 
 (defun value-fn (schema slot)
   "Does the actual work of G-VALUE."
@@ -132,7 +136,7 @@ RETURNS: the inherited value, or NIL."
   (declare (ftype (function (t &optional t) t) formula-fn))
   (let (has-parents)
     (when (a-local-only-slot slot)	; These CANNOT be inherited.
-      (return-from g-value-inherit-values NIL))
+      (return-from g-value-inherit-values (values NIL 0)))
     (dolist (relation *inheritance-relations*)
       (dolist (parent (if (eq relation :IS-A)
 			  (get-local-value schema :IS-A)
@@ -140,8 +144,9 @@ RETURNS: the inherited value, or NIL."
 	(setf has-parents T)
 	(let ((entry (slot-accessor parent slot))
 	      (value *no-value*)
-	      bits			; parent bits
+	      (bits 0)			; parent bits
 	      (intermediate-constant NIL))
+	  (declare (type #.*kr-bits-type* bits))
 	  (when entry
 	    (setf value (sl-value entry))
 	    (when (is-constant (sl-bits entry))
@@ -197,7 +202,7 @@ RETURNS: the inherited value, or NIL."
 			     (t		; top-level, no parents
 			      *is-parent-mask*))
 		       (slot-dependents slot-structure))
-    *no-value*))
+    (values *no-value* 0)))
 
 ;; G-CACHED-VALUE
 ;; 
@@ -392,7 +397,7 @@ of <slot>."
 	      (setf (cdr values) (delete schema (cdr values)))))))))
 
 (defun unlink-all-values (schema slot)
-  "Same as above, but unlinks all schemata that are in <slot>."
+  "Same as unlink-one-value, but unlinks all schemata that are in <slot>."
   (let ((inverse (cadr (assocq slot *relations*))))
     (when inverse
       (let ((entry (if (eq slot :IS-A)
@@ -701,8 +706,9 @@ Always returns the CODE of the resulting type (whether new or not)"
 
 (declaim (inline slot-is-constant))
 (defun slot-is-constant (schema slot)
-  (let ((entry (slot-accessor schema slot)))
-    (is-constant (sl-bits entry))))
+  (locally (declare #.*special-kr-optimization*)
+    (let ((entry (slot-accessor schema slot)))
+      (is-constant (sl-bits entry)))))
 
 
 (declaim (fixnum *warning-level*))
@@ -1268,6 +1274,36 @@ not be tracked down."
 		(setf (full-sl-dependents iterate-slot-value-entry) NIL))))))))
 
 
+(defun delete-formula (formula remove-from-parent)
+  "Eliminate all dependency pointers from the <formula>, since it is no
+longer installed on a slot.
+
+INPUTS:
+ - <formula>: the formula to get rid of
+ - <hard-p>: if T, do a more thorough job of deleting everything, and
+   destroy the <formula> schema itself."
+  (when (a-formula-number formula)
+    (eliminate-formula-dependencies formula NIL)
+    (if remove-from-parent
+      ;; Eliminate the <formula> from its parent's list of children.
+      (let ((parent (a-formula-is-a formula)))
+	(if parent
+	  (delete-one-or-list formula (a-formula-is-a-inv parent)))))
+    ;; Formula was not destroyed yet
+    (setf (a-formula-bins formula) nil) ; mark as destroyed.
+    (setf (a-formula-schema formula) nil)
+    (setf (a-formula-slot formula) nil)
+    (setf (a-formula-lambda formula) nil)
+    (setf (a-formula-depends-on formula) nil)
+    (let ((meta (a-formula-meta formula)))
+      (when meta
+	(setf (a-formula-meta formula) NIL)
+	(destroy-schema meta)))
+    (vector-push-extend formula *reuse-formulas*)))
+
+
+
+#-(and)
 (defun delete-formula (formula remove-from-parent)
   "Eliminate all dependency pointers from the <formula>, since it is no
 longer installed on a slot.
@@ -1968,11 +2004,43 @@ and friends, which know whether an :initialize method was specified locally."
 	      (*kr-send-parent* NIL))
 	  (apply function- args))))))
 
+#+GARNET-BINS
+(defparameter *min-size* 0
+  "Initial size for a new array of slots")
+
+#+GARNET-BINS
+(defun find-unused-resource (array how-many)
+
+  "Find a resource (a slots array, or a directory array) from the
+garbage heap, which is kept in the <array>. The resource must have at
+least <how-many> entries.
+
+RETURNS: the resource, or NIL if none can be found."
+  (dotimes (i (length array))
+    (let* ((slots (aref array i))
+	   (current-length (array-dimension slots 0)))
+      (when (>= current-length how-many)
+	(when (/= current-length how-many)
+	  (setf array (adjust-array slots how-many)))
+	(let ((l (1- (length array))))
+	  (if (> l i)
+	    ;; Move in the last element of the array.
+	    (rotatef (aref array i) (aref array l)))
+	  ;; Array contains one fewer element.
+	  (decf (fill-pointer array)))
+	(return slots)))))
+
+
+
 ;;; Schemas
 
 (defun allocate-schema-slots (schema)
   (locally (declare #.*special-kr-optimization*)
     (setf (schema-bins schema)
+	  #+GARNET-BINS
+	  (or (find-unused-resource *reuse-slots* *bins-length*)
+	      (make-array *bins-length* :initial-element NIL))
+	  #-GARNET-BINS
 	  (make-hash-table :test #'eq #+sbcl :synchronized #+sbcl t)))
   schema)
 
@@ -2759,7 +2827,7 @@ notation to be read back in."
 	  (let ((string ""))
 	    (do ((c (read-char stream) (read-char stream)))
 		((char= c #\>))
-	      (setf string (format nil "~A~C" string c)))
+	      (setf string (concatenate 'string string (string c))))
 	    (setf string (read-from-string string))
 	    (if (and (boundp string)
 		     (or (schema-p (symbol-value string))

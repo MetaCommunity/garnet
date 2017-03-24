@@ -467,3 +467,43 @@ Change log:
 ;;; 02/03/94  Andrew Mickish - Made Check-Double-Press a Gem function
 ;;; 01/19/94  Andrew Mickish - Created with functions from garnet-keytrans.lisp
 
+;;;; garnet-keytrans.lisp
+;;; Change log:
+;;  01/20/94 Andrew MIckish  - Moved device-specific stuff into x-inter.lisp
+;;                             and mac-inter.lisp
+;;  10/21/92 Dave Kosbie     - added *katie-base-char* global to hold keysym of
+;; 		               most recent char translated (and split #'translate-character
+;;                             so it calls base-char-to-character, which is needed by Katie
+;;   3/18/92 Ed Pervin       - Eliminated *shifted-keysym-translations*
+;; 		               Always convert control characters to keywords.
+;;   3/02/92 Andrew Mickish  - Added #-cmu switches in translate-character
+;;                             to avoid binding LOCKP.
+;;   1/30/92 Brad Myers      - added support for double-click
+;;   1/21/92 Ed Pervin       - Changes for CMUCL on Sparc station.
+;;   8/21/90 Ken Meltsner    - Added *ignore-undefined-keys*
+;;  10/25/89 Brad Myers      - modified so that keywords can be used as key
+;;                             names
+;;   9/16/89 Brad Myers      - Removed the exports to avoid name conflicts
+;;   4/7/89  Brad Myers      - Moved to Interactors package
+;;   3/15/89 Lynn Baumeister - created by editing Hemlock code
+
+
+;;;; inter-loader.lisp
+;;   10/2/03 RGA            - Changed from switching on #+apple
+;;                            to #+(and apple (not clx))
+;;   6/4/92 Brad Myers      - animation-interactor
+;;   5/28/92 Brad Myers     - new animation-process
+;;   4/2/92  McDaniel       - New multifont.
+;;   2/20/92 Andrew Mickish - Moved INTERACTORS package
+;;                            definiton into Garnet-Loader
+;;   1/30/92 Brad Myers     - removed kcl control-reader
+;;   6/18/91 Ed Pervin      - added multifont-textinter.
+;;   3/22/90 Robert Cook    - Define the package "INTERACTORS"
+;; 			      for the TI Explorer.
+;;   3/14/90 Brad Myers     - added textkeyhandling
+;;   1/4/90 Ed Pervin       - Added version number
+;;   6/7/89 Brad Myers      - Made to work with Sun Lucid Lisp also
+;;   5/24/89 Brad Myers     - Added angleinter
+;;   4/13/89 Brad Myers     - Changed name "interactors-loader" to "inter-loader"
+;;   4/7/89 Brad Myers      - Added new key translation files
+;;   3/11/89 lkb            - removed loading of cursor-text which was moved to opal

@@ -40,6 +40,7 @@
 	    gv-center-x-is-center-of gv-center-y-is-center-of
 	    gv-right-is-left-of gv-bottom-is-top-of
 	    q-max q-min q-abs
+	    swap half
 	    top-side left-side bottom-side right-side
 	    center set-center
 	    bounding-box set-bounding-box

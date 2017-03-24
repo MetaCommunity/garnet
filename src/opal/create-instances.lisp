@@ -110,34 +110,6 @@
 
 (in-package "OPAL")
 
-
-;;; Some premature optimization.
-(declaim (inline q-min))
-(defun q-min (x y)
-  "Two-argument fixnum version of min."
-  #+cmu
-  (declare (values fixnum))
-  (declare (fixnum x y))
-  (if (< x y) x y))
-
-
-(declaim (inline q-max))
-(defun q-max (x y)
-  "Two-argument fixnum version of max."
-  #+cmu 
-  (declare (values fixnum))
-  (declare (fixnum x y))
-  (if (< x y) y x))
-
-
-(declaim (inline q-abs))
-(defun q-abs (x)
-  "Fixnum version of abs."
-  #+cmu
-  (declare (values fixnum))
-  (declare (fixnum x))
-  (if (< x 0) (- x) x))
-
 ;;; Graphic-Quality Hierarchy
 ;;
 
@@ -237,13 +209,11 @@
   (:font-name "cursor"))
 
 ;; Used in multifonts
-(defvar *Font-Table* (make-array '(3 4 4)
-      :initial-contents '(((nil nil nil nil) (nil nil nil nil)
-                           (nil nil nil nil) (nil nil nil nil))
-                          ((nil nil nil nil) (nil nil nil nil)
-                           (nil nil nil nil) (nil nil nil nil))
-                          ((nil nil nil nil) (nil nil nil nil)
-                           (nil nil nil nil) (nil nil nil nil)))))
+(defvar *Font-Table* 
+  (make-array '(3 4 4) 
+	      :element-type '(or null kr:schema)
+	      :initial-element nil))
+
 
 ;; Fetch a font from the font table corresponding to the attribute parameters.
 ;;
@@ -336,9 +306,8 @@ avoiding wasted objects.
    (o-formula
     (let* ((root-window (gv gem:device-info :current-root))
 	   (old-index (g-cached-value (gv :self) :colormap-index))
-	   (new-index (gem:colormap-property root-window :ALLOC-COLOR
-					     (gvl :xcolor))))
-      (declare (fixnum old-index new-index))
+	   (new-index (gem:colormap-property root-window :ALLOC-COLOR (gvl :xcolor))))
+;;      (declare (fixnum old-index new-index))
       ;;changed the following [1995/12/08:goldman]
       (when gem:*read-write-colormap-cells-p*
 	(when (and old-index
@@ -527,21 +496,23 @@ avoiding wasted objects.
   (:update-slots NIL) ; New update does not use AGGREGATE'S visible!
   (:left (o-formula
           (let ((min-x 32767))     ;(min-x 999999))
+	    (declare (fixnum min-x))
 	    (dolist (child (gv-local (gv :self) :components))
 	      (when (gv child :visible)
-		(setf min-x (q-min min-x (gv child :left)))))
+		(setf min-x (q-min min-x (gv-fixnum child :left)))))
 	    (if (= min-x 32767) 0 min-x))
 	  0))
   (:top (o-formula
 	 (let ((min-y 32767))     ; (min-y 999999)
+	   (declare (fixnum min-y))
 	   (dolist (child (gv-local (gv :self) :components))
 	     (when (gv child :visible)
-	       (setf min-y (q-min min-y (gv child :top)))))
+	       (setf min-y (q-min min-y (gv-fixnum child :top)))))
 	   (if (= min-y 32767) 0 min-y))
 	 0))
   (:width (o-formula
 	   (let ((max-x -32767)     ; (max-x -999999)
-		 (min-x (gvl :left)))
+		 (min-x (gvl-fixnum :left)))
 	     (declare (fixnum max-x min-x))
 	     (dolist (child (gv-local (gv :self) :components))
 	       (when (gv child :visible)
@@ -550,11 +521,12 @@ avoiding wasted objects.
 	     (q-max 0 (- max-x min-x)))))
   (:height (o-formula
 	    (let ((max-y -32767)        ; (max-y -999999)
-		  (min-y (gvl :top)))
+		  (min-y (gvl-fixnum :top)))
+	      (declare (fixnum max-y min-y))
 	      (dolist (child (gv-local (gv :self) :components))
                  (when (gv child :visible)
-                   (setf max-y (q-max max-y (+ (or (gv child :top) 0)
-					     (or (gv child :height) 0))))))
+                   (setf max-y (q-max max-y (+ (or (gv-fixnum child :top) 0)
+					     (or (gv-fixnum child :height) 0))))))
 	      (q-max 0 (- max-y min-y)))))
 
   (:visible (o-formula (let ((parent (gvl :parent)))
@@ -733,12 +705,11 @@ avoiding wasted objects.
 		(let* ((min-x 9999)
 		       (line-style (gvl :line-style))
 		       (lsthickness (if line-style
-					(* 2 (q-max 1 (gv line-style 
-							:line-thickness)))
+					(* 2 (q-max 1 (gv-fixnum line-style :line-thickness)))
 					0)))
 		  (do ((point point-list (cddr point)))
 		      ((null point) (- min-x lsthickness))
-		    (setf min-x (q-min min-x (car point)))))
+		    (setf min-x (q-min min-x (the fixnum (car point))))))
 		0))))
   (:top (o-formula
 	 (let ((point-list (gvl :point-list)))
@@ -746,12 +717,11 @@ avoiding wasted objects.
 	       (let* ((min-y 9999)
 		      (line-style (gvl :line-style))
 		      (lsthickness (if line-style
-				       (* 2 (q-max 1 (gv line-style
-						       :line-thickness)))
+				       (* 2 (q-max 1 (gv-fixnum line-style :line-thickness)))
 				       0)))
 		 (do ((point point-list (cddr point)))
 		     ((null point) (- min-y lsthickness))
-		   (setf min-y (q-min min-y (cadr point)))))
+		   (setf min-y (q-min min-y (the fixnum (cadr point))))))
 	       0))))
   (:width (o-formula
 	   (let ((point-list (gvl :point-list)))
@@ -760,13 +730,12 @@ avoiding wasted objects.
 			(max-x 0)
 			(line-style (gvl :line-style))
 			(lsthickness (if line-style
-					 (* 4 (q-max 1 (gv line-style
-							 :line-thickness)))
+					 (* 4 (q-max 1 (gv-fixnum line-style :line-thickness)))
 					 0)))
 		   (do ((point point-list (cddr point)))
 		       ((null point) (+ (- max-x min-x) lsthickness))
-		     (setf min-x (q-min min-x (car point)))
-		     (setf max-x (q-max max-x (car point)))))
+		     (setf min-x (q-min min-x (the fixnum (car point))))
+		     (setf max-x (q-max max-x (the fixnum (car point))))))
 		 0))))
   (:height (o-formula
 	    (let ((point-list (gvl :point-list)))
@@ -775,13 +744,12 @@ avoiding wasted objects.
 			 (max-y 0)
 			 (line-style (gvl :line-style))
 			 (lsthickness (if line-style
-					  (* 4 (q-max 1 (gv line-style
-							  :line-thickness)))
+					  (* 4 (q-max 1 (gv-fixnum line-style :line-thickness)))
 					  0)))
 		    (do ((point point-list (cddr point)))
 			((null point) (+ (- max-y min-y) lsthickness))
-		      (setf min-y (q-min min-y (cadr point)))
-		      (setf max-y (q-max max-y (cadr point)))))
+		      (setf min-y (q-min min-y (the fixnum (cadr point))))
+		      (setf max-y (q-max max-y (the fixnum (cadr point))))))
 		  0)))))
 
 
@@ -985,6 +953,7 @@ avoiding wasted objects.
   (:dy (o-formula (- (gvl-fixnum :from-y) (gvl-fixnum :head-y))))
   (:ftlength (o-formula (let ((dx (gvl-fixnum :dx))
 			      (dy (gvl-fixnum :dy)))
+			  (declare (fixnum dx dy))
 			  (max 1.0 (sqrt (+ (the fixnum (* dx dx)) (the fixnum (* dy dy))))))))
   (:ux (o-formula (/ (gvl-fixnum :dx) (gvl-fixnum :ftlength))))
   (:uy (o-formula (/ (gvl-fixnum :dy) (gvl-fixnum :ftlength))))
@@ -998,6 +967,7 @@ avoiding wasted objects.
 				(head-x (gvl-fixnum :head-x))
 				(head-y (gvl-fixnum :head-y))
 				(cx (gvl-fixnum :cx)) (cy (gvl-fixnum :cy)))
+			    (declare (fixnum ax ay head-x head-y cx cy))
 			    (if (gvl :open-p)
 				(list ax ay head-x head-y cx cy)
 				(list ax ay head-x head-y cx cy ax ay)))))
@@ -1028,8 +998,8 @@ avoiding wasted objects.
 			       (:destroy-hooks nil) (:notify-hooks nil)))
   (:left 0)
   (:top 0)
-  (:width 355)
-  (:height 277)
+  (:width 400)
+  (:height 300)
   (:omit-title-bar-p NIL)
   (:aggregate)
   (:title)       ; set in :initialize method

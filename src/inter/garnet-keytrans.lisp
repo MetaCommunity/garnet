@@ -22,26 +22,6 @@
 ;;  To alter the contents of the tables, see the (define-xxx ...) calls in
 ;;  define-xxx-keys.lisp
 
-
-;;; Change log:
-;;  01/20/94 Andrew MIckish  - Moved device-specific stuff into x-inter.lisp
-;;                             and mac-inter.lisp
-;;  10/21/92 Dave Kosbie     - added *katie-base-char* global to hold keysym of
-;; 		               most recent char translated (and split #'translate-character
-;;                             so it calls base-char-to-character, which is needed by Katie
-;;   3/18/92 Ed Pervin       - Eliminated *shifted-keysym-translations*
-;; 		               Always convert control characters to keywords.
-;;   3/02/92 Andrew Mickish  - Added #-cmu switches in translate-character
-;;                             to avoid binding LOCKP.
-;;   1/30/92 Brad Myers      - added support for double-click
-;;   1/21/92 Ed Pervin       - Changes for CMUCL on Sparc station.
-;;   8/21/90 Ken Meltsner    - Added *ignore-undefined-keys*
-;;  10/25/89 Brad Myers      - modified so that keywords can be used as key
-;;                             names
-;;   9/16/89 Brad Myers      - Removed the exports to avoid name conflicts
-;;   4/7/89  Brad Myers      - Moved to Interactors package
-;;   3/15/89 Lynn Baumeister - created by editing Hemlock code
-
 
 (in-package "INTERACTORS")
 
@@ -67,9 +47,11 @@
 
 ;;; end section snarfed from Hemlock
 
+(declaim (fixnum *num-modifier-keys*))
 (defparameter *num-modifier-keys* 4)
 
 
+(declaim (fixnum *num-mouse-buttons*))
 (defparameter *num-mouse-buttons* 24
   "XX At least 11 buttons....(was) 3 buttons * 2 (for double-click")
 (defparameter *mouse-translation-dimensions*
@@ -82,6 +64,7 @@
 
 (defmacro mouse-index (modifier-bits)
   `(let ((sum 0))
+     (declare (fixnum sum))
      (dolist (mod-bit ,modifier-bits)
        (incf sum (car (rassoc mod-bit *modifier-translations*)))) sum))
 
@@ -89,7 +72,8 @@
 ;; at CMU on the RT's, they get numbered left->right (makes sense)
 (declaim (fixnum *left-button* *middle-button* *right-button* 
 		 *up-scroll-button* *down-scroll-button*
-		 *double-offset*))
+		 *double-offset* *double-left-button* *double-middle-button*
+		 *double-right-button*))
 (defvar *left-button*        1)
 (defvar *middle-button*      2)
 (defvar *right-button*       3)
@@ -104,9 +88,6 @@
 (defvar *double-left-button*   (+ *left-button*   *double-offset*))
 (defvar *double-middle-button* (+ *middle-button* *double-offset*))
 (defvar *double-right-button*  (+ *right-button*  *double-offset*))
-
-;; Controls spacing between clicks in a multiple-click event for X
-(defparameter *double-click-time* 250) ; in milleseconds
 
 (defmacro define-mouse-up (button modifier-bits garnet-keyword)
   `(setf (aref *mouse-up-translations* ,button (mouse-index, modifier-bits))

@@ -252,12 +252,12 @@
 
 
 ;; MULTIFONT-TEXT-CURSOR : Cursor for multifont-text
-(create-instance 'MULTIFONT-TEXT-CURSOR opal:rectangle
+(create-instance 'MULTIFONT-TEXT-CURSOR RECTANGLE
   :declare ((:type (fixnum :ascent :descent :top :left :width :height)))
   (:update-slots '(:visible :fast-redraw-p :top :left :width :height
 		   :line-style :filling-style :draw-function :force-update))
   (:draw-function :xor)
-  (:filling-style opal:black-fill)
+  (:filling-style BLACK-FILL)
   (:line-style nil)
   (:fast-redraw-p T)
   (:visible nil)
@@ -275,12 +275,13 @@
 		   (frag-descent cursor-frag)
 		   (min (gv-fixnum parent :current-font :max-char-descent)
 			(gv-fixnum parent :cursor-line :descent))))))
-  (:top (o-formula (- (gvl-fixnum :parent :base-line) (gvl-fixnum :ascent))))
+  (:top (o-formula (the fixnum (- (gvl-fixnum :parent :base-line) (gvl-fixnum :ascent)))))
   (:left (o-formula (let ((parent (gvl :parent)))
-		      (+ (gv-fixnum parent :left)
-			 (gv-fixnum parent :cursor-x-offset)))))
+		      (the fixnum 
+			   (+ (gv-fixnum parent :left)
+			      (gv-fixnum parent :cursor-x-offset))))))
   (:width 2)
-  (:height (o-formula (+ (gvl-fixnum :ascent) (gvl-fixnum :descent)))))
+  (:height (o-formula (the fixnum (+ (gvl-fixnum :ascent) (gvl-fixnum :descent))))))
 
 
 (s-value MULTIFONT-TEXT :do-not-dump-slots
@@ -311,27 +312,27 @@
 			(dolist (frag line)
 			  (incf fragno)
 			  (unless
-			      (or (stringp frag) (is-a-p frag opal:view-object)
+			      (or (stringp frag) (is-a-p frag view-object)
 				  (mark-p frag) (eq (car frag) :mark)
 				  (and (stringp (car frag))
 				       (let ((specs-list (cdr frag)))
 					 (if (listp specs-list)
 					     (and  
 					      (let ((font (first specs-list)))
-						(or (is-a-p font opal:font)
-						    (is-a-p font opal:font-from-file)))
+						(or (is-a-p font font)
+						    (is-a-p font font-from-file)))
 					      (let ((fcolor (second specs-list)))
 						(or (null fcolor)
-						    (and (is-a-p fcolor opal:color)
+						    (and (is-a-p fcolor color)
 							 (let ((bcolor (third specs-list)))
 							   (or (null bcolor)
 							       (is-a-p bcolor
-								       opal:color)))))))
-					     (or (is-a-p specs-list opal:font)
-						 (is-a-p specs-list opal:font-from-file))))))
+								       color)))))))
+					     (or (is-a-p specs-list font)
+						 (is-a-p specs-list font-from-file))))))
 			    (error "Fragment ~s of line ~s must be a string, a view-object, a mark, a cons of a string with a font, or a list of a string, font, and (optional) colors, but it was ~S"
 				   fragno lineno frag)))))
-		  (unless (or (stringp line) (is-a-p line opal:view-object))
+		  (unless (or (stringp line) (is-a-p line view-object))
 		    (error "Line ~s must be a string, a view-object, or a list of fragments, but it was ~S."
 			   lineno line))))))
       (unless (stringp text)
@@ -341,91 +342,106 @@
 
 ;;; XXX These resource lists are thread-unsafe.
 
-;; If the *Free-Line-List* is non-nil, a line is fetched from it to be used
-;; as a new line.  Otherwise create-instance is used to generate a new line.
-;;(defun new-line ()
-;;  (if *Free-Line-List*
-;;    (pop *Free-Line-List*)
-;;    (create-instance nil MULTIFONT-LINE)))
-
+#-line-lock
 (defun new-line ()
   (create-instance nil MULTIFONT-LINE))
 
+;; If the *Free-Line-List* is non-nil, a line is fetched from it to be used
+;; as a new line.  Otherwise create-instance is used to generate a new line.
+#+line-lock
+(defun new-line ()
+  (if *Free-Line-List*
+    (pop *Free-Line-List*)
+    (create-instance nil MULTIFONT-LINE)))
+
+
 ;; Fetches a fragment from the *Free-Frag-Head* list.  If the list is nil then
 ;; a new fragment is generated.
+#-frag-lock
 (defun new-frag ()
   (make-frag))
 
-;;(defun new-frag ()
-;;  (if *Free-Frag-Head*
-;;    (let ((val *Free-Frag-Head*))
-;;      (setf *Free-Frag-Head* (frag-next *Free-Frag-Head*))
-;;      (setf (frag-object val) nil)
-;;      val)
-;;    (make-frag)))
+#+frag-lock
+(defun new-frag ()
+  (if *Free-Frag-Head*
+    (let ((val *Free-Frag-Head*))
+      (setf *Free-Frag-Head* (frag-next *Free-Frag-Head*))
+      (setf (frag-object val) nil)
+      val)
+    (make-frag)))
 
 
 ;; Use this to add a fragment to the free list.
+#-frag-lock
 (defun free-frag (frag)
   (declare (ignore frag))
 )
 
-;;(defun free-frag (frag)
-;;  (setf (frag-next frag) *Free-Frag-Head*)
-;;  (setf *Free-Frag-Head* frag))
+#+frag-lock
+(defun free-frag (frag)
+  (setf (frag-next frag) *Free-Frag-Head*)
+  (setf *Free-Frag-Head* frag))
 
 
 ;; Use this to add a group of fragments to the free list.
+#-frag-lock
 (defun free-frag-line (first-frag last-frag)
   (declare (ignore first-frag last-frag))
   )
 
-;;(defun free-frag-line (first-frag last-frag)
-;;  (when (and first-frag last-frag)
-;;    (setf (frag-next last-frag) *Free-Frag-Head*)
-;;    (setf *Free-Frag-Head* first-frag)))
+#+frag-lock
+(defun free-frag-line (first-frag last-frag)
+  (when (and first-frag last-frag)
+    (setf (frag-next last-frag) *Free-Frag-Head*)
+    (setf *Free-Frag-Head* first-frag)))
 
 
 ;; Fetches a mark from the *Free-Mark-Head* list.  If the list is nil then
 ;; a new mark is generated.
+#-mark-lock
 (defun new-mark ()
   (make-mark))
 
-;;(defun new-mark ()
-;;  (if *Free-Mark-Head*
-;;    (let ((val *Free-Mark-Head*))
-;;      (setf *Free-Mark-Head* (mark-next *Free-Mark-Head*))
-;;      val)
-;;    (make-mark)))
+#+mark-lock
+(defun new-mark ()
+  (if *Free-Mark-Head*
+    (let ((val *Free-Mark-Head*))
+      (setf *Free-Mark-Head* (mark-next *Free-Mark-Head*))
+      val)
+    (make-mark)))
 
 
 ;; Use this to add a mark to the free list.
+#-mark-lock
 (defun free-mark (mark)
   (declare (ignore mark)))
 
-;;(defun free-mark (mark)
-;;  (setf (mark-next mark) *Free-Mark-Head*)
-;;  (setf *Free-Mark-Head* mark))
+#+mark-lock
+(defun free-mark (mark)
+  (setf (mark-next mark) *Free-Mark-Head*)
+  (setf *Free-Mark-Head* mark))
 
 
 
 ;; Use this to add a group of marks to the free list.
+#-mark-lock
 (defun free-mark-line (first-mark last-mark)
   (declare (ignore first-mark last-mark)))
 
-;;(defun free-mark-line (first-mark last-mark)
-;;  (when (and first-mark last-mark)
-;;    (setf (mark-next last-mark) *Free-Mark-Head*)
-;;    (setf *Free-Mark-Head* first-mark)))
+#+mark-lock
+(defun free-mark-line (first-mark last-mark)
+  (when (and first-mark last-mark)
+    (setf (mark-next last-mark) *Free-Mark-Head*)
+    (setf *Free-Mark-Head* first-mark)))
 
 
 ;; Removes the line from its containing aggregate.  Puts it into the
 ;; *Free-Line-List* for potential later use.
 (defun destroy-line (my-line)
-  (opal:remove-component (g-value my-line :parent) my-line)
+  (remove-component (g-value my-line :parent) my-line)
   (free-frag-line (g-value my-line :first-frag) (g-value my-line :last-frag))
   ;; XXX thread unsafe
-  #-(and)(push my-line *Free-Line-List*))
+  #+line-lock (push my-line *Free-Line-List*))
 
 
 ;; Turns string str into a list of strings, split up at #\newlines.
@@ -437,6 +453,7 @@
 	((null pos)
 	 ;; Add space to first string as well.
 	 (push (concatenate 'string str " ") ans))
+      (declare (type (or null fixnum) pos))
       (push (concatenate 'string (subseq str (1+ pos)) " ") ans)
       (setq str (subseq str 0 pos)))))
 
@@ -474,7 +491,7 @@
 	      (push (list my-position width) output)
 	      (setq spc nil spc-spc nil)))
 	  (incf my-position)
-	  (incf width (the fixnum (opal:char-width (frag-font frag) char))))))))
+	  (incf width (the fixnum (char-width (frag-font frag) char))))))))
 
 
 ;; Return the character position to break the line.  The break must occur such
@@ -496,7 +513,7 @@
 		   (string (frag-string cut-frag)))
 	       (do ((i 0 (1+ i)))
 		   ((> accum width) (1- my-position))
-		 (incf accum (the fixnum (opal:char-width font (schar string i))))
+		 (incf accum (the fixnum (char-width font (schar string i))))
 		 (incf my-position)))
 	     my-position))))
 
@@ -654,8 +671,8 @@
 					  cursor-sub-index))
 	(setf (frag-length left-frag) cursor-sub-index)
 	(setf (frag-width right-frag)
-	      (opal:string-width (frag-font right-frag)
-				 (frag-string right-frag)))
+	      (string-width (frag-font right-frag)
+			    (frag-string right-frag)))
 	(decf (frag-width left-frag) (frag-width right-frag))
 
 	(cond
@@ -786,7 +803,7 @@
 	      (unless (zerop frag-offset)
 		(incf x-offset (frag-width cursor-frag))))
 	    (incf x-offset 
-		  (the fixnum (opal:string-width 
+		  (the fixnum (string-width 
 			       (frag-font cursor-frag)
 			       (subseq (the simple-string (frag-string cursor-frag))
 				       0 frag-offset)))))
@@ -841,7 +858,7 @@
 	      (s-value next-line :prev-line new-line)
 	      (s-value gob :last-line new-line))
 	  (s-value my-line :next-line new-line)
-	  (opal:add-component gob new-line :behind (g-value gob :cursor))
+	  (add-component gob new-line :behind (g-value gob :cursor))
 	  (s-value new-line :last-frag last-frag)))
 
     (do* ((frag (g-value my-line :first-frag) (frag-next frag))
@@ -926,12 +943,12 @@
 
       ((stringp my-line)
        (dolist (sub-my-line (break-at-newlines my-line) (reverse ans))
-	 (push (append (list sub-my-line) (list (list " "  opal:default-font
+	 (push (append (list sub-my-line) (list (list " "  default-font
 						      *default-color* *default-color*)))
 	       ans)))
 
-      ((is-a-p my-line opal:view-object)
-       (push (append (list my-line) (list (list " " opal:default-font
+      ((is-a-p my-line view-object)
+       (push (append (list my-line) (list (list " " default-font
 						*default-color* *default-color*)))
 	     ans))
 
@@ -951,7 +968,7 @@
 				 (if true-list
 				     (second frag)
 				     specs-list)
-				 opal:default-font))
+				 default-font))
 		  (last-fcolor (if true-list (third frag) *default-color*))
 		  (last-bcolor (if true-list (fourth frag)  *default-color*)))
 
@@ -1003,7 +1020,7 @@
       (T              (setq text (add-spaces text))))
     (dolist (my-line text)
       (setq new-line (new-line))
-      (opal:add-component gob new-line :behind cursor)
+      (add-component gob new-line :behind cursor)
       (if prev-line
 	(s-value prev-line :next-line new-line)
 	(s-value gob :first-line new-line))
@@ -1033,7 +1050,7 @@
 		(setq font (frag-font last-frag)
 		      fcolor (frag-fcolor last-frag)
 		      bcolor (frag-bcolor last-frag))
-		(setq font opal:default-font
+		(setq font default-font
 		      fcolor *default-color*
 		      bcolor *default-color*))
 	      (new-frag-with-font font fcolor bcolor
@@ -1041,7 +1058,7 @@
 	    (progn
 	      (setf (frag-next prev-frag) new-frag)
 	      (setf (frag-prev new-frag) prev-frag)))
-	  (if (or (is-a-p frag opal:view-object) (mark-p frag))
+	  (if (or (is-a-p frag view-object) (mark-p frag))
 	    (let* ((prev-line (g-value new-line :prev-line))
 		   (last-frag (and prev-line (g-value prev-line :last-frag)))
 		   font fcolor bcolor)
@@ -1049,7 +1066,7 @@
 		(setq font (frag-font last-frag)
 		      fcolor (frag-fcolor last-frag)
 		      bcolor (frag-bcolor last-frag))
-		(setq font opal:default-font
+		(setq font default-font
 		      fcolor *default-color*
 		      bcolor *default-color*))
 	      (new-frag-with-font font fcolor bcolor
@@ -1059,7 +1076,7 @@
 	      (setf (frag-prev new-frag) prev-frag))))
 	(setq prev-frag new-frag)
 	(cond
-	  ((is-a-p frag opal:view-object)
+	  ((is-a-p frag view-object)
 	   (setf (frag-object-p new-frag) T)
 	   (setf (frag-object new-frag) frag)
 	   (setf (frag-font new-frag) nil)
@@ -1069,7 +1086,7 @@
 	   (setf (frag-width new-frag) (g-value frag :width))
 	   (setf (frag-ascent new-frag) (g-value frag :height))
 	   (setf (frag-descent new-frag) 0)
-	   (opal:add-component gob frag :back)
+	   (add-component gob frag :back)
 	   (s-value frag :multifont-object gob)
 	   (s-value frag :multifont-line new-line)
 	   (s-value frag :multifont-frag new-frag)
@@ -1102,14 +1119,14 @@
 	   (setf (frag-object-p new-frag) NIL)
 	   (if (stringp frag)
 	     (setq substring frag
-		   font opal:default-font
+		   font default-font
 		   fcolor *default-color*
 		   bcolor *default-color*)
 	     (progn
 	       (setq substring (car frag))
 	       (let ((specs-list (cdr frag)))
 		 (if (listp specs-list)
-		   (setq font (or (second frag) opal:default-font)
+		   (setq font (or (second frag) default-font)
 			 fcolor (or (third frag) *default-color*)
 			 bcolor (or (fourth frag) *default-color*))
 		   (setq font specs-list
@@ -1121,8 +1138,8 @@
 	   (setf (frag-fcolor new-frag) fcolor)
 	   (setf (frag-bcolor new-frag) bcolor)
 	   (setf (frag-width new-frag)
-		 (opal:string-width font substring
-				    :display (g-value gob :window)))
+		 (string-width font substring
+			       :display (g-value gob :window)))
 	   (setf (frag-ascent new-frag) (g-value font :max-char-ascent))
 	   (setf (frag-descent new-frag) (g-value font :max-char-descent)))))
       (s-value new-line :last-frag new-frag)
@@ -1170,18 +1187,18 @@
 		     (aref update-vals +multifont-height+))))
 
 
-(define-method :write-slots opal:multifont-text (agget normal-proto components
-						       behaviors
-						       suppress-children?)
+(define-method :write-slots MULTIFONT-TEXT (agget normal-proto components
+						  behaviors
+						  suppress-children?)
   (s-value agget :initial-text (get-text agget))
   (call-prototype-method agget normal-proto components
 			 behaviors suppress-children?))
 
-(define-method :initialize-copy opal:multifont-text (orig copy)
-  (s-value copy :initial-text (opal:get-text orig))
+(define-method :initialize-copy MULTIFONT-TEXT (orig copy)
+  (s-value copy :initial-text (get-text orig))
   (kr-send copy :initialize copy))
 
-(define-method :fix-update-slots opal:MULTIFONT-TEXT (gob)
+(define-method :fix-update-slots MULTIFONT-TEXT (gob)
   (if (g-value gob :word-wrap-p)
       (let ((text-width (g-value gob :text-width)))
 	(declare (fixnum text-width))
@@ -1198,18 +1215,18 @@
 
 
 ;; Method :INITIALIZE : create initial data for text box.
-(define-method :initialize opal:MULTIFONT-TEXT (gob &optional (first-time t))
+(define-method :initialize MULTIFONT-TEXT (gob &optional (first-time t))
   (when first-time
-    (kr-send opal:aggregate :initialize gob))
+    (kr-send aggregate :initialize gob))
   (let ((cursor (create-instance nil multifont-text-cursor))
 	(text (g-value gob :initial-text)))
     (check-text text)
     (s-value gob :cursor cursor)
-    (opal:add-component gob cursor :front)
+    (add-component gob cursor :front)
     (install-text gob text)))
 
 
-(define-method :draw opal::MULTIFONT-TEXT-CURSOR (gob a-window)
+(define-method :draw MULTIFONT-TEXT-CURSOR (gob a-window)
   (call-prototype-method gob a-window)
   (with-demons-disabled
       (s-value gob :force-update NIL)))
@@ -1223,7 +1240,7 @@
 ;;   (g-value line-style :foreground-color :colormap-index)
 ;;   (g-value line-style :background-color :colormap-index)
 ;;
-(define-method :draw opal::MULTIFONT-LINE (gob a-window)
+(define-method :draw MULTIFONT-LINE (gob a-window)
 
   (let* ((update-vals (g-local-value gob :update-slots-values))
 	 (show-marks (g-value gob :show-marks))
@@ -1259,7 +1276,7 @@
 			 (draw-left (if sticky-left (- left 3) (- left 5)))
 			 (string (if sticky-left "<" ">")))
 		    (gem:draw-text a-window draw-left (+ top 4) string
-				   (opal:get-standard-font :fixed :bold :small)
+				   (get-standard-font :fixed :bold :small)
 				   function line-style))))
 	      (incf left (frag-width frag)))
 
@@ -1272,9 +1289,7 @@
 				(create-instance nil line-style
 				  (:constant nil)
 				  (:foreground-color fcolor)))
-			  (setq fcolor (g-value line-style :foreground-color)))
-		      #+comment
-		      (g-value fcolor :colormap-index)))
+			  (setq fcolor (g-value line-style :foreground-color)))))
 		   (background-color
 		    (let ((bcolor (frag-bcolor frag)))
 		      (if bcolor
@@ -1284,15 +1299,10 @@
 				    (create-instance nil line-style
 				      (:constant nil)
 				      (:background-color bcolor))))
-			  (setq bcolor (g-value line-style :background-color)))
-		      #+comment
-		      (g-value bcolor :colormap-index)))
+			  (setq bcolor (g-value line-style :background-color)))))
 		   (string (frag-string frag)))
 
 	      (declare (ignore foreground-color background-color))
-	      ;;  (opal::set-gc line-style-gc xlib-gc-line :foreground foreground-color)
-	      ;;  (opal::set-gc line-style-gc xlib-gc-line :background background-color)
-
 	      (setf new-line-style (or new-line-style line-style))
 
 	      (let ((start-highlight (frag-start-highlight frag))
@@ -1328,21 +1338,21 @@
 			  (gem:draw-text
 			   a-window left top left-str font function
 			   new-line-style fill-p)
-			  (incf left (opal:string-width font left-str
+			  (incf left (string-width font left-str
 							:display a-window))
 
 			  ;; Draw middle portion, switch fore/back
 			  (gem:draw-text
 			   a-window left top mid-str font function
 			   new-line-style fill-p T)
-			  (incf left (opal:string-width font mid-str
+			  (incf left (string-width font mid-str
 							:display a-window))
 
 			  ;; Draw the right portion
 			  (gem:draw-text
 			   a-window left top right-str font function
 			   new-line-style fill-p)
-			  (incf left (opal:string-width font right-str
+			  (incf left (string-width font right-str
 							:display a-window))))))))))))
 
 
@@ -1373,8 +1383,8 @@
       (let ((string (frag-string cursor-frag))
 	    (font (frag-font cursor-frag)))
 	(do* ((frag-pos 0 (1+ frag-pos))
-	      (c-width (opal:char-width font (schar string frag-pos))
-		       (opal:char-width font (schar string frag-pos))))
+	      (c-width (char-width font (schar string frag-pos))
+		       (char-width font (schar string frag-pos))))
 	     ((> (+ cursor-offset c-width) x-offset)
 	      (setq cursor-frag-pos frag-pos))
 	  (declare (fixnum c-width))
@@ -1854,7 +1864,7 @@
 			  (:large :medium)
 			  (:very-large :large)))
 		  (setf (third key) size))))
-	(opal:get-standard-font (first key) (second key) (third key)))))
+	(get-standard-font (first key) (second key) (third key)))))
 
 (defun change-font-frag (frag my-font family size italic bold first-face)
   (unless (frag-object-p frag)
@@ -1866,7 +1876,7 @@
 	(setf (frag-ascent frag) (g-value new-font :max-char-ascent))
 	(setf (frag-descent frag) (g-value new-font :max-char-descent))
 	(setf (frag-width frag)
-	      (opal:string-width new-font (frag-string frag)))))))
+	      (string-width new-font (frag-string frag)))))))
 
 
 (defun change-font-mid (gob my-line start-pos end-pos
@@ -2213,7 +2223,7 @@
 			    (the fixnum
 				 (if (frag-object-p frag)
 				     (frag-width frag)
-				     (opal:char-width (frag-font frag) char))))))
+				     (char-width (frag-font frag) char))))))
 		(if (and (= frag-pos (frag-length frag))
 			 (let ((obj (frag-object next)))
 			   (and (mark-p obj) (mark-sticky-left obj))))
@@ -2233,7 +2243,7 @@
 		(incf (g-value gob :cursor-x-offset)
 		      (if (frag-object-p frag)
 			  (frag-width frag)
-			  (opal:char-width (frag-font frag) char)))))
+			  (char-width (frag-font frag) char)))))
 	  (reset-font gob)
 	  char))))
 
@@ -2272,10 +2282,10 @@
 		      (setq char-size (frag-width frag)))
 		    (progn
 		      (setq char (schar (frag-string frag) frag-pos))
-		      (setq char-size (opal:char-width (frag-font frag) char))))
+		      (setq char-size (char-width (frag-font frag) char))))
 		(progn
 		  (setq char #\newline)
-		  (setq char-size (opal:char-width (frag-font frag) #\space))
+		  (setq char-size (char-width (frag-font frag) #\space))
 		  )
 		)
 	    )
@@ -2286,7 +2296,7 @@
 	      (progn
 		(setq char (schar (frag-string frag) frag-pos))
 		(setq char-size
-		      (opal:char-width (frag-font frag) char))))
+		      (char-width (frag-font frag) char))))
 	  )
       (when (g-value gob :selection-p)
 	(invalidate-line my-line)
@@ -2652,7 +2662,7 @@
         ((null frag))
       (unless (frag-object-p frag)
         (return-from search-for-font (frag-font frag)))))
-  opal:default-font)
+  default-font)
 
 (defun search-backwards-for-font (start-line start-frag)
   (do ((frag start-frag (frag-prev frag)))
@@ -2665,7 +2675,7 @@
         ((null frag))
       (unless (frag-object-p frag)
         (return-from search-backwards-for-font (frag-font frag)))))
-  opal:default-font)
+  default-font)
 
 (defun CHANGE-FONT-OF-SELECTION (gob my-font &key family size
                                  (italic :not-supplied) (bold :not-supplied))
@@ -2725,7 +2735,7 @@
 		(wrap-line gob my-line)
 		(do ()
 		    ((null (undo-wrap-line gob my-line))))))))))
-    (let* ((old-font (or (g-value gob :current-font) opal:default-font))
+    (let* ((old-font (or (g-value gob :current-font) default-font))
 	   (first-face (g-value old-font :face)))
       (s-value gob :current-font (update-font old-font my-font family size
 					      italic bold first-face)))))
@@ -2843,7 +2853,7 @@
     (setq frag (g-value my-line :last-frag))
     (setq font (search-for-font my-line frag))
     (multiple-value-setq (fcolor bcolor) (search-for-color my-line frag))
-    (setq width (opal:char-width font #\space))
+    (setq width (char-width font #\space))
     (if (or (null frag) (frag-object-p frag))
       (let ((new-frag (new-frag)))
         (setf (frag-line-style new-frag) NIL)
@@ -2909,7 +2919,7 @@
     (if next-frag
       (setf (frag-prev next-frag) new-frag)
       (s-value my-line :last-frag new-frag))
-    (if (or (is-a-p my-font opal:font) (is-a-p my-font opal:font-from-file))
+    (if (or (is-a-p my-font font) (is-a-p my-font font-from-file))
       (progn
         (setf (frag-object-p new-frag) NIL)
         (setf (frag-string new-frag) "")
@@ -3009,7 +3019,7 @@
 		   (frag-pos (g-value gob :cursor-frag-pos))
 		   (my-font (or new-font (g-value gob :current-font)
 				(search-for-font my-line frag)))
-		   (char-size (the fixnum (opal:char-width my-font char)))
+		   (char-size (the fixnum (char-width my-font char)))
 		   (my-fcolor (or new-fcolor (g-value gob :current-fcolor)))
 		   (my-bcolor (or new-bcolor (g-value gob :current-bcolor))))
 	      (if (frag-object-p frag)
@@ -3043,7 +3053,7 @@
 (defun remove-object (gob object)
   (let ((prev-object (g-value object :mf-prev-object))
 	(next-object (g-value object :mf-next-object)))
-    (opal:remove-component gob object)
+    (remove-component gob object)
     (setf (frag-object-p (g-value object :multifont-frag)) nil)
     (if prev-object
       (s-value prev-object :mf-next-object next-object)
@@ -3104,7 +3114,7 @@
             (setq char-size (frag-width frag)))
           (progn
             (setq char (schar (frag-string frag) frag-pos))
-            (setq char-size (opal:char-width (frag-font frag) char))
+            (setq char-size (char-width (frag-font frag) char))
             (setf (frag-string frag)
 		(let ((old-string (frag-string frag)))
                   (concatenate 'string (subseq old-string 0 frag-pos)
@@ -3196,7 +3206,7 @@
         (setq char-size (frag-width frag)))
       (progn
         (setq char (schar (frag-string frag) frag-pos))
-        (setq char-size (opal:char-width (frag-font frag) char))
+        (setq char-size (char-width (frag-font frag) char))
         (setf (frag-string frag)
 	    (let ((old-string (frag-string frag)))
               (concatenate 'string (subseq old-string 0 frag-pos)
@@ -3274,7 +3284,7 @@
                (frag-pos (g-value gob :cursor-frag-pos))
                (my-font (or new-font (g-value gob :current-font)
 			    (search-for-font my-line frag)))
-               (text-size (opal:string-width
+               (text-size (string-width
 			   my-font str
 			   :display (g-local-value gob :window)))
                (str-length (length str))
@@ -3314,7 +3324,7 @@
 
 (defun ADD-OBJECT (gob object)
   (TOGGLE-SELECTION gob nil)
-  (when (is-a-p object opal:view-object)
+  (when (is-a-p object view-object)
     (let* ((my-line (g-value gob :cursor-line))
            (frag (g-value gob :cursor-frag))
            (frag-pos (g-value gob :cursor-frag-pos))
@@ -3349,7 +3359,7 @@
 	  (s-value gob :last-object object)))
       (s-value gob :first-object object)
       (set-object-left my-line)
-      (opal:add-component gob object :back)
+      (add-component gob object :back)
       (when (g-value gob :word-wrap-p)
         (wrap-line gob my-line)
         (let ((prev-line (g-value my-line :prev-line)))
@@ -3481,11 +3491,11 @@
 (defun insert-line (gob my-line)
   (cond
     ((stringp my-line) (INSERT-STRING gob my-line))
-    ((is-a-p my-line opal:view-object) (ADD-OBJECT gob my-line))
+    ((is-a-p my-line view-object) (ADD-OBJECT gob my-line))
     (T (dolist (frag my-line)
          (cond
 	   ((stringp frag) (INSERT-STRING gob frag))
-           ((is-a-p frag opal:view-object) (ADD-OBJECT gob frag))
+           ((is-a-p frag view-object) (ADD-OBJECT gob frag))
            (T (let ((first-item (car frag))
 		    (specs-list (cdr frag)))
 		(if (eq first-item :mark)
@@ -3580,7 +3590,7 @@
 (defun copy-frag-mid (frag start-pos end-pos)
   (declare (fixnum start-pos end-pos))
   (if (= start-pos end-pos)
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3592,7 +3602,7 @@
 (defun delete-frag-mid (gob frag start-pos end-pos)
   (declare (fixnum start-pos end-pos))
   (if (= start-pos end-pos)
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3610,14 +3620,14 @@
         (setf (frag-string frag) new-string)
         (setf (frag-length frag) (length new-string))
         (setf (frag-width frag)
-	      (opal:string-width my-font new-string
+	      (string-width my-font new-string
 				 :display (g-local-value gob :window)))
         (list str my-font my-fcolor my-bcolor)))))
 
 (defun copy-frag-left (frag frag-position)
   (declare (fixnum frag-position))
   (if (zerop frag-position)
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3629,7 +3639,7 @@
 (defun delete-frag-left (gob frag frag-position)
   (declare (fixnum frag-position))
   (if (zerop frag-position)
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3646,7 +3656,7 @@
         (setf (frag-string frag) new-string)
         (setf (frag-length frag) (length new-string))
         (setf (frag-width frag)
-	      (opal:string-width my-font new-string
+	      (string-width my-font new-string
 				 :display (g-local-value gob :window)))
         (list str my-font my-fcolor my-bcolor)))))
 
@@ -3654,7 +3664,7 @@
 (defun copy-frag-right (frag frag-position)
   (declare (fixnum frag-position))
   (if (= frag-position (frag-length frag))
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3666,7 +3676,7 @@
 (defun delete-frag-right (gob frag frag-position)
   (declare (fixnum frag-position))
   (if (= frag-position (frag-length frag))
-    (list "" opal:default-font *default-color* *default-color*)
+    (list "" default-font *default-color* *default-color*)
     (if (frag-object-p frag)
       (let ((obj (frag-object frag)))
 	(if (mark-p obj)
@@ -3683,7 +3693,7 @@
         (setf (frag-string frag) new-string)
         (setf (frag-length frag) (length new-string))
         (setf (frag-width frag)
-	      (opal:string-width my-font new-string
+	      (string-width my-font new-string
 				 :display (g-local-value gob :window)))
         (list str my-font my-fcolor my-bcolor)))))
 
@@ -3962,7 +3972,7 @@
       (destroy-line my-line)))
   (do ((object (g-value gob :first-object) (g-value object :mf-next-object)))
       ((null object))
-    (opal:remove-component gob object))
+    (remove-component gob object))
   (free-mark-line (g-value gob :first-mark) (g-value gob :last-mark))
   (s-value gob :first-mark nil)
   (s-value gob :last-mark nil)
@@ -4030,25 +4040,25 @@
 
 (defun font-to-list (my-font)
   (cond
-    ((is-a-p my-font opal:font)
+    ((is-a-p my-font font)
         (list :FONT (g-value my-font :family) (g-value my-font :face)
               (g-value my-font :size)))
-    ((is-a-p my-font opal:font-from-file)
+    ((is-a-p my-font font-from-file)
         (list :FONT-FROM-FILE (g-value my-font :font-path)
               (g-value my-font :font-name)))
-    (t  (font-to-list opal:default-font))))
+    (t  (font-to-list default-font))))
 
 (defun list-to-font (my-font)
   (case (car my-font)
     (:FONT
         (GET-STANDARD-FONT (second my-font) (third my-font) (fourth my-font)))
     (:FONT-FROM-FILE
-        (create-instance nil opal:font-from-file
+        (create-instance nil font-from-file
           (:font-path (second my-font))
           (:font-name (third my-font))))))
 
 (defun frag-to-list (frag)
-  (if (or (is-a-p frag opal:view-object) (stringp frag))
+  (if (or (is-a-p frag view-object) (stringp frag))
     frag
     (let* ((specs-list (cdr frag))
 	   (font (if (listp specs-list)
@@ -4057,7 +4067,7 @@
       (cons (car frag) (font-to-list font)))))
 
 (defun list-to-frag (frag)
-  (if (or (stringp frag) (is-a-p frag opal:view-object))
+  (if (or (stringp frag) (is-a-p frag view-object))
     frag
     (let* ((specs-list (cdr frag))
 	   (font (if (listp specs-list)
@@ -4110,7 +4120,7 @@
 
 (defun listify-frag (frag)
   (if (stringp frag)
-    (list frag opal:default-font *default-color* *default-color*)
+    (list frag default-font *default-color* *default-color*)
     frag))
 
 (defun listify-line (my-line)
@@ -4149,14 +4159,14 @@
 (defun empty-frag-p (frag)
   (cond
     ((stringp frag) (string= "" frag))
-    ((is-a-p frag opal:view-object) NIL)
+    ((is-a-p frag view-object) NIL)
     (T (string= "" (car frag)))))
 
 (defun empty-line-p (line)
   (if (stringp line)
     (string= "" line)
     (if line
-      (and (not (is-a-p line opal:view-object))
+      (and (not (is-a-p line view-object))
            (= (length line) 1) (empty-frag-p (first line)))
       T)))
 
@@ -4189,15 +4199,15 @@
 	    (setf (frag-ascent frag) (g-value object :height))))
         (let ((my-font (frag-font frag)))
           (setf (frag-width frag)
-                (opal:string-width my-font (frag-string frag)
+                (string-width my-font (frag-string frag)
 				   :display (g-local-value gob :window)))
           (setf (frag-ascent frag) (g-value my-font :max-char-ascent))
           (setf (frag-descent frag) (g-value my-font :max-char-descent)))))
     (calculate-size-of-line gob line)))
 
 (defun reset-multifont-sizes ()
-  (opal::do-all-instances opal:multifont-text
+  (do-all-instances multifont-text
     #'(lambda (obj)
 	(reset-all-sizes obj))))
 
-(push #'reset-multifont-sizes opal::*auxilliary-reconnect-routines*)
+(push #'reset-multifont-sizes *auxilliary-reconnect-routines*)

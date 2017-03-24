@@ -37,7 +37,7 @@
   (dolist (inst (g-value obj :is-a-inv))
     (do-all-instances inst a-function :self NIL)
     (funcall a-function inst))
-  (if self (funcall a-function obj)))
+  (when self (funcall a-function obj)))
 
 
 (defun Destroy-Font-Slots (fnt)
@@ -122,7 +122,7 @@
     (setf root-window (g-value gem:device-info :current-root))
 
     (with-constants-disabled
-      (s-value opal::COLOR :color-p gem:*color-screen-p*))
+      (s-value COLOR :color-p gem:*color-screen-p*))
     
     ;; you can't call alloc-color-cells on a :true-color or :static-color
     ;; screen...conditionalized it. [1995/12/08:goldman]

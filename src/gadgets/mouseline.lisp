@@ -8,8 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;   MouseLine is a quite demo aggregadget that puts a line at the bottom of
-;;;   the window showing what the mouse buttons will do:
+;;;   MouseLine is a demo aggregadget that puts a line at the bottom
+;;;   of the window showing what the mouse buttons will do:
 ;;;
 ;;;  Implemented by Brad Myers
 ;;;
@@ -92,7 +92,7 @@ Change log:
   (declare (ignore prev-obj))
   (let ((wait-amount #+garnet-processes (g-value inter :wait-amount)
 		     #-garnet-processes NIL))
-    (if (and wait-amount
+    (if (and #-garnet-processes wait-amount
 	     (> wait-amount 0))
 	(Launch-MouseLine-Process inter new-obj wait-amount)
 	(Display-MouseLine-Text inter new-obj))))
@@ -213,7 +213,7 @@ Change log:
   (let ((wait-amount #+garnet-processes (g-value inter :wait-amount)
 		     #-garnet-processes NIL)
 	win)
-    (if (and wait-amount
+    (if (and #-garnet-processes wait-amount
 	     (> wait-amount 0))
 	(progn
 	  (if new ; if there is an object, then wait, otherwise remove window
@@ -316,7 +316,6 @@ Change log:
       (:waiting-priority ,MouseLinePriorityLevel)
       (:running-priority ,MouseLinePriorityLevel)
       (:final-function InsideOutsideHandler))
-     
      (:pop-immediate-show ,inter:menu-interactor
       (:start-where ,(o-formula (list :list-leaf-element-of
 				      (gvl :operates-on)

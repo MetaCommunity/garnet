@@ -144,32 +144,33 @@
 symbol is bound.  Note: The suffix of the string is converted to all
 uppercase characters before checking if it is bound in the package."
   (let ((result-1 (verify-binding-aux string 0)))
-    (if result-1
-        (let* ((colon-p (first result-1))
-               (prefix (second result-1))
-               (symbol-1 (values (read-from-string prefix)))
-               (index (third result-1)))
-          (if colon-p
-              ;; Then symbol-1 indicates a package name
-              (when (find-package symbol-1)
-                ;; Then symbol-1 is a valid package name
-                (let ((result-2 (verify-binding-aux string (+ 1 index))))
-                  (when result-2
-                    ;; Then suffix indicates a var in the package symbol-1
-                    (let* ((suffix (string-upcase (second result-2)))
-                           (access-internal-p (fourth result-2)))
-                      (multiple-value-call
-                          #'(lambda (symbol-2 access)
-                              (if symbol-2
-                                  (if (or (eq access :external)
-                                          access-internal-p)
-                                      ;; verify that symbol-2 is not a function
-                                      (when (boundp symbol-2) 
-                                        (values (read-from-string string)))
-                                      )))
-                        (find-symbol suffix symbol-1))))))
-              ;; Then symbol indicates a var in the working package
-              (when (and (not (numberp symbol-1)) (boundp symbol-1)) symbol-1))))))
+    (when result-1
+      (let* ((colon-p (first result-1))
+	     (prefix (second result-1))
+	     (symbol-1 (values (read-from-string prefix)))
+	     (index (third result-1)))
+	(declare (fixnum index))
+	(when colon-p
+	  ;; Then symbol-1 indicates a package name
+	  (when (find-package symbol-1)
+	    ;; Then symbol-1 is a valid package name
+	    (let ((result-2 (verify-binding-aux string (+ 1 index))))
+	      (when result-2
+		;; Then suffix indicates a var in the package symbol-1
+		(let* ((suffix (string-upcase (second result-2)))
+		       (access-internal-p (fourth result-2)))
+		  (multiple-value-call
+		      #'(lambda (symbol-2 access)
+			  (if symbol-2
+			      (if (or (eq access :external)
+				      access-internal-p)
+				  ;; verify that symbol-2 is not a function
+				  (when (boundp symbol-2) 
+				    (values (read-from-string string)))
+				  )))
+		    (find-symbol suffix symbol-1))))))
+	  ;; Then symbol indicates a var in the working package
+	  (when (and (not (numberp symbol-1)) (boundp symbol-1)) symbol-1))))))
 
 
 
@@ -177,6 +178,8 @@ uppercase characters before checking if it is bound in the package."
 (defun VERIFY-BINDING-AUX (string start)
   "Split the string at the colon(s) to return either the package name 
 or the symbol name if called where the first character is a colon."
+  (declare (simple-string string)
+	   (fixnum start))
   (let ((str-len (length string)))
     (when (> str-len start)
       ;; Skip second colon if there is a double colon between package and var
@@ -191,10 +194,10 @@ or the symbol name if called where the first character is a colon."
           ;; FMG --- Just use lisp utilities to do this stuff.
           (let* ((colon (position #\: string :start start :test #'char=))
                  (new-string (subseq string start colon)))
-            (list (not (null colon)) 
-                  new-string
-                  (or colon (1- str-len)) 
-                  access-internal-p)))))))
+            (values (not (null colon)) 
+		    new-string
+		    (or colon (1- str-len)) 
+		    access-internal-p)))))))
 
 ;;;
 ;;; (end) Verify-Binding

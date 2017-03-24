@@ -71,7 +71,7 @@
 
 (defun Button-Interactor-Initialize (new-Button-schema)
   (if-debug new-Button-schema (format T "Button initialize ~s~%" new-Button-schema))
-  (Check-Interactor-Type new-Button-schema inter:button-interactor)
+  (Check-Interactor-Type new-Button-schema button-interactor)
   (Check-Required-Slots new-Button-schema)
   (check-slots-to-set new-Button-schema)
   (Set-Up-Defaults new-Button-schema)
@@ -273,8 +273,8 @@
 ;;; Button schema
 ;;
 
-(Create-Schema 'inter:button-interactor
-	       (:is-a inter:interactor)
+(Create-Schema 'BUTTON-INTERACTOR
+	       (:is-a interactor)
 	       (:name :First-Button-interactor)
 	       (:start-action 'Button-Int-Start-Action)
 	       (:running-action 'Button-Int-Running-Action)
@@ -306,7 +306,7 @@
 
 ;; Need special destroy to remove the extra final feedback objects that
 ;; may have been allocated
-(define-method :destroy-me inter:button-interactor (an-interactor &optional (erase T))
+(define-method :destroy-me BUTTON-INTERACTOR (an-interactor &optional (erase T))
   (if-debug an-interactor
 	    (format T "Button special destroy ~s erase=~s~%" an-interactor erase))
   (when (g-value an-interactor :timer-repeat-p)
@@ -317,6 +317,6 @@
 ;;
 ;; Scroll wheel interactor. Scroll wheels are treated as if someone
 ;; clicked on a button. We look for the mouse-up of the scroll wheel.
-(create-instance 'inter:scroll-wheel-interactor inter:button-interactor
+(create-instance 'SCROLL-WHEEL-INTERACTOR button-interactor
   (:continuous nil)
   (:start-event '(:downscrollup :upscrollup)))

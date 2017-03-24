@@ -63,7 +63,12 @@ debugger, otherwise NIL"
     #-(or allegro ccl sb-thread) NIL
     ))
 
+
+
 (defun send-timer-event (inter)
+  "Inject a timer event into the event stream. The data accompanying
+  the event is the index of the interactor in the array of timer
+  interactors."
   (let* ((wins (Get-Interactor-Windows inter))
 	 (win (if (listp wins) (car wins) wins)))
     (if-debug inter (Format T "Posting Timer event for ~s~%" inter))

@@ -414,7 +414,7 @@ currently being edited."))
 			     "Error Check for \""
 			     (Get-User-Name (gvl :parent :for-object))
 			     "\"")))
-       (:font ,(opal:get-standard-font NIL :bold-italic :large)))
+       (:font ,(opal:get-standard-font NIL :bold-italic #-(and):large #+(and) nil)))
       (:ok-cancel ,garnet-gadgets:motif-text-button-panel
        (:left 300) ;(:left 360)
        (:top ,(o-formula (+ 5 (opal:gv-bottom (gvl :parent :title)))))

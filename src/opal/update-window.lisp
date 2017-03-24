@@ -201,14 +201,15 @@ This is done to avoid unnecessary total updates."
 
 (defun do-total-update (invalid-objects invalid-xors invalid-copys a-window
 					window-agg buffer exposed-clip-mask
-					line-style-gc filling-style-gc)
-  (let (exposed-bbox)			; Exposed-bbox tells whether the window was
-					; just exposed and nothing else happened to it.
-    (unless (and (setq exposed-bbox (and (null invalid-objects)
-					 (null invalid-xors)
-					 (null invalid-copys)
-					 (g-value a-window :exposed-bbox)))
-		 buffer)
+			line-style-gc filling-style-gc)
+  ;; Exposed-bbox tells whether the window was
+  ;; just exposed and nothing else happened to it.
+  (let ((exposed-bbox (and (null invalid-objects)
+			   (null invalid-xors)
+			   (null invalid-copys)
+			   (g-value a-window :exposed-bbox))))
+
+    (unless (and exposed-bbox buffer)
       (if exposed-bbox 
 	(progn
 	  (bbox-to-clip-mask exposed-bbox exposed-clip-mask)
@@ -240,7 +241,6 @@ This is done to avoid unnecessary total updates."
 			   line-style-gc filling-style-gc)
 	(update-method-aggregate window-agg
 				 (g-local-value window-agg :update-info)
-				 line-style-gc filling-style-gc
 				 exposed-bbox NIL (not exposed-bbox)))
 
       (free-list invalid-objects)
@@ -400,14 +400,13 @@ This is done to avoid unnecessary total updates."
 				     line-style-gc filling-style-gc)
 		  (update-method-aggregate
 		   window-agg (g-local-value window-agg :update-info)
-		   line-style-gc filling-style-gc
 		   win-old-bbox win-new-bbox NIL))
 		(progn
 		  (gem:set-clip-mask a-window clip-mask-1
 				     line-style-gc filling-style-gc)
 		  (update-method-aggregate
 		   window-agg (g-local-value window-agg :update-info)
-		   line-style-gc filling-style-gc win-new-bbox NIL NIL)))))
+		   win-new-bbox NIL NIL)))))
 	;; If there are fastdraw objects, draw
 	;; them, then clear the list....
 	(when fastdraw-objects
@@ -519,7 +518,7 @@ This is done to avoid unnecessary total updates."
 		  NIL))
 	   (free-list fastdraw-objects))))
 
-(define-method :update opal::window (a-window &optional (total-p NIL))
+(define-method :update WINDOW (a-window &optional (total-p NIL))
   (declare (optimize (speed 3) (safety 1)))
   (with-update-lock-held
     (let* ((win-info (g-local-value a-window :win-update-info))
@@ -597,20 +596,26 @@ This is done to avoid unnecessary total updates."
 		  (progn
 		    (do-total-update invalid-objects invalid-xors invalid-copys a-window
 				     window-agg buffer exposed-clip-mask
-				     line-style-gc filling-style-gc))
+				     ;; XXX???
+				     line-style-gc filling-style-gc
+				     ))
       
 		  ;;else this is a PARTIAL window update.
 		  (do-partial-update invalid-objects invalid-xors invalid-copys a-window
 				     window-agg buffer exposed-clip-mask
-				     line-style-gc filling-style-gc obj-update-info
-				     obj-update-slots-values win-info win-new-bbox
-				     win-old-bbox fastdraw-objects)))
+				     ;; XXX???
+				     line-style-gc filling-style-gc 
+				     obj-update-info obj-update-slots-values
+				     win-info win-new-bbox win-old-bbox
+				     fastdraw-objects)))
 
 	    ;; When using double-buffering, copy buffer into window.
 	    (when (and visible buffer)
 	      (if (or total-p (null win-new-bbox))
 		  (gem:bit-blit a-window buffer
-				0 0 (g-value a-window :width) (g-value a-window :height)
+				0 0
+				(g-value-fixnum a-window :width)
+				(g-value-fixnum a-window :height)
 				drawable 0 0)
 		  (progn
 		    (when win-new-bbox

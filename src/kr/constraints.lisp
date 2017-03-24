@@ -50,8 +50,10 @@
 ;;; FORMULAS
 ;;
 
-;; Reuses one of the destroyed formulas, or allocates one if none exist.
+#-(and)
 (defun make-new-formula ()
+  "Reuses one of the destroyed formulas, or allocates one if none
+exist."
   (let ((f (formula-pop)))
     (if f
 	;; Reuse a formula
@@ -68,6 +70,28 @@
 	)
     (set-formula-number f 0)
     f))
+
+#+(and)
+(defun make-new-formula ()
+  (let ((l (1- (length *reuse-formulas*)))
+	f)
+    (if (< l 0)
+	;; No formulas to reuse
+	(setf f (make-a-formula))
+	;; Reuse the last formula in the array.
+	(progn
+	  (setf f (aref *reuse-formulas* l))
+	  (setf (a-formula-depends-on f) nil)
+	  (setf (a-formula-cached-value f) nil)
+	  (setf (a-formula-path f) nil)
+	  (setf (a-formula-is-a f) nil)
+	  (setf (a-formula-function f) nil)
+	  (setf (a-formula-lambda f) nil)
+	  (setf (a-formula-is-a-inv f) nil)
+	  (decf (fill-pointer *reuse-formulas*))))
+    (set-formula-number f 0)
+    f))
+
 
 (defun formula-fn (form &optional (initial-value nil) meta)
   "Creates an interpreted formula.  The <form> can be either a Lisp expression
@@ -129,7 +153,7 @@
 	    (a-formula-priority formula) *min-priority*)
       formula)))
 
-(declaim (inline prepare-formula))
+(declaim (inline o-formula-fn))
 (defun o-formula-fn (function lambda initial-value meta)
   (let ((formula (prepare-formula initial-value)))
     (setf (a-formula-function formula) function
@@ -323,18 +347,16 @@ and the same parent (if any)."
   "RETURNS:
      T if the slot is not constant, i.e., it was not declared constant and we
      are not in the middle of a gv chain where the slot is declared a link
-     constant.
-"
+     constant."
   (let ((entry (slot-accessor schema slot)))
     (when entry
       (not (is-constant (sl-bits entry))))))
 
 
-;; This is similar to g-value-fn, but does a few things needed for constant
-;; formula checking before it does anything else.  Also, sets up
-;; dependencies at the end.
-;;
 (defun gv-value-fn (schema slot)
+  "This is similar to g-value-fn, but does a few things needed for
+constant formula checking before it does anything else. Also, sets up
+dependencies at the end."
   (locally (declare #.*special-kr-optimization*)
     #+GARNET-DEBUG
     (unless (or *current-formula* (schema-p schema))
@@ -371,6 +393,11 @@ and the same parent (if any)."
 	(unless (full-sl-p entry)
 	  ;; We did have an entry, but it was too small.
 	  (let ((full-entry (make-full-sl)))
+	    #+GARNET-BINS
+	    (do ((e (svref (schema-bins schema) (slot-to-bin-index slot)) (cdr e)))
+		((eq (car e) entry)
+		 (setf (car e) full-entry)))
+	    #-GARNET-BINS
 	    (setf (gethash slot (schema-bins schema)) full-entry)
 	    (setf (sl-name full-entry) slot)
 	    (if entry

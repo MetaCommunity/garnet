@@ -1,12 +1,11 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 
 ;;; $Id$
 ;;;
@@ -15,69 +14,11 @@
 ;;;
 ;;; Designed and implemented by Brad A. Myers
 
-#|
-============================================================
-Change log:
-       9/8/93 Brad Myers - fixed bug with final-feed-avail (thanks to Almond)
-       7/13/93 Brad Myers - allow formula in :final-feedback-obj (BVZ)
-       7/30/92 Brad Myers - make explicit-stop more robust (for Lars Smit)
-       7/16/92 Brad Myers - fixed small bug where :continuous NIL
-                   meant couldn't destroy in final-function: Robert Schnelbach
-       4/4/92  Brad Myers - Bound kr::*constants-disabled* in destroy also
-       4/3/92  Andrew Mickish - Bound kr::*constants-disabled* in
-                                List-Final-Feedback-Obj; removed test for
-                                constant :parent in Get-New-Feedback-Obj.
-       4/1/92  Andrew Mickish - kr::*debug-switch* ---> #-garnet-debug
-       2/27/92 Andrew Mickish - Check for destroyed object in Calc-Set-Obj-Slot
-                                by calling schema-p
-       2/7/92  Brad Myers - test final-feedback is constant part of aggregadget
-                          - more robust destroy
-       1/28/92 Brad Myers - make :start-where T work.
-                          - added :slots-to-set parameter
-       1/21/92 Ed Pervin - In Clear-All-Selected, check that selected
-                           is not destroyed object.
-       3/26/91 Brad Myers - fixed bug introduced last time for main-agg from
-                            running-where rather than start-where in do-start
-       3/20/91 Brad Myers - fixed bug in SelectObj
-       1/13/91 Brad Myers - made the selection list always be in reverse order
-       12/4/90 Brad Myers - fixed bug in SelectObj for when interactor
-                            hasn't run
-       10/11/90 Brad Myers - added explicit Stop-Interactor code
-	9/21/90 Brad Myers - fixed final-feedback so works if :start-where
-                             returns :none.
-			     Added new procedures:
-				Return-Final-Selection-Objs,
-                                gv-Final-Selection-Objs, DeSelectObj, SelectObj
-        7/23/90 Brad Myers - added new parameter to Destroy-Extra-Final-
-                             Feedback-Objs
-          7/11/90 Ed Pervin - new :destroy-me method
-  	  6/14/90 Brad Myers - added destroy method
- 	   6/7/90 Brad Myers - add final-feedback-objs
-	  4/27/90 Brad Myers - fixed so can be non-continuous
-	 10/25/89 Brad Myers - small bug in setting the :selected slot
-         10/5/89 Brad Myers - Add Final-Function
-	 10/4/89 Roger Dannenberg - Change debugging output
-         9/22/89 Brad Myers - Made more robust when :start-where = T
-         8/14/89 Brad Myers - Fixed for multiple priority levels
-         6/26/89 Brad Myers - Fixed to have quote for create-schema
-         6/8/89  Brad Myers -  Fixed so how-set handled consistently
-         5/30/89 Brad Myers -  call-method -> kr-send;
-                               allow running-where to be set after initialized
-         4/20/89 Brad Myers - schema-call -> call-method
-         4/14/89 Brad Myers - fixed self-deactivate
-         4/7/89  Brad Myers and Dario Giuse - changed to work with new KR
-         1/15/89 Lynn Baumeister - changed x,y to event structure in func calls
-	12/22/88 Brad Myers - feedback both in feedbackobj and main aggregate
-	11/28/88 Brad Myers - removed from Interactor.lisp
-============================================================
-|#
-
 (in-package "INTERACTORS")
 
 
 ;;;;===========================================================
 ;;;  Utility procedures
-;;;============================================================
 ;;;============================================================
 
 ;;; parts of :slots-to-set list
@@ -539,7 +480,7 @@ not selected, this does nothing."
 
 (defun Menu-Interactor-Initialize (new-Menu-schema)
   (if-debug new-Menu-schema (format T "Menu initialize ~s~%" new-menu-schema))
-  (Check-Interactor-Type new-Menu-schema inter:menu-interactor)
+  (Check-Interactor-Type new-Menu-schema menu-interactor)
   (Check-Required-Slots new-Menu-schema)
   (check-slots-to-set new-Menu-schema)
   (Set-Up-Defaults new-Menu-schema)
@@ -732,8 +673,8 @@ not selected, this does nothing."
 ;;; Menu schema
 ;;;============================================================
 
-(Create-Schema 'inter:menu-interactor
-		     (:is-a inter:interactor)
+(Create-Schema 'MENU-INTERACTOR
+		     (:is-a interactor)
 		     (:name :First-Menu-interactor)
 		     (:start-action 'Menu-Int-Start-Action)
 		     (:running-action 'Menu-Int-Running-Action)

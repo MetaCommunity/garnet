@@ -23,10 +23,10 @@
 ;;;   (:height 100))
 ;;; 
 
-(define-method :point-in-gob window (gob x y)
+(define-method :point-in-gob WINDOW (gob x y)
   (declare (fixnum x y))
-  (and (<= 0 x (g-value gob :width))
-       (<= 0 y (g-value gob :height))))
+  (and (<= 0 x (g-value-fixnum gob :width))
+       (<= 0 y (g-value-fixnum gob :height))))
 
 ;;; A couple routines useful for windows with backing store
 
@@ -61,7 +61,8 @@
 			    ;; DZG (xlib:window-id event-window)
 			    ))
   (if a-window
-    (kr:with-demon-disabled  (g-value window :invalidate-demon)
+      ;;    (kr:with-demon-disabled  (g-value window :invalidate-demon)
+      (kr:with-demon-disabled  (g-value a-window :invalidate-demon)
       (s-value a-window :visible t)))
   t)
 
@@ -101,11 +102,12 @@
 			    ))
   (when (schema-p a-window)
     (if (g-value a-window :visible)
-      (with-demon-disabled (g-value WINDOW :invalidate-demon)
-	(s-value a-window :visible :iconified)))
+;;;	(with-demon-disabled (g-value WINDOW :invalidate-demon)
+	(with-demon-disabled (g-value A-WINDOW :invalidate-demon)	
+	  (s-value a-window :visible :iconified)))
     (if (and *exit-main-event-loop-function*
 	     (not (any-top-level-window-visible)))
-      (funcall *exit-main-event-loop-function*)))
+	(funcall *exit-main-event-loop-function*)))
   t)
 
 
@@ -170,6 +172,7 @@
 (defun zoom-window (a-window &optional fullzoom?)
   (when (is-a-p a-window window)
     (let ((zoomdims (g-local-value a-window :zoomdims)))
+      (declare (type (or null (simple-array fixnum (4))) zoomdims))
       (if zoomdims
 	(progn
 	  (s-value a-window :zoomdims NIL)
@@ -179,12 +182,12 @@
 	  (s-value a-window :height (aref zoomdims 3)))
 
 	;;else no zoomdims, so store zoomdims and zoom!
-	(let ((top    (g-value a-window :top   ))
-	      (left   (g-value a-window :left  ))
-	      (width  (g-value a-window :width ))
-	      (height (g-value a-window :height)))
+	(let ((top    (g-value-fixnum a-window :top   ))
+	      (left   (g-value-fixnum a-window :left  ))
+	      (width  (g-value-fixnum a-window :width ))
+	      (height (g-value-fixnum a-window :height)))
 	  (s-value a-window :zoomdims
-		   (make-array 4
+		   (make-array 4 :element-type 'fixnum
 			       :initial-contents (list top left width height)))
 	  (s-value a-window :top 0)
 	  (s-value a-window :height gem:*screen-height*)
@@ -199,8 +202,9 @@
 (defun convert-coordinates (win1 x y &optional win2)
   (declare (fixnum x y))
   (multiple-value-bind (xc yc)
-      (gem:translate-coordinates (if win1 win1 (g-value gem:DEVICE-INFO :current-root))
-                                 win1 x y win2)
+      (gem:translate-coordinates 
+       (if win1 win1 (g-value gem:DEVICE-INFO :current-root))
+       win1 x y win2)
     (if xc
       ;; Low-level conversion is better.
       (values xc yc)
@@ -215,6 +219,7 @@
 
 
 (defun simple-initialize-window-border-widths (a-window border-width)
+  (declare (fixnum border-width))
   (s-value a-window :left-border-width border-width)
   (s-value a-window :top-border-width border-width)
   (s-value a-window :right-border-width border-width)
@@ -226,7 +231,8 @@
 
 
 (defun Configure-Notify (event-debug x y width height a-window
-				     above-sibling)
+			 above-sibling)
+  (declare (fixnum x y width height))
   (if event-debug
     (format t "Configure-notify win=~s ~s ~s ~s ~s ~s~%"
 	    a-window
@@ -446,10 +452,10 @@
 ;;;
 ;; Cosmetic application of cursors.
 (defun set-gc-cursor ()
-  (opal:change-cursors garbage-pair))
+  (change-cursors garbage-pair))
 
 (defun unset-gc-cursor ()
-  (opal:restore-cursors))
+  (restore-cursors))
 
 ;; Actually this seems to freeze up the lisp for some reason.
 #-(and)  (pushnew #'set-gc-cursor ext:*before-gc-hooks*)
@@ -458,7 +464,7 @@
 
 ;;; Set the :window slot of the window to be the window itself!
 ;;;
-(define-method :initialize window (a-window)
+(define-method :initialize WINDOW (a-window)
   (call-prototype-method a-window)
   (let ((win-info (make-win-update-info))
 	(a-window-update-info (g-local-value a-window :update-info)))
@@ -517,21 +523,20 @@
   (let ((display-info (initialize-display a-window)))
     ;; Make sure the window has an attached display-info.
     (setf (g-value a-window :display-info) display-info)
-    (multiple-value-bind (black-pixel #+comment white-pixel)
-	(gem:black-white-pixel a-window)
+    (let ((black-pixel (gem:black-white-pixel a-window)))
       (let* ((title-name (g-value a-window :title))
-	     (left (g-value a-window :left))
-	     (top  (g-value a-window :top))
-	     (border-width (g-value a-window :border-width))
-	     (width  (g-value a-window :width))
-	     (height (g-value a-window :height))
+	     (left (g-value-fixnum a-window :left))
+	     (top  (g-value-fixnum a-window :top))
+	     (border-width (g-value-fixnum a-window :border-width))
+	     (width  (g-value-fixnum a-window :width))
+	     (height (g-value-fixnum a-window :height))
 	     (parent (or (g-value a-window :parent)
 			 ;; dzg & amickish -- use the root window of the
 			 ;; current device.
 			 (g-value gem:device-info :current-root)))
              ;; NIL background-color means white
 	     (background (gem:color-to-index a-window
-                          (g-value a-window :background-color)))
+					     (g-value a-window :background-color)))
 	     (drawable (gem:create-window
 			parent
 			left top width height
@@ -549,20 +554,21 @@
 			(not (g-value a-window :position-by-hand))
 			(not (g-value a-window :position-by-hand))
 			(if (g-value a-window :omit-title-bar-p) :on :off))))
+	(declare (fixnum left top border-width width height))
 
 	(gem:set-drawable-to-window a-window drawable)
 	(set-wm-icon a-window (g-value a-window :icon-bitmap))
 
 	(if (g-value a-window :draw-on-children)
-	  (set-subwindow-mode a-window :include-inferiors))
+	    (set-subwindow-mode a-window :include-inferiors))
 
 	(setf (g-value a-window :drawable) drawable)
 	(if (g-value a-window :double-buffered-p)
-	  (let ((buffer (create-buffer a-window)))
-	    (s-value a-window :buffer buffer)
-	    (gem:set-window-property a-window :BUFFER-GCONTEXT
-				     (list buffer black-pixel background))
-	    (clear-buffer a-window)))
+	    (let ((buffer (create-buffer a-window)))
+	      (s-value a-window :buffer buffer)
+	      (gem:set-window-property a-window :BUFFER-GCONTEXT
+				       (list buffer black-pixel background))
+	      (clear-buffer a-window)))
 
 	(s-value a-window :top-border-width border-width)
 	(s-value a-window :left-border-width border-width)
@@ -594,7 +600,7 @@
 
 	;; bring up the window, and display it
 	(if (g-value a-window :visible)
-	  (gem:map-and-wait a-window drawable))
+	    (gem:map-and-wait a-window drawable))
 	(s-value a-window :old-parent (g-value a-window :parent))
 	drawable))))
 
@@ -626,8 +632,8 @@
 	   ;; not checked
 	   (let ((old-parent (g-value a-window :old-parent))
 	         (new-parent (g-value a-window :parent))
-		 (left       (g-value a-window :left))
-		 (top        (g-value a-window :top)))
+		 (left       (g-value-fixnum a-window :left))
+		 (top        (g-value-fixnum a-window :top)))
 	     (unless (eq old-parent new-parent)
 	       ;; first, fix old-parent's :child slot
 	       (if (schema-p old-parent)
@@ -651,21 +657,21 @@
 				    (g-value a-window :icon-title)))
 	  (:left
 	   (gem:set-window-property a-window :LEFT
-				    (+ (g-value a-window :left)
-				       (g-value a-window :left-border-width))))
+				    (+ (g-value-fixnum a-window :left)
+				       (g-value-fixnum a-window :left-border-width))))
 	  (:top
 	   (gem:set-window-property a-window :TOP
-				    (+ (g-value a-window :top)
-				       (g-value a-window :top-border-width))))
+				    (+ (g-value-fixnum a-window :top)
+				       (g-value-fixnum a-window :top-border-width))))
 	  (:width
 	   (let ((width (g-value a-window :width)))
-	     (setf (opal::win-update-info-width win-info) width)
+	     (setf (win-update-info-width win-info) width)
 	     (setf make-new-buffer
 		   (or (gem:set-window-property a-window :WIDTH width)
 		       make-new-buffer))))
 	  (:height
-	   (let ((height (g-value a-window :height)))
-	     (setf (opal::win-update-info-height win-info) height)
+	   (let ((height (g-value-fixnum a-window :height)))
+	     (setf (win-update-info-height win-info) height)
 	     (setf make-new-buffer
 		 (or (gem:set-window-property a-window :HEIGHT height)
 		     make-new-buffer))))
@@ -705,21 +711,21 @@
   (let ((a-window (getf (xlib:drawable-plist event-window) :garnet)))
     (if (schema-p a-window)
 	(let ((drawable (g-value a-window :drawable)))
-	  (if (and drawable (= (xlib:window-id drawable)
-			       (xlib:window-id event-window)))
+	  (if (and drawable (= (the fixnum (xlib:window-id drawable))
+			       (the fixnum (xlib:window-id event-window))))
 	      (progn
 		;; Because the window is being destroyed because of an
 		;; event from the window manager, we want to allow the
 		;; application to do something about it.
 		(dolist (hook (g-value a-window :destroy-hooks))
 		  (funcall hook a-window))
-		(opal:destroy a-window))
+		(destroy a-window))
 	      ;; Then event-window is an orphaned window
 	      (gem:delete-window a-window event-window)))
 	;; Then event-window is an orphaned window
 	(gem:delete-window NIL event-window))))
 
-(define-method :destroy-me window (a-window)
+(define-method :destroy-me WINDOW (a-window)
   ;; first recursively destroy all subwindows
   (dolist (child (g-value a-window :child))
     (when (eq a-window (g-value child :parent))
@@ -745,7 +751,7 @@
   (call-prototype-method a-window))
 
 
-(define-method :destroy window (a-window)
+(define-method :destroy WINDOW (a-window)
   (dolist (instance (copy-list (g-local-value a-window :is-a-inv)))
     (destroy instance))
   (destroy-me a-window)
@@ -754,7 +760,7 @@
     (funcall *exit-main-event-loop-function*)))
 
 
-(define-method :flush window (a-window)
+(define-method :flush WINDOW (a-window)
   (gem:flush-output a-window))
 
 

@@ -49,7 +49,8 @@
 	; else make a name
 	(let ((name (or (when (null for-obj) "NIL")
 			(if (schema-p for-obj)
-			    (or (g-value for-obj :known-as)
+			    (or (let ((ka (g-value for-obj :known-as)))
+				  (when ka (symbol-name ka)))
 				(g-value for-obj :label-string)
 				(g-value for-obj :string)
 				(g-value for-obj :items)
@@ -696,10 +697,10 @@ being used for ~S" obj)))
 
 (create-instance 'VALUE-CONTROL opal:aggregadget
   (:window-left 300) (:window-top 400)
-  (:window-width 525) (:window-height 225)
+  (:window-width 495) (:window-height 225)
   (:window-title "Value Control")
   (:window-background-color *Foreground-Color*)
-  (:width (o-formula (gvl :window :width) 525))
+  (:width (o-formula (gvl :window :width) 495))
   (:height (o-formula (gvl :window :height) 225))
   (:for-object NIL)
   (:slot-to-reference :filtered-value)
@@ -725,7 +726,7 @@ being used for ~S" obj)))
   (:parts `(
     (:title ,opal:text
       (:left 4) (:top 4)
-      (:font ,(opal:get-standard-font NIL :bold-italic :large))
+      (:font ,(opal:get-standard-font NIL :bold-italic #-(and) :large #+(and) nil))
       (:string ,(o-formula (concatenate 'simple-string
 			    "Exported Value Control for \""
 			    (Get-User-Name (gvl :parent :for-object))

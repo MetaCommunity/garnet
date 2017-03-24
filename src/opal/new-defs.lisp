@@ -19,29 +19,34 @@
   (valid-p nil :type boolean))
 
 
-;; Force-Computation-P is necessary since if an object R is in an aggregate A,
-;; and you add-component that aggregate into another (visible) aggregate, then
-;; R will be marked dirty, but it will not be added to the invalid-objects list
-;; of the window, so at update time all its values in :update-slots-values will
-;; be incorrect and will need to be recomputed.  Obtuse, but this works!
+;;;;
+;; The update-info-bits field is used to encode the following:
+;;   dirty-p
+;;   aggregate-p
+;;   invalid-p
+;;   force-computation-p
+;;   on-fastdraw-list-p
+;;
+;; Force-Computation-P is necessary since if an object R is in an
+;; aggregate A, and you add-component that aggregate into another
+;; (visible) aggregate, then R will be marked dirty, but it will not
+;; be added to the invalid-objects list of the window, so at update
+;; time all its values in :update-slots-values will be incorrect and
+;; will need to be recomputed. Obtuse, but this works!
 
 (defstruct (update-info (:print-function update-info-print-function))
 	window
 	old-bbox
-	bits)
+	;; Note this has more bits than number of -p items above.
+	(bits 0 :type (unsigned-byte 8))) 
 
 ;;; This constant is used in debug/objsize.lisp to determine the
 ;;; size in bytes of an update-info structure.
 ;;; NOTE: IF YOU CHANGE THE DEFINITION OF UPDATE-INFO, BE SURE
 ;;; TO CHANGE THE VALUE OF THIS CONSTANT.
+(declaim (fixnum number-of-slots-of-update-info-struct))
 (defconstant number-of-slots-of-update-info-struct 3)
 
-;;; The update-info-bits field is used to encode the following:
-;;;   dirty-p
-;;;   aggregate-p
-;;;   invalid-p
-;;;   force-computation-p
-;;;   on-fastdraw-list-p
 
 (defmacro bit-setter (object bit-position value)
   (cond ((eq value T)
@@ -145,13 +150,13 @@
      (if (bbox-valid-p ,dest-bbox)
       (progn
 	(setf (bbox-x1 ,dest-bbox)
-		(MIN (bbox-x1 ,dest-bbox) (bbox-x1 ,source-bbox)))
+		(Q-MIN (bbox-x1 ,dest-bbox) (bbox-x1 ,source-bbox)))
 	(setf (bbox-y1 ,dest-bbox)
-		(MIN (bbox-y1 ,dest-bbox) (bbox-y1 ,source-bbox)))
+		(Q-MIN (bbox-y1 ,dest-bbox) (bbox-y1 ,source-bbox)))
 	(setf (bbox-x2 ,dest-bbox)
-		(MAX (bbox-x2 ,dest-bbox) (bbox-x2 ,source-bbox)))
+		(Q-MAX (bbox-x2 ,dest-bbox) (bbox-x2 ,source-bbox)))
 	(setf (bbox-y2 ,dest-bbox)
-		(MAX (bbox-y2 ,dest-bbox) (bbox-y2 ,source-bbox))))
+		(Q-MAX (bbox-y2 ,dest-bbox) (bbox-y2 ,source-bbox))))
       (progn
 	(setf (bbox-x1 ,dest-bbox) (bbox-x1 ,source-bbox))
 	(setf (bbox-y1 ,dest-bbox) (bbox-y1 ,source-bbox))
@@ -183,12 +188,12 @@
 ;;; Updates the bbox given (probably the object's :old-bbox slot value) with
 ;;; the values from the object.  This *presumes* that the object is visible!
 (defmacro update-bbox (object bbox)
-    `(let ((left (g-value ,object :left))
-	   (top  (g-value ,object :top )))
+    `(let ((left (g-value-fixnum ,object :left))
+	   (top  (g-value-fixnum ,object :top )))
 	(setf (bbox-x1 ,bbox) left)
 	(setf (bbox-y1 ,bbox) top)
-	(setf (bbox-x2 ,bbox) (+ left (g-value ,object :width )))
-	(setf (bbox-y2 ,bbox) (+ top  (g-value ,object :height)))
+	(setf (bbox-x2 ,bbox) (+ left (g-value-fixnum ,object :width )))
+	(setf (bbox-y2 ,bbox) (+ top  (g-value-fixnum ,object :height)))
 	(setf (bbox-valid-p ,bbox) T)))
 
 ;;; Returns true if they intersect (ignores the valid bit!)
@@ -239,26 +244,30 @@
 		(return))))))
 
 
+;; Trust the garbage collector. Hmn....
 (defmacro get-cons (the-car the-cdr)
- `(let ((cons-cell *free-cons*))
-   (if cons-cell
-     (progn
-	(setf *free-cons* (cdr *free-cons*))
-	(setf (car cons-cell) ,the-car)
-	(setf (cdr cons-cell) ,the-cdr)
-	cons-cell)
-     (cons ,the-car ,the-cdr))))
+  ;; `(let ((cons-cell *free-cons*))
+  ;;   (if cons-cell
+  ;;     (progn
+  ;;	(setf *free-cons* (cdr *free-cons*))
+  ;;	(setf (car cons-cell) ,the-car)
+  ;;	(setf (cdr cons-cell) ,the-cdr)
+  ;;	cons-cell)
+  ;;     (cons ,the-car ,the-cdr))))
+  `(cons ,the-car ,the-cdr))
 
 (defmacro free-cons (cons-cell)
-  `(progn
-	(setf (cdr ,cons-cell) *free-cons*)
-	(setf *free-cons* ,cons-cell)))
+  ;;  `(progn
+  ;;	(setf (cdr ,cons-cell) *free-cons*)
+  ;;	(setf *free-cons* ,cons-cell)))
+)
 
 (defmacro free-list (the-list)
-  `(when ,the-list
-     (let ((last-cdr (last ,the-list)))
-	(setf (cdr last-cdr) *free-cons*)
-	(setf *free-cons* ,the-list))))
+  ;;  `(when ,the-list
+  ;;     (let ((last-cdr (last ,the-list)))
+  ;;       (setf (cdr last-cdr) *free-cons*)
+  ;;       (setf *free-cons* ,the-list))))
+)
 
 (defmacro normal-invalidate (gob win-info)
  `(setf (win-update-info-invalid-objects ,win-info)

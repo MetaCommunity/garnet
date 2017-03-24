@@ -1211,7 +1211,8 @@ pixmap format in the list of valid formats."
   (let ((display (the-display root-window)))
     (xlib:event-case
      (display :discard-p t :timeout (if ignore-keys 0 NIL))
-     ;; this first one is for when a window is deleted by the wm
+     ;; This first one is for when a window is deleted by the wm or
+     ;; for a timer event.
      (:CLIENT-MESSAGE
       (event-window type data format)
       (event-handler-debug :CLIENT-MESSAGE event-window type data format)

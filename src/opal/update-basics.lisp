@@ -63,7 +63,7 @@
 ;;;        the bit and any pertinent windows' lists appropriately -- the way
 ;;;        it's done here is less efficient but far easier to do correctly..)
 
-(define-method :invalidate-demon opal:VIEW-OBJECT (vob slot save)
+(define-method :invalidate-demon VIEW-OBJECT (vob slot save)
   (declare (ignore slot save))
   (let (the-window win-update-info)
    (unless (null (setq the-window (g-local-value vob :window)))
@@ -77,7 +77,7 @@
 ;;; Window's update demon only adds newly-invalid slots to
 ;;; its invalid-slots list
 
-(define-method :invalidate-demon opal::WINDOW (a-window slot save)
+(define-method :invalidate-demon WINDOW (a-window slot save)
   (declare (ignore save))
   (let ((win-update-info (g-local-value a-window :win-update-info)))
     (if win-update-info
@@ -90,7 +90,7 @@
 ;;; This was the original "update demon", and used to live inside
 ;;; "view-object" and not "graphical-object"...
 
-(define-method :invalidate-demon opal:GRAPHICAL-OBJECT (gob slot save)
+(define-method :invalidate-demon GRAPHICAL-OBJECT (gob slot save)
   (declare (ignore save slot))
   (let* ((gob-update-info (g-local-value gob :update-info))
 	 (the-window (and gob-update-info
@@ -158,7 +158,7 @@
 	(pushnew object (win-update-info-fix-update-slots-objects
 			 (g-local-value a-window :win-update-info))))
       
-      (with-demon-disabled  (g-value opal:GRAPHICAL-OBJECT :invalidate-demon)
+      (with-demon-disabled  (g-value GRAPHICAL-OBJECT :invalidate-demon)
 	(s-value object :window
 		 (setf (update-info-window update-info) a-window)))
 
@@ -230,7 +230,7 @@
 			       (update-info-old-bbox obj-ui)))))
 
 ;; Temporary storage for "invalidate-bbox" function below
-(defvar *opal-temp-bbox* (opal::make-bbox :valid-p T))
+(defvar *opal-temp-bbox* (make-bbox :valid-p T))
 
 ;; Please see comment above
 (defun invalidate-bbox (a-window x1 y1 x2 y2)

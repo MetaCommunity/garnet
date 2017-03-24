@@ -63,19 +63,22 @@
 	 (width (aref update-vals +rect-width+))
 	 (height (aref update-vals +rect-height+))
 	 (lstyle (aref update-vals +rect-lstyle+))
-	 (min-width-height (min width height))
+	 (min-width-height (q-min width height))
 	 (draw-fn (aref update-vals +rect-draw-function+))
 	 (rect-fstyle (aref update-vals +rect-fstyle+))
 	 (thickness (get-old-thickness gob +rect-lstyle+ update-vals))
 
          (font (aref update-vals +kft-font+))
          (string (aref update-vals +kft-string+))
-	 (ascent (gem:max-character-ascent a-window font))
+	 (ascent (the fixnum (gem:max-character-ascent a-window font)))
 	 (text-height (+ ascent (gem:max-character-descent a-window font)))
          (text-left-offset (half (- width
 				    (gem:text-width a-window font string))))
          (text-top-offset  (half (- height text-height)))
 	 )
+    (declare (fixnum left top width height 
+		     min-width-height thickness ascent 
+		     text-height text-left-offset text-top-offset))
 
     (when (plusp min-width-height)  ; only draw if width, height > 0
       (if (>= (* 2 thickness) min-width-height) ; if rectangle too small,

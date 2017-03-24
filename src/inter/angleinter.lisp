@@ -71,7 +71,7 @@ vis = NIL"
 
 (defun Angle-Interactor-Initialize (new-Angle-schema)
   (if-debug new-Angle-schema (format T "Angle initialize ~s~%" new-Angle-schema))
-  (Check-Interactor-Type new-Angle-schema inter:Angle-Interactor)
+  (Check-Interactor-Type new-Angle-schema Angle-Interactor)
   (Check-Required-Slots new-Angle-schema)
   (Set-Up-Defaults new-Angle-schema))
 
@@ -160,11 +160,12 @@ vis = NIL"
 (defconstant 2PI (* 2 PI))
 
 (defun Calc-Center (object)
-  (list (+ (g-value object :left) (floor (g-value object :width) 2))
-	(+ (g-value object :top) (floor (g-value object :height) 2))))
+  (list (+ (g-value-fixnum object :left) (floor (g-value-fixnum object :width) 2))
+	(+ (g-value-fixnum object :top) (floor (g-value-fixnum object :height) 2))))
 
 (defun Calc-Angle (an-interactor center x y)
   #-garnet-debug (declare (ignore an-interactor))
+;;  (declare (fixnum x y))
   (let ((angle (atan (- (second center) y) (- x (first center)))))
     (setq angle (if (< angle 0) (+ 2PI angle) angle))
     (if-debug an-interactor
@@ -295,8 +296,8 @@ save object over, call start procedure."
 ;;; Angle schema
 ;;
 
-(Create-Schema 'inter:Angle-Interactor
-	       (:is-a inter:Interactor)
+(Create-Schema 'Angle-Interactor
+	       (:is-a Interactor)
 	       (:name :First-Angle-interactor)
 	       (:start-action 'Angle-Int-Start-Action)
 	       (:running-action 'Angle-Int-Running-Action)

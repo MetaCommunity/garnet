@@ -71,7 +71,7 @@ opal::*garnet-windows*."))
 		 (if (or (eq how-to :opal-set-agg-to-nil)
 			 (not (schema-p (g-value opal-window :aggregate))))
 		   (s-value opal-window :aggregate NIL))
-		 (opal:destroy opal-window))
+		 (destroy opal-window))
 	     ;; The clx-window was created for some Opal window
 	     ;; that no longer exists -- it is orphaned!
 	     (gem:delete-window root clx-window))
@@ -95,7 +95,7 @@ opal::*garnet-windows*."))
        (setf *garnet-windows* NIL)
        )
       (:help
-       (format t (documentation 'opal::clean-up 'function)))
+       (format t (documentation 'clean-up 'function)))
       (t (format t "options are :opal, :opal-set-agg-to-nil, :orphans-only, :clx, or :help.")))
     num-killed))
 

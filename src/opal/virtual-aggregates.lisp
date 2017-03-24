@@ -52,7 +52,7 @@
 (defvar work-clip-mask (make-list 4))
 (defvar work-bbox (make-bbox :valid-p t))
 
-(create-instance 'opal:VIRTUAL-AGGREGATE opal:graphical-object
+(create-instance 'VIRTUAL-AGGREGATE graphical-object
   :declare ((:type (fixnum :array-length-increment
 			   :next-available-rank :gaps-in-arrays)))
   (:update-slots '(:visible :fast-redraw-p))
@@ -122,31 +122,34 @@
 ;;; The virtual-invalid-object is an invisible placeholder to be put
 ;;; on the window's invalid-objects list, to let the update method
 ;;; know what the bbox of the changed part of a virtual-aggregate is.
-(create-instance 'virtual-invalid-object opal:view-object
+(create-instance 'VIRTUAL-INVALID-OBJECT view-object
   (:update-slots '(:visible :fast-redraw-p :make-update-think-i-have-changed)))
 
 
-(define-method :initialize opal:virtual-aggregate (gob)
+(define-method :initialize VIRTUAL-AGGREGATE (gob)
   (let ((dummy (create-instance nil (g-value gob :item-prototype)))
 	array-length)
     ;; If dummy does not have :draw method, create one.
     (when (and (not (g-value dummy :draw))
 	       (g-value dummy :update))
       ;; Fix for changes from 2.2 to 3.0. ---fmg
-      (if (is-a-p dummy opal:aggregate)
-	  (s-value dummy :draw
-		   #'(lambda (dummy a-window)
-		       (s-value dummy :window a-window)
-		       (update dummy (g-value dummy :update-info)
-			       nil nil
-			       NIL NIL T)))
-	(s-value dummy :draw
+      ;; Fix incorrect --- actual fix eliminates extra arguments
+      ;; everywhere, making below unnecessary. --- fmg
+;;      (if (is-a-p dummy opal:aggregate)
+;;	  (s-value dummy :draw
+;;		   #'(lambda (dummy a-window)
+;;		       (s-value dummy :window a-window)
+;;		       (update dummy (g-value dummy :update-info)
+;;			       nil nil
+;;			       NIL NIL T)))
+      (s-value dummy :draw
 		 #'(lambda (dummy a-window)
 		     (declare (ignore a-window))
 		     (update dummy (g-value dummy :update-info)
-			     NIL NIL T)))))
+			     NIL NIL T))))
+;;      )
     (s-value gob :invalid-object
-	     (create-instance nil opal::virtual-invalid-object
+	     (create-instance nil virtual-invalid-object
 	       (:parent gob)
 	       (:make-update-think-i-have-changed 0)))
     (s-value dummy :parent gob)
@@ -165,7 +168,7 @@
       (setq array-length (car array-length)))
     (s-value gob :array-length array-length)
     (s-value gob :bbox-array
-	     (make-array array-length :element-type 'opal::bbox 
+	     (make-array array-length :element-type 'bbox 
 			 :adjustable t))
     (when (numberp array-length);; one dimensional
       (s-value gob :next-available-rank array-length))
@@ -175,7 +178,7 @@
 
 
 ;;; Gives rank of item at point <x,y>.
-(define-method :point-to-rank opal:virtual-aggregate (gob x y)
+(define-method :point-to-rank VIRTUAL-AGGREGATE (gob x y)
   (let ((item-array (g-value gob :item-array))
         (point-in-item (g-value gob :point-in-item))
         item)
@@ -187,9 +190,9 @@
 
 
 
-(define-method :point-to-component opal:virtual-aggregate (a-thing x y &key (type t))
+(define-method :point-to-component VIRTUAL-AGGREGATE (a-thing x y &key (type t))
   (when (or (eq type t)
-            (opal::my-is-a-p (g-value a-thing :item-prototype) type))
+            (my-is-a-p (g-value a-thing :item-prototype) type))
     (let ((dummy (g-value a-thing :dummy-item))
           (rank (point-to-rank a-thing x y)))
       (when rank
@@ -210,7 +213,7 @@
         (s-value v :already-on-invalid-objects-list t)))))
 
 
-(define-method :update opal:virtual-aggregate (gob update-info bbox-1 bbox-2
+(define-method :update VIRTUAL-AGGREGATE (gob update-info bbox-1 bbox-2
 						   &optional (total-p NIL))
   (let* ((dummy (g-value gob :dummy-item))
 	 (dummy-slots-list (g-value dummy :update-slots))
@@ -278,7 +281,7 @@
 
 
 ;;; Only valid for one-dimensional virtual-aggregates.
-(define-method :add-item opal:virtual-aggregate (gob new-item)
+(define-method :add-item VIRTUAL-AGGREGATE (gob new-item)
   (let ((item-array (g-value gob :item-array))
 	(bbox-array (g-value gob :bbox-array))
 	(array-size (g-value gob :array-length))
@@ -317,7 +320,7 @@
     (make-virtual-aggregate-invalid gob)
 ))
 
-(define-method :change-item opal:virtual-aggregate (gob new-item rank &optional rank2)
+(define-method :change-item VIRTUAL-AGGREGATE (gob new-item rank &optional rank2)
   (let ((item-array (g-value gob :item-array))
         (bbox-array (g-value gob :bbox-array))
 	(dummy-item (g-value gob :dummy-item))
@@ -345,7 +348,7 @@
 
 
 ;;; Only valid for one-dimensional virtual-aggregates.
-(define-method :remove-item opal:virtual-aggregate (gob rank)
+(define-method :remove-item VIRTUAL-AGGREGATE (gob rank)
   (let* ((item-array (g-value gob :item-array))
 	 (bbox-array (g-value gob :bbox-array))
          (changed-bbox (update-info-old-bbox
@@ -374,10 +377,10 @@
     (make-virtual-aggregate-invalid gob)
 ))
 
-(define-method :destroy-me opal:virtual-aggregate (gob &optional (top-level-p t))
+(define-method :destroy-me VIRTUAL-AGGREGATE (gob &optional (top-level-p t))
   (call-prototype-method gob top-level-p))
 
-(define-method :do-items opal:virtual-aggregate (a-aggregate a-function 
+(define-method :do-items VIRTUAL-AGGREGATE (a-aggregate a-function 
 							     &key (type t))
    (let ((item-array (g-value a-aggregate :item-array)))
      (loop for child across item-array

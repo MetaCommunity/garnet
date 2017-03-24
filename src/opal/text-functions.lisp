@@ -27,48 +27,45 @@
 
 
 (defun string-width (fnt str &key (start 0) end display)
+  (declare (fixnum start)
+	   (type (or fixnum null) end))
   (unless display
     (setq display (g-value gem:DEVICE-INFO :current-root)))
   ;; If it's a fixed-width font, get the stored width of a single character
   (let ((char-width (g-value fnt :char-width)))
+    (declare (type (or fixnum null) char-width))
     (if (and char-width (not (find #\newline str)))
-      ;; For fixed-width single line, just do multiplication
-      (let ((str-len (length str)))
-	(if (null end)
-	  (if (zerop start)
-	    (* char-width str-len)
-	    (* char-width (- str-len start)))
-	  (if (zerop start)
-	    (* char-width end)
-	    (* char-width (- end start)))))
+	;; For fixed-width single line, just do multiplication
+	(let ((str-len (length str)))
+ 	  (declare (fixnum str-len))
+	  (if (null end)
+	      (if (zerop start)
+		  (* char-width str-len)
+		  (* char-width (- str-len start)))
+	      (if (zerop start)
+		  (* char-width end)
+		  (* char-width (- end start)))))
 	
-      ;; For multiple lines, find max width of all lines
-      (do* ((width 0)
-	    (line-end (position #\newline str)
-		      (position #\newline remaining-str))
-	    (current-line (if line-end (subseq str 0 line-end) str)
-			  (if line-end
-			    (subseq remaining-str 0 line-end)
-			    remaining-str))
-	    (remaining-str (if line-end (subseq str (1+ line-end)))
-			   (if line-end
-			     (subseq remaining-str (1+ line-end))))
-	    (width (max width (if char-width
-				(* char-width (length current-line))
-				(if (or start end)
-				  (gem:text-width
-				   display fnt
-				   (subseq current-line start end))
-				  (gem:text-width display fnt current-line))))
-		   (max width (if char-width
-				(* char-width (length current-line))
-				(if (or start end)
-				  (gem:text-width
-				   display fnt
-				   (subseq current-line start end))
-				  (gem:text-width display fnt
-						  current-line))))))
-	   ((null line-end) width)))))
+	;; For multiple lines, find max width of all lines
+	(do* ((width 0)
+	      (line-end (position #\newline str)
+			(position #\newline remaining-str))
+	      (current-line (if line-end (subseq str 0 line-end) str)
+			    (if line-end
+				(subseq remaining-str 0 line-end)
+				remaining-str))
+	      (remaining-str (if line-end (subseq str (1+ line-end)))
+			     (if line-end
+				 (subseq remaining-str (1+ line-end))))
+	      (width (max width (if char-width
+				    (* char-width (length current-line))
+				    (gem:text-width display fnt
+						    (subseq current-line start end))))
+		     (max width (if char-width
+				    (* char-width (length current-line))
+				    (gem:text-width display fnt
+						    (subseq current-line start end))))))
+	     ((null line-end) width)))))
 
 
 
@@ -121,7 +118,7 @@
 	(let* ((line-number
 		(max 0
 		     (min (1- (length cut-strings))
-			  (floor (- y (g-value txt :top))
+			  (floor (- y (g-value-fixnum txt :top))
 				 (+ (gem:max-character-ascent root font)
 				    (gem:max-character-descent root font))))))
 	       (cut-string (nth line-number cut-strings))
@@ -133,14 +130,14 @@
 	     (get-index (cut-string-string cut-string)
 			font
 			(- x
-			   (g-value txt :left)
+			   (g-value-fixnum txt :left)
 			   (case (g-value txt :justification)
-			     (:right (- (g-value txt :width)
+			     (:right (- (g-value-fixnum txt :width)
 					(cut-string-width cut-string)))
 			     (:center
-			      (floor (- (g-value txt :width)
+			      (floor (- (g-value-fixnum txt :width)
 					(cut-string-width cut-string))
 				     2))
 			     (t 0))))))
 	(get-index (g-value txt :string) font
-		   (- x (g-value txt :left)))))))
+		   (- x (g-value-fixnum txt :left)))))))

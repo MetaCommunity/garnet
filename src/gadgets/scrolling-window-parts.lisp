@@ -100,8 +100,7 @@
 ;;; 
 ;;; This method is used by both scrolling windows and scrolling-windows-with-bars.
 (defun Scrolling-Window-Update
-       (agg &optional (update-info :top-level)
-	    line-style-gc filling-style-gc bbox-1 bbox-2 (total-p nil))
+       (agg &optional (update-info :top-level) bbox-1 bbox-2 (total-p nil))
   (if (or (eq update-info :top-level)
 	  (eq update-info T))
       ; then is a top level call from the user, so create windows if necessary
@@ -111,8 +110,7 @@
 	  (setq win (kr-send agg :Creator-Func agg)))
 	(opal:update win (if (eq update-info T) T NIL)))
       ;; else update the object normally
-      (call-prototype-method agg update-info line-style-gc filling-style-gc
-			     bbox-1 bbox-2 total-p)))
+      (call-prototype-method agg update-info bbox-1 bbox-2 total-p)))
 
 (create-instance 'Scrolling-Window opal:aggregadget
    :declare ((:parameters :left :top :width :height :position-by-hand

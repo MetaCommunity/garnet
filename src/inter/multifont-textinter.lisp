@@ -53,7 +53,7 @@
 ;;     ^1 ^2 ^3 ^4  = small, medium, large, and very-large fonts
 
 
- (in-package "INTERACTORS")
+(in-package "INTERACTORS")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(MULTIFONT-TEXT-INTERACTOR))
@@ -308,7 +308,7 @@
 
 (defun Multifont-Text-Interactor-Initialize (new-Text-schema)
    (if-debug new-Text-schema (format T "Text initialize ~s~%" new-Text-schema))
-   (Check-Interactor-Type new-Text-schema inter:multifont-text-interactor)
+   (Check-Interactor-Type new-Text-schema multifont-text-interactor)
    (Check-Required-Slots new-Text-schema)
    (Set-Up-Defaults new-Text-schema)
 )
@@ -425,7 +425,7 @@
 ;; remove selection into cut buffer
 (defun do-delete-selection (inter obj event set-cut-buf?)
   (let* ((deleted-stuff (if (g-value inter :lisp-mode-p)
-			    (inter:delete-lisp-region obj)
+			    (delete-lisp-region obj)
 			    (opal:delete-selection obj)))
 	 (deleted-string (opal:text-to-string deleted-stuff))
 	 (a-window (event-window event)))
@@ -456,7 +456,7 @@
     (if yanked-stuff
       (opal:insert-text obj yanked-stuff)
       (opal:insert-string obj
-			  (Opal:Get-X-Cut-Buffer (inter:event-window event))))
+			  (Opal:Get-X-Cut-Buffer (event-window event))))
     (curs-move inter obj)))
 
 
@@ -558,7 +558,7 @@
 (defun check-delete-selection (string-object lisp-mode-p)
   (and (g-value string-object :selection-p)
        (if lisp-mode-p
-	   (inter:delete-lisp-region string-object)
+	   (delete-lisp-region string-object)
 	   (opal:delete-selection string-object))))
 
 ;; Does the same stuff as inter:Edit-String (in textkeyhandling.lisp)
@@ -568,7 +568,7 @@
       NIL ; ignore this event and keep editing
       ; else
       (let* ((char (event-char event))
-	     (new-trans-char (inter::Translate-key char an-interactor))
+	     (new-trans-char (Translate-key char an-interactor))
 	     (last-edited-string (g-value an-interactor :last-edited-string)))
 	;; make sure there isn't a selection visible in another
 	;; string, in case this interactor is operating over multiple
@@ -690,7 +690,7 @@
 		  (:copy-selection
 		   (do-copy-selection an-interactor string-object event))
 		  (:copy-to-X-cut-buffer
-		   (Opal:Set-X-Cut-Buffer (inter:event-window event)
+		   (Opal:Set-X-Cut-Buffer (event-window event)
 					  (opal:get-string string-object)))
 
 		  (:yank-buffer
@@ -701,12 +701,12 @@
 						   event))
 		  (:copy-from-X-cut-buffer
 		   (opal:insert-string string-object
-			   (Opal:Get-X-Cut-Buffer (inter:event-window event)))
+			   (Opal:Get-X-Cut-Buffer (event-window event)))
 		   (curs-move an-interactor string-object))
 
 		  (:Insert-LF-after
 		     (if (g-value an-interactor :lisp-mode-p)
-			 (inter:add-lisp-char string-object #\newline)
+			 (add-lisp-char string-object #\newline)
 			 (opal:add-char string-object #\newline))
 		     (opal:go-to-prev-char string-object))
 
@@ -741,7 +741,7 @@
 					     NIL))
 		      ;; add char to string
 		      (if (g-value an-interactor :lisp-mode-p)
-			 (inter:add-lisp-char string-object new-trans-char)
+			 (add-lisp-char string-object new-trans-char)
 			 (opal:add-char string-object new-trans-char))
 		      (curs-move an-interactor string-object))
 		     ;; check if a string
@@ -793,8 +793,8 @@
 ;;
 
 ;; Here's the actual interactor.
-(Create-Schema 'inter:MULTIFONT-TEXT-INTERACTOR
-      (:is-a inter:text-interactor)
+(Create-Schema 'MULTIFONT-TEXT-INTERACTOR
+      (:is-a text-interactor)
       (:lisp-mode-p NIL)
       (:match-parens-p NIL)
       (:match-obj NIL)
@@ -816,5 +816,5 @@
       (:back-inside-action 'Multifont-Text-Int-Back-Inside-Action)
       (:initialize 'Multifont-Text-Interactor-Initialize))
 
-(Set-MultiFont-Default-Key-Translations inter:MULTIFONT-TEXT-INTERACTOR)
-(Set-Lisp-Key-Translations inter:MULTIFONT-TEXT-INTERACTOR)
+(Set-MultiFont-Default-Key-Translations MULTIFONT-TEXT-INTERACTOR)
+(Set-Lisp-Key-Translations MULTIFONT-TEXT-INTERACTOR)

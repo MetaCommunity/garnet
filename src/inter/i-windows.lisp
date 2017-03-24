@@ -12,9 +12,16 @@
 
 (in-package "INTERACTORS")
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(TRANSCRIBE-SESSION REPLAY-SESSION  ; Wrapper functions
+	    CLOSE-TRANSCRIPT
+	    TRANSCRIPT-EVENTS-TO-FILE TRANSCRIPT-EVENTS-FROM-FILE
+	    *TRANS-TO-FILE-MOTION* *TRANSCRIPT-VERBOSE*
+	    *GARNET-DEFAULT-TRANSCRIPT-FILENAME*)))
+	    
 ;; Hitting the key *garnet-break-key* will cause an exit from the
 ;; main-event-loop and exit from replaying a transcript.
-(defvar *Garnet-Break-Key* :F1)
+(defvar *Garnet-Break-Key* :F2)
 
 
 ;;;  Functions to deal with transcripts
@@ -60,6 +67,15 @@
     (format t "Transcribing session to ~A~%" transcript-pathname)
     (Transcript-Events-To-File transcript-pathname window-list)
     (format t "Transcription session finished at ~A~%" (time-to-string))))
+
+;; Just a wrapper around Transcript-Events-From-File to supply defaults.
+(defun Replay-Session ()
+  "A wrapper around Transcript-Events-From-File to supply defaults."
+  (let ((transcript-pathname (merge-pathnames *Garnet-Default-Transcript-Filename*))
+	(window-list opal:*garnet-windows*))
+    (format t "Replaying session from ~A~%" transcript-pathname)
+    (Transcript-Events-From-File transcript-pathname window-list)
+    (format t "Replay session finished at ~A~%" (time-to-string))))
 
 (defun Transcript-Events-To-File (filename window-list &key (motion T)
 							 (if-exists :supersede))
@@ -422,7 +438,7 @@ Arguments:
   t)
 
 
-(defun Queue-Timer-Event (inter)
+(defun Queue-Timer-Event (window inter)
   (if-debug :event
 	    (format t "~%<><><><> Timer Event, Inter Index=~s~%" inter))
   ;; only need the event for the transcripting
@@ -432,7 +448,8 @@ Arguments:
 	  (event-code *Current-Event*) inter
 	  (event-x *Current-Event*) 0
 	  (event-y *Current-Event*) 0
-	  (event-window *Current-Event*) T
+	  (event-window *Current-Event*)
+	  (gem:window-from-drawable gem::*root-window* window)
 	  (event-timestamp *Current-Event*) NIL
 	  )
     (trans-out-event *Current-event*))
@@ -637,11 +654,11 @@ Arguments:
 	 (opal::Delete-Notify NIL event-window))
 	((and (eq format 32)
 	      (eq type :TIMER_EVENT))
-	 (if interactors::*trans-from-file*
-	   T
-	   ;; ignore events when read transcript
-	   (interactors::Queue-Timer-Event
-	    (aref (the (simple-array (unsigned-byte 32) (5)) data) 0)))))
+	 (if *trans-from-file*
+	     T			  ; ignore events when read transcript
+	     (Queue-Timer-Event 
+	      event-window
+	      (aref (the (simple-array (unsigned-byte 32) (5)) data) 0)))))
   NIL)
 
 

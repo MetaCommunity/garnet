@@ -715,8 +715,12 @@
 	         (create-instance nil opal:gray-fill
 				  (:foreground-color button-color))))))
 
-  (s-value (g-value MENU3-OBJ :final-feedback) :filling-style
-	   (o-formula (gv MENU3-OBJ :text-button-list :selected :shadow :filling-style)))
+    ;; XXX This is broken ... xor of color doesn't work right.
+  (let ((final-feedback (g-value MENU3-OBJ :final-feedback)))
+    (s-value final-feedback :filling-style
+	     (o-formula (gv MENU3-OBJ :text-button-list :selected :shadow :filling-style)))
+#-(and)    (s-value final-feedback :fast-redraw-p :rectangle)
+#-(and)    (s-value final-feedback :draw-function :invert))
 
 
   ;; Create and add objects to the aggrelist in MENU5-OBJ.  (Since MENU5

@@ -28,11 +28,13 @@
   (let ((filter (g-value inter :input-filter))
 	(x (event-x event))
 	(y (event-y event)))
+    (declare (fixnum x y))
     (when filter
       (if-debug inter (format T "Filtering input, old ~s,~s~%" x y)))
-    (cond ((null filter)(values x y))
-	  ((numberp filter) (values (* filter (round x filter))
-				    (* filter (round y filter))))
+    (cond ((null filter) (values x y))
+	  ((numberp filter) 
+	   (values (* filter (round x filter))
+		   (* filter (round y filter))))
 	  ((listp filter)
 	   (let ((xmod (first filter))
 		 (xorigin (second filter))
@@ -98,45 +100,63 @@
 ;;; Helper procedures for the default procedures to go into the slots
 ;;;============================================================
 
-			     ;left top width height
+;;; Glo points.
+
+;; XXX Sadly, this gets referenced as a "list4" and it's a PITA to try
+;; to fix it. "list4"s are also used as x1 x2 y1 y2 structures. 
+;; But I prefer defstruct even as a list type for perspicuity and
+;; potential future optimization (not that it's a big issue).
+(defstruct (glo-points (:type list))
+  (left 0 :type fixnum)
+  (top 0 :type fixnum)
+  (width 0 :type fixnum)
+  (height 0 :type fixnum))
+
+;;left top width height
+#-(and)
 (defparameter *glo-points* (list 0 0 0 0))  ; use this to avoid cons-ing
+(defparameter *glo-points* (make-glo-points))  ; use this to avoid cons-ing
 
 
 ;;; Calculates an object's position.
 (defun CalcPosition (an-interactor obj x y)
+  (declare (fixnum x y))
   (let ((attach (g-value an-interactor :attach-point)))
     (if-debug an-interactor (format T "   CalcPosition attach=~s, x,y=(~s,~s)~%"
 				    attach x y))
         ;; RGA --- added call to get-obj-slots-for-movegrow
     (multiple-value-bind (left top width height)
 	(get-obj-slots-for-movegrow obj nil an-interactor)
-      (declare (ignore top left))
+      (declare (ignore left top)
+	       (fixnum width height))
         ;; use a global to avoid cons-ing
-      (setf (first *glo-points*)
+      (setf (glo-points-left *glo-points*)
 	(case attach
 	  ((:nw :sw :w) x)
 	  ((:ne :se :e) (1+ (- x width)))
 	  ((:n :s) (- x (floor width 2)))
 	  (:center (- x (floor width 2))) ; use integer divide
-	  (:where-hit (- x (g-value an-interactor :x-off)))
+	  (:where-hit (- x (g-value-fixnum an-interactor :x-off)))
 	  (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
-      (setf (second *glo-points*)
+      (setf (glo-points-top *glo-points*)
 	(case attach
 	  ((:nw :ne :n) y)
 	  ((:sw :se :s) (1+ (- y height)))
 	  ((:e :w) (- y (floor height 2)))
 	  (:center (- y (floor height 2)))
-	  (:where-hit (- y (g-value an-interactor :y-off)))))
-      (setf (third *glo-points*) width)
-      (setf (fourth *glo-points*) height)
+	  (:where-hit (- y (g-value-fixnum an-interactor :y-off)))
+	  (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
+      (setf (glo-points-width *glo-points*) width)
+      (setf (glo-points-height *glo-points*) height)
       *glo-points*)))
 
 ;; Deals with changing an objects size, not position, returns a new
 ;; left top w h.  x and y in are the new mouse point
 (defun CalcSizeAndPosition (an-interactor obj x y)
+  (declare (fixnum x y))
   (let* ((attach (g-value an-interactor :attach-point))
-	 (minwidth (g-value an-interactor :Min-width))
-	 (minheight (g-value an-interactor :Min-height))
+	 (minwidth (g-value-fixnum an-interactor :Min-width))
+	 (minheight (g-value-fixnum an-interactor :Min-height))
 	 #|| ; RGA replaced with call to get-obj-slots-for-movegrow
 	 (left (g-value obj :left))
 	 (top (g-value obj :top))
@@ -150,7 +170,7 @@
     ;; RGA --- added call to get-obj-slots-for-movegrow
     (multiple-value-bind (left top width height)
 	(get-obj-slots-for-movegrow obj nil an-interactor)
-
+      (declare (fixnum left top width height))
       (when minwidth (setq rightp1 (+ 1 left width)))
       (when minheight (setq bottomp1 (+ 1 top height)))
       (when (eq attach :where-hit)
@@ -164,14 +184,14 @@
 	 (when (and minwidth
 		    (< (- rightp1 x) minwidth))
 	   (setq x (- rightp1 minwidth)))
-	 (setf (first *glo-points*) x)
-	 (setf (third *glo-points*) (+ width (- left x))))
+	 (setf (glo-points-left *glo-points*) x)
+	 (setf (glo-points-width *glo-points*) (+ width (- left x))))
 	((:s :n)			; no changes for these
-	 (setf (first *glo-points*) left)
-	 (setf (third *glo-points*) width))
+	 (setf (glo-points-left *glo-points*) left)
+	 (setf (glo-points-width *glo-points*) width))
 	((:ne :se :e)
-	 (setf (first *glo-points*) left)
-	 (setf (third *glo-points*)
+	 (setf (glo-points-left *glo-points*) left)
+	 (setf (glo-points-width *glo-points*)
 	   (if (and minwidth
 		    (< (- x left) minwidth))
 	       minwidth			; use minwidth if too small
@@ -184,14 +204,14 @@
 	 (when (and minheight
 		    (< (- bottomp1 y) minheight))
 	   (setq y (- bottomp1 minheight)))
-	 (setf (second *glo-points*) y)
-	 (setf (fourth *glo-points*) (+ height (- top y))))
+	 (setf (glo-points-top *glo-points*) y)
+	 (setf (glo-points-height *glo-points*) (+ height (- top y))))
 	((:e :w)			; no changes for these
-	 (setf (second *glo-points*) top)
-	 (setf (fourth *glo-points*) height))
+	 (setf (glo-points-top *glo-points*) top)
+	 (setf (glo-points-height *glo-points*) height))
 	((:se :sw :s)
-	 (setf (second *glo-points*) top)
-	 (setf (fourth *glo-points*)
+	 (setf (glo-points-top *glo-points*) top)
+	 (setf (glo-points-height *glo-points*)
 	   (if (and minheight
 		    (< (- y top) minheight))
 	       minheight		; use minheight if too small
@@ -206,6 +226,7 @@
 ;; returns a new points lines, for both sets of end points: (x1 y1 x2 y2)
 ;; but only one of the points will have changed.
 (defun CalcLineEndPoint (an-interactor x y)
+  (declare (fixnum x y))
   (let ((attach (g-value an-interactor :attach-point))
 	(minlength (g-value an-interactor :Min-length))
 	(origpoints (g-value an-interactor :saved-original-points)))
@@ -245,27 +266,27 @@
 		(setf movingy y)))
 	  ; now set point-list
 	  (case attach
-	    (1 (setf (first *glo-points*) movingx)
-	       (setf (second *glo-points*) movingy)
-	       (setf (third *glo-points*) firstx)
-	       (setf (fourth *glo-points*) firsty))
+	    (1 (setf (glo-points-left *glo-points*) movingx)
+	       (setf (glo-points-top *glo-points*) movingy)
+	       (setf (glo-points-width *glo-points*) firstx)
+	       (setf (glo-points-height *glo-points*) firsty))
 
-	    (2 (setf (first *glo-points*) firstx)
-	       (setf (second *glo-points*) firsty)
-	       (setf (third *glo-points*) movingx)
-	       (setf (fourth *glo-points*) movingy))))
+	    (2 (setf (glo-points-left *glo-points*) firstx)
+	       (setf (glo-points-top *glo-points*) firsty)
+	       (setf (glo-points-width *glo-points*) movingx)
+	       (setf (glo-points-height *glo-points*) movingy))))
 
 	; else don't worry about minimum length because no minimum length
 	(case attach
-	  (1 (setf (first *glo-points*) x)
-	     (setf (second *glo-points*) y)
-	     (setf (third *glo-points*) (third origpoints))
-	     (setf (fourth *glo-points*) (fourth origpoints)))
+	  (1 (setf (glo-points-left *glo-points*) x)
+	     (setf (glo-points-top *glo-points*) y)
+	     (setf (glo-points-width *glo-points*) (third origpoints))
+	     (setf (glo-points-height *glo-points*) (fourth origpoints)))
 	  
-	  (2 (setf (first *glo-points*) (first origpoints))
-	     (setf (second *glo-points*) (second origpoints))
-	     (setf (third *glo-points*) x)
-	     (setf (fourth *glo-points*) y))
+	  (2 (setf (glo-points-left *glo-points*) (first origpoints))
+	     (setf (glo-points-top *glo-points*) (second origpoints))
+	     (setf (glo-points-width *glo-points*) x)
+	     (setf (glo-points-height *glo-points*) y))
 	  (t (error "bad attach for line ~s, should be 1, 2, or :where-hit" attach))))
     *glo-points*))
 
@@ -273,6 +294,7 @@
 
 ;;; Calculates an line's position as it is moved without changing length or slope
 (defun CalcLineMove (an-interactor x y)
+  (declare (fixnum x y))
   (let ((attach (g-value an-interactor :attach-point))
 	(origxdist (g-value an-interactor :orig-x-dist))
 	(origydist (g-value an-interactor :orig-y-dist))
@@ -286,31 +308,34 @@
       (setq yoff (g-value an-interactor :y-off)))
 
 ;; use a global to avoid cons-ing
-    (setf (first *glo-points*)
+    (setf (glo-points-left *glo-points*)
 	  (case attach
 	    (1 x)
 	    (2 (- x origxdist))
 	    (:center (- x origxdist))
 	    (:where-hit (- x xoff))
 	    (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
-    (setf (second *glo-points*)
+    (setf (glo-points-top *glo-points*)
 	  (case attach
 	    (1 y)
 	    (2 (- y origydist))
 	    (:center (- y origydist))
-	    (:where-hit (- y yoff))))
-    (setf (third *glo-points*)
+	    (:where-hit (- y yoff))
+	    (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
+    (setf (glo-points-width *glo-points*)
 	  (case attach
 	    (1 (+ x origxdist))
 	    (2 x)
 	    (:center (+ x origxdist))
-	    (:where-hit (+ (- x xoff) origxdist))))
-    (setf (fourth *glo-points*)
+	    (:where-hit (+ (- x xoff) origxdist))
+	    (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
+    (setf (glo-points-height *glo-points*)
 	  (case attach
 	    (1 (+ y origydist))
 	    (2 y)
 	    (:center (+ y origydist))
-	    (:where-hit (+ (- y yoff) origydist))))
+	    (:where-hit (+ (- y yoff) origydist))
+	    (t (error "bad attach ~s on interactor ~s" attach an-interactor))))
     *glo-points*))
     
 
@@ -321,6 +346,7 @@
 ;;; Orig-?-dist is the distance from x2 to x1, unless centered in which case it
 ;;; is half the distance.
 (defun SetLineInitialSlots (an-interactor obj x y)
+  (declare (fixnum x y))
   ;; RGA --- added call to get-obj-slots-for-movegrow
   (multiple-value-bind (x1 y1 x2 y2)
       (get-obj-slots-for-movegrow obj t an-interactor)
@@ -346,6 +372,7 @@
 ;;; interactor's :where-hit-attach slot based on hit position.
 ;;; Returns :where-hit-attach
 (defun CalcLineWhereHitAttach (an-interactor x y)
+  (declare (fixnum x y))
   (let* ((origpoints (g-value an-interactor :saved-original-points))
 	 (x1 (first origpoints))
 	 (y1 (second origpoints))
@@ -370,6 +397,7 @@
 ;;; interactor's :where-hit-attach slot based on hit position.  Also sets
 ;;; x-off and y-off.  Returns :where-hit-attach
 (defun CalcWhereHitAttach (an-interactor x y)
+  (declare (fixnum x y))
   (let* ((origbox (g-value an-interactor :saved-original-points))
 	 (x-off (- (first origbox) x))  ; should be negative numbers
 	 (y-off (- (second origbox) y))   ; if point is inside the box
@@ -492,12 +520,8 @@
 
 (defun get-obj-slots-for-movegrow (obj line-p inter)
   (when obj 
-    (let ((slots-to-set (g-value inter :slots-to-set))
-;;	  (old-points (kr:g-value obj (if line-p :points :box)))
-	  )
+    (let ((slots-to-set (g-value inter :slots-to-set)))
       (cond ((member slots-to-set '(:box :points))
-	     ;; RGA using old-points gives some odd effects
-	     ;; (if old-points (values-list old-points))
 	     (if line-p
 		 (values (kr:g-value obj :x1)
 			 (kr:g-value obj :y1)
@@ -538,7 +562,7 @@
 (defun Move-Grow-Interactor-Initialize (new-Move-Grow-schema)
   (if-debug new-Move-Grow-schema (format T "Select change initialize ~s~%"
 					 new-Move-Grow-schema))
-  (Check-Interactor-Type new-Move-Grow-schema inter:Move-Grow-Interactor)
+  (Check-Interactor-Type new-Move-Grow-schema Move-Grow-Interactor)
   (Check-Required-Slots new-Move-Grow-schema)
   (Set-Up-Defaults new-Move-Grow-schema)
   )
@@ -850,40 +874,40 @@
 ;;; Move-Grow schema
 ;;;============================================================
 
-(Create-Schema 'inter:Move-Grow-Interactor
-		     (:is-a inter:interactor)
-		     (:name :First-Move-Grow-interactor)
-		     (:start-action 'Move-Grow-Int-Start-Action)
-		     (:running-action 'Move-Grow-Int-Running-Action)
-		     (:stop-action 'Move-Grow-Int-Stop-Action)
-		     (:abort-action 'Move-Grow-Int-Abort-Action)
-		     (:outside-action 'Move-Grow-Int-Outside-Action)
-		     (:back-inside-action 'Move-Grow-Int-Back-Inside-Action)
-		     (:obj-to-change NIL)  ;supplied by application program
-		     (:Min-width 0); minimum allowed width and height
-		     (:Min-height 0)
-		     (:attach-point :where-hit) ; where attach to object
-		     (:grow-p NIL) ; if T then grow, else move
-		     (:line-p NIL) ; if T, then move an end of the line,
-			        ; else move left,top,width,height of rectangle
-		     (:x-off 0) ; needed for :where-hit.  Offset from where
-		     (:y-off 0)    ;    hit to top left of object
-		     (:slots-to-set :box)
-		     (:input-filter NIL)
-		     (:saved-original-points NIL) ; used for ABORT or outside
-		     (:saved-last-points NIL) ; used if stop and outside and
-						; outside control is :last
-		     (:obj-being-changed NIL) ; saved object under the mouse
-		     (:Go 'General-Go)  ; proc executed when events happen
-		     (:Do-Start 'Move-Grow-Do-Start)     ; these are
-		     (:Do-Running 'Move-Grow-Do-Running) ;   called by GO
-		     (:Do-Stop 'Move-Grow-Do-Stop)       ;   to do
-		     (:Do-Explicit-Stop 'Move-Grow-Explicit-Stop);for stop-interactor
-		     (:Do-Abort 'Move-Grow-Do-Abort)     ;   the real work.
-		     (:Do-Outside 'Move-Grow-Do-Outside) ;   They call the
-		     (:Do-Back-Inside 'Move-Grow-Do-Back-Inside)  ; appropriate
-		     (:Do-Outside-Stop 'Move-Grow-Do-Outside-Stop); -action
-								     ; procedures
-		     (:initialize 'Move-Grow-Interactor-Initialize))
+(Create-Schema 'Move-Grow-Interactor
+	       (:is-a interactor)
+	       (:name :First-Move-Grow-interactor)
+	       (:start-action 'Move-Grow-Int-Start-Action)
+	       (:running-action 'Move-Grow-Int-Running-Action)
+	       (:stop-action 'Move-Grow-Int-Stop-Action)
+	       (:abort-action 'Move-Grow-Int-Abort-Action)
+	       (:outside-action 'Move-Grow-Int-Outside-Action)
+	       (:back-inside-action 'Move-Grow-Int-Back-Inside-Action)
+	       (:obj-to-change NIL) ;supplied by application program
+	       (:Min-width 0)	    ; minimum allowed width and height
+	       (:Min-height 0)
+	       (:attach-point :where-hit) ; where attach to object
+	       (:grow-p NIL)		  ; if T then grow, else move
+	       (:line-p NIL)	 ; if T, then move an end of the line,
+					; else move left,top,width,height of rectangle
+	       (:x-off 0)  ; needed for :where-hit.  Offset from where
+	       (:y-off 0)  ;    hit to top left of object
+	       (:slots-to-set :box)
+	       (:input-filter NIL)
+	       (:saved-original-points NIL) ; used for ABORT or outside
+	       (:saved-last-points NIL) ; used if stop and outside and
+					; outside control is :last
+	       (:obj-being-changed NIL) ; saved object under the mouse
+	       (:Go 'General-Go)    ; proc executed when events happen
+	       (:Do-Start 'Move-Grow-Do-Start)		 ; these are
+	       (:Do-Running 'Move-Grow-Do-Running) ;   called by GO
+	       (:Do-Stop 'Move-Grow-Do-Stop)       ;   to do
+	       (:Do-Explicit-Stop 'Move-Grow-Explicit-Stop) ;for stop-interactor
+	       (:Do-Abort 'Move-Grow-Do-Abort) ;   the real work.
+	       (:Do-Outside 'Move-Grow-Do-Outside) ;   They call the
+	       (:Do-Back-Inside 'Move-Grow-Do-Back-Inside) ; appropriate
+	       (:Do-Outside-Stop 'Move-Grow-Do-Outside-Stop) ; -action
+					; procedures
+	       (:initialize 'Move-Grow-Interactor-Initialize))
 
 

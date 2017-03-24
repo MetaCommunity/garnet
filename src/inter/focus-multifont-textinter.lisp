@@ -34,7 +34,7 @@
 
 (defun Focus-Interactor-Initialize (new-Text-schema)
   (if-debug new-Text-schema (format T "Text initialize ~s~%" new-Text-schema))
-   (Check-Interactor-Type new-Text-schema inter:focus-multifont-textinter)
+   (Check-Interactor-Type new-Text-schema focus-multifont-textinter)
    (Check-Required-Slots new-Text-schema)
    (Set-Up-Defaults new-Text-schema)
    (when (g-value new-Text-schema :obj-to-change)
@@ -85,7 +85,7 @@ The offending interactor was ~S." an-interactor)
    (let ((string-object (g-value interactor :obj-to-change)))
       (when string-object
          (let ((deleted-stuff (if (g-value interactor :lisp-mode-p)
-				  (inter:delete-lisp-region string-object)
+				  (delete-lisp-region string-object)
 				  (opal:delete-selection string-object))))
             (s-value interactor :cut-buffer deleted-stuff)
 	    (curs-move interactor string-object)))))
@@ -114,15 +114,15 @@ The offending interactor was ~S." an-interactor)
 	                                   (g-value an-interactor :stop-event))
       (kr-send an-interactor :final-function an-interactor obj-over event
 	       (opal:get-string obj-over)
-	       (inter:event-x event) (inter:event-y event))
+	       (event-x event) (event-y event))
       ;; otherwise, edit char into string
       (obj-or-feedback-edit an-interactor obj-over
 			    (g-value an-interactor :feedback-obj) event)))
 
 
 ;;; Focus-Multifont-Textinter schema
-(Create-Schema 'inter:focus-multifont-textinter
-   (:is-a inter:interactor)
+(Create-Schema 'focus-multifont-textinter
+   (:is-a interactor)
    (:name :First-Focus-Text-interactor)
    (:stop-event NIL)
    (:stop-action 'Focus-Int-Stop-Action)
@@ -161,5 +161,5 @@ The offending interactor was ~S." an-interactor)
 ;;; The key translations are the same for the
 ;; focus-multifont-textinter and the multifont-textinter
 
-(Set-MultiFont-Default-Key-Translations inter:focus-multifont-textinter)
-(Set-Lisp-Key-Translations inter:focus-multifont-textinter)
+(Set-MultiFont-Default-Key-Translations focus-multifont-textinter)
+(Set-Lisp-Key-Translations focus-multifont-textinter)

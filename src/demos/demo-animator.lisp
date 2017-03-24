@@ -55,8 +55,8 @@
   #-garnet-processes
   (declare (ignore dont-enter-main-event-loop double-buffered-p))
   #-garnet-processes
-  (format T "*** Demo-Animator only works under Lucid, Allegro, and LispWorks and 
-MCL 3.0 and greater  ***
+  (format T "*** Demo-Animator only works under ***
+*** Allegro, CCL, SBCL and CMUCL ***
 *** because it uses multiple processes.  Sorry.***")
   #+garnet-processes
   (let (agg)

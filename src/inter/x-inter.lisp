@@ -1,32 +1,39 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GEM; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 ;;;
 
 
 (in-package "GEM")
+;;; XXX This file should be moved to the gem directory, or so one
+;;; would think.
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export '(*double-click-time*))) ; for controlling double clicks
+	    
 
 (defparameter *last-state* NIL)
 (defparameter *last-code* NIL)
 (declaim (integer *last-time*))
 (defparameter *last-time* 0)
+;; Controls spacing between clicks in a multiple-click event for X
+(defparameter *double-click-time* 250) ; in milleseconds
 
 (defun x-Check-Double-Press (root-window state code time)
   (declare (ignore root-window))
   (declare (integer time))
-  (if inter::*double-click-time*
+  (if *double-click-time*
       (let (newcode)
 	(if (and (eq state *last-state*)
 		 (eq code *last-code*)
-		 (<= (- time *last-time*) inter::*double-click-time*))
-	    (setf newcode (+ code inter::*double-offset*)) ;; is double click
-	    (setf newcode code))   ;; else not double click
+		 (<= (- time *last-time*) *double-click-time*))
+	    (setf newcode (+ code inter::*double-offset*)) ; is double click
+	    (setf newcode code))	; else not double click
 	;; set up for next time
 	(setf *last-state* state)
 	(setf *last-code* code)
@@ -68,9 +75,9 @@
 			      :K))))
 	      (gem:set-window-property window :EVENT-MASK em)
 	      (s-value window :event-mask em)))
-      ;; here no drawable yet, set the field in the window so it will
-      ;; use the right one when the drawable is created
-      (s-value window :want-running-em interestedp))))
+	;; here no drawable yet, set the field in the window so it will
+	;; use the right one when the drawable is created
+	(s-value window :want-running-em interestedp))))
 
 
 

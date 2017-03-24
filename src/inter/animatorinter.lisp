@@ -99,7 +99,7 @@
 ;;; Animator interactor
 ;;
 (Create-Schema 'animator-interactor
-	       (:is-a inter:interactor)
+	       (:is-a interactor)
 	       (:name :First-Animator-interactor)
 	       (:start-event NIL)	; doesn't start
 	       (:start-where NIL) 
@@ -137,8 +137,8 @@
 
 (defun Anim-Bounce (anim)
   (let ((win (g-value anim :window))
-	(x-inc (g-value anim :x-inc))
-	(y-inc (g-value anim :y-inc))
+	(x-inc (g-value-fixnum anim :x-inc))
+	(y-inc (g-value-fixnum anim :y-inc))
 	(obj (g-value anim :obj-to-change))
 	)
     (unless obj
@@ -147,12 +147,12 @@
     (unless win
       (error "bounce animator-interactor but no :window ~s"
 	     anim))
-    (let* ((width (g-value win :width))
-	   (height (g-value win :height))
-	   (x (+ x-inc (g-value obj :left)))
-	   (y (+ y-inc (g-value obj :top)))
-	   (w (g-value obj :width))
-	   (h (g-value obj :height))
+    (let* ((width (g-value-fixnum win :width))
+	   (height (g-value-fixnum win :height))
+	   (x (+ x-inc (g-value-fixnum obj :left)))
+	   (y (+ y-inc (g-value-fixnum obj :top)))
+	   (w (g-value-fixnum obj :width))
+	   (h (g-value-fixnum obj :height))
 	   (r (+ x w))
 	   (b (+ y h)))
       (if (< x 0)
@@ -177,8 +177,8 @@
 
 (defun Anim-Wrap (anim)
   (let ((win (g-value anim :window))
-	(x-inc (g-value anim :x-inc))
-	(y-inc (g-value anim :y-inc))
+	(x-inc (g-value-fixnum anim :x-inc))
+	(y-inc (g-value-fixnum anim :y-inc))
 	(obj (g-value anim :obj-to-change))
 	)
     (unless obj
@@ -187,10 +187,10 @@
     (unless win
       (error "warp animator-interactor but no :window ~s"
 	     anim))
-    (let* ((width (g-value win :width))
-	   (height (g-value win :height))
-	   (x (+ x-inc (g-value obj :left)))
-	   (y (+ y-inc (g-value obj :top))))
+    (let* ((width (g-value-fixnum win :width))
+	   (height (g-value-fixnum win :height))
+	   (x (+ x-inc (g-value-fixnum obj :left)))
+	   (y (+ y-inc (g-value-fixnum obj :top))))
       (if (< x 0)
 	  (setq x width)
 	  ;; otherwise, check right

@@ -203,10 +203,10 @@ being used for ~S" obj)))
 
 (create-instance 'ENABLE-CONTROL opal:aggregadget
   (:window-left 300) (:window-top 400)
-  (:window-width 550) (:window-height 225)
+  (:window-width 495) (:window-height 225)
   (:window-title "Enable Control")
   (:window-background-color *ENCON-Foreground-Color*)
-  (:width (o-formula (gvl :window :width) 550))
+  (:width (o-formula (gvl :window :width) 495))
   (:height (o-formula (gvl :window :height) 225))
   (:for-object NIL)
   (:slot-to-reference :selected)
@@ -221,7 +221,7 @@ being used for ~S" obj)))
   (:parts `(
     (:title ,OPAL:TEXT
       (:GILT-REF "TYPE-TEXT")
-      (:FONT ,(opal:get-standard-font NIL :bold-italic :large))
+      (:FONT ,(opal:get-standard-font NIL :bold-italic #-(and) :large #+(and) nil))
       (:BOX (4 4 361 20 ))
       (:STRING ,(o-formula (concatenate 'simple-string
 			    "Change my Enable for \""

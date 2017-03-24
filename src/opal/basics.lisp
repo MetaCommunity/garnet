@@ -22,24 +22,23 @@
 ;;; adjust the far side of the gob's bounding box.
 ;;; Used to be macros, but were changed to defuns for efficiency.
 
-(declaim (inline bottom))
-(defun bottom (gob)
-  (when gob (1- (+ (g-value-fixnum gob :top)
-		   (g-value-fixnum gob :height)))))
-
-(declaim (inline right))
-(defun right (gob)
-  (when gob (1- (+ (g-value-fixnum gob :left)
-		   (g-value-fixnum gob :width)))))
 
 (declaim (inline unchecked-gv-bottom))
 (defun unchecked-gv-bottom (gob)
-  (1- (+ (gv-fixnum gob :top) (gv-fixnum gob :height))))
+  (1- (+ (gv-fixnum gob :top)
+	 (gv-fixnum gob :height))))
 
 (declaim (inline gv-bottom))
 (defun gv-bottom (gob)
   (if gob (unchecked-gv-bottom gob)
       (kr::broken-link-throw nil :top)))
+
+(declaim (inline bottom))
+(defun bottom (gob)
+  (when gob 
+    (1- (+ (g-value-fixnum gob :top)
+	   (g-value-fixnum gob :height)))))
+
 
 (declaim (inline unchecked-gv-right))
 (defun unchecked-gv-right (gob)
@@ -49,6 +48,12 @@
 (defun gv-right (gob)
   (if gob (unchecked-gv-right gob)
           (kr::broken-link-throw nil :left)))
+
+(declaim (inline right))
+(defun right (gob)
+  (when gob (1- (+ (g-value-fixnum gob :left)
+		   (g-value-fixnum gob :width)))))
+
 
 (declaim (inline unchecked-gv-center-x))
 (defun unchecked-gv-center-x (gob)
@@ -136,19 +141,19 @@
 
 (defun set-center (gob x y)
   (declare (fixnum x y))
-  (setf (center-x gob) x)
-  (setf (center-y gob) y))
+  (setf (center-x gob) x
+	(center-y gob) y))
 
 
 (defun set-position (gob left top)
   (declare (fixnum left top))
-  (setf (g-value gob :left) left)
-  (setf (g-value gob :top) top))
+  (setf (g-value gob :left) left
+	(g-value gob :top) top))
 
 (defun set-size (gob width height)
   (declare (fixnum width height))
-  (setf (g-value gob :width) width)
-  (setf (g-value gob :height) height))
+  (setf (g-value gob :width) width
+	(g-value gob :height) height))
 
 (defun set-bounding-box (gob left top width height)
   (declare (fixnum left top width height))
@@ -162,8 +167,8 @@
 ;;; -- dzg,amickish -- removed copy-down of :update-slots and :fast-redraw-p
 (define-method :initialize view-object (gob)
   (let ((temp-info (make-update-info)))
-    (setf (update-info-bits temp-info) 0)
-    (setf (update-info-old-bbox temp-info) (make-bbox))
+    (setf (update-info-bits temp-info) 0
+	  (update-info-old-bbox temp-info) (make-bbox))
     (s-value gob :update-info temp-info)))
 
 
@@ -176,13 +181,14 @@
   (setf (update-info-aggregate-p (g-local-value gob :update-info)) NIL))
 
 (define-method :point-in-gob view-object (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
-  (let ((top (g-value gob :top))
-	(left (g-value gob :left))
-	(width (g-value gob :width))
-	(height (g-value gob :height))
-	(hit (g-value gob :hit-threshold)))
-    (declare (fixnum top left width height))
+  (let ((top (g-value-fixnum gob :top))
+	(left (g-value-fixnum gob :left))
+	(width (g-value-fixnum gob :width))
+	(height (g-value-fixnum gob :height))
+	(hit (g-value-fixnum gob :hit-threshold)))
+    (declare (fixnum top left width height hit))
     (and (>= x (- left hit))
 	 (< x (+ left width hit))
 	 (>= y (- top hit))

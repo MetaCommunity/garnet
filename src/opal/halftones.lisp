@@ -39,7 +39,7 @@
 
 ;;; a bit inelegant, perhaps, but very clear
 (defun build-halftone-table (root-window)
-  (let ((halftone-table (make-array *halftone-table-size*)))
+  (let ((halftone-table (make-array *halftone-table-size* :element-type 'halftone)))
     (setf (aref halftone-table 0)
 	  (make-halftone :percent 0
 			 :device-image (gem:device-image root-window 0)))
@@ -54,7 +54,7 @@
 			 :device-image (gem:device-image root-window 3)))
     (setf (aref halftone-table 4) 
 	  (make-halftone :percent 25
-			 :filling-style OPAL:LIGHT-GRAY-FILL
+			 :filling-style LIGHT-GRAY-FILL
 			 :device-image (gem:device-image root-window 4)))
     (setf (aref halftone-table 5) 
 	  (make-halftone :percent 31
@@ -67,7 +67,7 @@
 			 :device-image (gem:device-image root-window 7)))
     (setf (aref halftone-table 8) 
 	  (make-halftone :percent 50
-			 :filling-style OPAL:GRAY-FILL
+			 :filling-style GRAY-FILL
 			 :device-image (gem:device-image root-window 8)))
     (setf (aref halftone-table 9) 
 	  (make-halftone :percent 56
@@ -80,7 +80,7 @@
 			 :device-image (gem:device-image root-window 11)))
     (setf (aref halftone-table 12) 
 	  (make-halftone :percent 75
-			 :filling-style OPAL:DARK-GRAY-FILL
+			 :filling-style DARK-GRAY-FILL
 			 :device-image (gem:device-image root-window 12)))
     (setf (aref halftone-table 13) 
 	  (make-halftone :percent 81
@@ -102,11 +102,11 @@
 ;;; first window appears, and every time a Garnet image is restarted on the
 ;;; Mac (see ccl:def-load-pointers in mac.lisp).
 (defun Install-Bitmap-Images ()
-  (with-demon-disabled (g-value opal:GRAPHICAL-OBJECT :invalidate-demon)
-    (s-value opal::WHITE-FILL-BITMAP      :image (halftone-image  0))
-    (s-value opal::LIGHT-GRAY-FILL-BITMAP :image (halftone-image 25))
-    (s-value opal::GRAY-FILL-BITMAP       :image (halftone-image 50))
-    (s-value opal::DARK-GRAY-FILL-BITMAP  :image (halftone-image 75))))
+  (with-demon-disabled (g-value GRAPHICAL-OBJECT :invalidate-demon)
+    (s-value WHITE-FILL-BITMAP      :image (halftone-image  0))
+    (s-value LIGHT-GRAY-FILL-BITMAP :image (halftone-image 25))
+    (s-value GRAY-FILL-BITMAP       :image (halftone-image 50))
+    (s-value DARK-GRAY-FILL-BITMAP  :image (halftone-image 75))))
 
 
 (defun initialize-halftones ()
@@ -175,15 +175,15 @@
 (defun make-filling-style (fname-or-image-list &key
 					       root-window
 					       (from-file-p NIL)
-					       (foreground-color opal:black)
-					       (background-color opal:white))
+					       (foreground-color black)
+					       (background-color white))
   (unless root-window
     (setq root-window (g-value gem:DEVICE-INFO :current-root)))
-  (let ((result (create-instance NIL opal:filling-style
+  (let ((result (create-instance NIL filling-style
 		  (:foreground-color foreground-color)
 		  (:background-color background-color)
 		  (:fill-style :opaque-stippled)))
-	(stipple-entry (create-instance NIL opal:bitmap))
+	(stipple-entry (create-instance NIL bitmap))
 	(fixed-list (unless from-file-p
 		      (mapcar #'(lambda(x) (coerce x 'simple-bit-vector))
 			      fname-or-image-list)))

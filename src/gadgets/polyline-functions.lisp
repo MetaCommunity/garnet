@@ -326,7 +326,7 @@
       ;; :point-list and the :polyline-handles-being-used slot.  Then we
       ;; add the new handle to the window and get out of the loop.
       (dotimes (i (1- (/ len 2)))
-	(when (opal::between-polyline-points
+	(when (opal::between-segment-points
 	       (nth (* 2 i) points) (nth (1+ (* 2 i)) points) x y
 	       (nth (* 2 (1+ i)) points) (nth (1+ (* 2 (1+ i))) points) thresh)
 	  (let ((new-handle

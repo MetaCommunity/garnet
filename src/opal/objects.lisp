@@ -99,6 +99,7 @@
             ((not (bbox-valid-p old-bbox)) ; If it wasn't visible, do nothing
 	     NIL)
 	    ;; now check if all entries are numbers
+	    #-(and) ;; Type declaration should catch this.
             ((not (and (numberp (bbox-x1 old-bbox))
                        (numberp (bbox-y1 old-bbox))
                        (numberp (bbox-x2 old-bbox))
@@ -118,37 +119,37 @@
     (setq object-erased NIL))		; No window, so couldn't erase it!
   object-erased))
 
-(define-method :destroy-me opal:view-object (object &optional (top-level-p T))
- (if object
-  (let* ((the-window (g-value object :window))
-	 (parent  (g-local-value object :parent))
-	 (erase-p (and top-level-p the-window parent
-		    (not (g-local-value object :already-tried-to-destroy)))))
-    (if (and top-level-p parent)
-	(let ((known-as (g-local-value object :known-as)))
-	  (s-value parent :components
-		   (delete object (g-local-value parent :components)))
-	  (mark-as-changed parent :components)
-	  (if known-as (destroy-slot parent known-as))))
-    (s-value object :already-tried-to-destroy t)
-    (if erase-p
-	(update the-window (not (carefully-erase object the-window))))
-    (destroy-schema object))))
+(define-method :destroy-me VIEW-OBJECT (object &optional (top-level-p T))
+ (when object
+   (let* ((the-window (g-value object :window))
+	  (parent  (g-local-value object :parent))
+	  (erase-p (and top-level-p the-window parent
+			(not (g-local-value object :already-tried-to-destroy)))))
+     (when (and top-level-p parent)
+       (let ((known-as (g-local-value object :known-as)))
+	 (s-value parent :components
+		  (delete object (g-local-value parent :components)))
+	 (mark-as-changed parent :components)
+	 (when known-as (destroy-slot parent known-as))))
+     (s-value object :already-tried-to-destroy t)
+     (when erase-p
+       (update the-window (not (carefully-erase object the-window))))
+     (destroy-schema object))))
 
-(define-method :destroy opal:view-object (object &optional (top-level-p T))
+(define-method :destroy VIEW-OBJECT (object &optional (top-level-p T))
   (dolist (instance (g-local-value object :is-a-inv))
     (destroy instance top-level-p))
   (destroy-me object top-level-p))
 
-(define-method :draw opal:line (gob a-window)
+(define-method :draw LINE (gob a-window)
   (let* ((update-vals  (g-local-value gob :update-slots-values))
 	 (lstyle (aref update-vals +line-lstyle+)))
-    (if lstyle
+    (when lstyle
       (gem:draw-line a-window
-		     (aref update-vals +line-x1+)
-		     (aref update-vals +line-y1+)
-		     (aref update-vals +line-x2+)
-		     (aref update-vals +line-y2+)
+		     (the fixnum (aref update-vals +line-x1+))
+		     (the fixnum (aref update-vals +line-y1+))
+		     (the fixnum (aref update-vals +line-x2+))
+		     (the fixnum (aref update-vals +line-y2+))
 		     (aref update-vals +line-draw-function+)
 		     lstyle))))
 
@@ -157,33 +158,44 @@
 ;;; to calculate the point on the horizontal (or vertical) that the query
 ;;; point shares for mostly vertical (or horizontal) lines.
 ;;; 
-(define-method :point-in-gob opal:line (gob x y)
+;;; Returns T if point <x2,y2> is within distance "threshold" of the line
+;;; segment with endpoints <x1,y1> and <x3,y3>.
+(declaim (inline between-segment-points))
+(defun between-segment-points (x1 y1 x2 y2 x3 y3 threshold)
+  (declare (fixnum x1 y1 x2 y2 x3 y3 threshold))
+  (when (and (<= (- (min x1 x3) threshold) x2 (+ (max x1 x3) threshold))
+	     (<= (- (min y1 y3) threshold) y2 (+ (max y1 y3) threshold)))
+    (let* ((a (- y1 y3))                 ; equation for line is
+	   (b (- x3 x1))                 ;  ax + by + c = 0
+	   (c (- (* x1 y3) (* x3 y1)))
+	   (d (+ (* a x2) (* b y2) c)))   ; d/sqrt(a^2+b^2) is the distance
+      (<= (* d d)                         ; between line and point <x,y>
+	  (* threshold threshold (+ (* a a) (* b b)))))))
+
+
+(define-method :point-in-gob LINE (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
   (let ((x1 (g-value gob :x1))
 	(x2 (g-value gob :x2))
 	(y1 (g-value gob :y1))
 	(y2 (g-value gob :y2))
-	(threshold (max (g-value gob :hit-threshold)
-			(ceiling (get-thickness gob) 2))))
-    (when (and (<= (- (min x1 x2) threshold) x (+ (max x1 x2) threshold))
-	       (<= (- (min y1 y2) threshold) y (+ (max y1 y2) threshold)))
-      (let* ((a (- y1 y2))                 ; equation for line is
-	     (b (- x2 x1))                 ;  ax + by + c = 0
-	     (c (- (* x1 y2) (* x2 y1)))
-	     (d (+ (* a x) (* b y) c)))    ; d/sqrt(a^2+b^2) is the distance
-	(<= (* d d)                        ; between line and point <x,y>
-	    (* threshold threshold (+ (* a a) (* b b)))))))))
+	(threshold (max (g-value-fixnum gob :hit-threshold)
+			(ceiling (the fixnum (get-thickness gob)) 2))))
+    (between-segment-points x1 y1 x y x2 y2 threshold))))
 
 ;;; The following functions allow access and setting to the gobs center
 ;;; position.
 
+(declaim (inline center-x))
 (defun center-x (gob)
-  (+ (g-value gob :left) (truncate (g-value gob :width) 2)))
+  (+ (g-value-fixnum gob :left) (the fixnum (truncate (g-value-fixnum gob :width) 2))))
 
+(declaim (inline center-y))
 (defun center-y (gob)
-  (+ (g-value gob :top) (truncate (g-value gob :height) 2)))
+  (+ (g-value-fixnum gob :top) (the fixnum (truncate (g-value-fixnum gob :height) 2))))
 
-(define-method :rotate opal:line (gob angle &optional (center-x (center-x gob))
+(define-method :rotate LINE (gob angle &optional (center-x (center-x gob))
 				(center-y (center-y gob)))
  (unless (zerop angle)
   (let* ((x1 (g-value gob :x1))
@@ -208,41 +220,43 @@
 
 
 ;;; Rectangles
-(define-method :draw opal:rectangle (gob a-window)
+(define-method :draw RECTANGLE (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
-	 (width (aref update-vals opal::+rect-width+))
-	 (height (aref update-vals opal::+rect-height+))
+	 (width (aref update-vals +rect-width+))
+	 (height (aref update-vals +rect-height+))
 	 (min-width-height (min width height))
-	 (fstyle (aref update-vals opal::+rect-fstyle+))
-	 (lstyle (aref update-vals opal::+rect-lstyle+))
-	 (thickness (opal::get-old-thickness gob opal::+rect-lstyle+
-					     update-vals)))
+	 (fstyle (aref update-vals +rect-fstyle+))
+	 (lstyle (aref update-vals +rect-lstyle+))
+	 (thickness (get-old-thickness gob +rect-lstyle+ update-vals)))
+    (declare (fixnum width height min-width-height thickness))
     (when (plusp min-width-height)	; only draw if width, height > 0
       (if (>= (* 2 thickness) min-width-height) ; if rectangle too small,
 					; just draw solid rectangle
 	(setf lstyle nil
-	      fstyle opal:black-fill))
+	      fstyle black-fill))
       (gem:draw-rectangle a-window
-			  (aref update-vals opal::+rect-left+)
-			  (aref update-vals opal::+rect-top+)
+			  (the fixnum (aref update-vals +rect-left+))
+			  (the fixnum (aref update-vals +rect-top+))
 			  width height
-			  (aref update-vals opal::+rect-draw-function+)
+			  (aref update-vals +rect-draw-function+)
 			  lstyle fstyle))))
 
 
 
-(define-method :point-in-gob opal:rectangle (gob x y)
+(define-method :point-in-gob RECTANGLE (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
   (let* ((thickness (get-thickness gob))
-	 (width (g-value gob :width))
-	 (height (g-value gob :height))
+	 (width (g-value-fixnum gob :width))
+	 (height (g-value-fixnum gob :height))
 	 (select-outline-only (g-value gob :select-outline-only))
-	 (threshold (g-value gob :hit-threshold))
+	 (threshold (g-value-fixnum gob :hit-threshold))
 	 (t+t (+ thickness threshold))
-	 (left (g-value gob :left))
-	 (top (g-value gob :top))
+	 (left (g-value-fixnum gob :left))
+	 (top (g-value-fixnum gob :top))
 	 (right (+ left width))
 	 (bottom (+ top height)))
+    (declare (fixnum thickness width height left top right bottom))
     (and (point-in-rectangle x y (- left threshold) (- top threshold)
 			     (+ right threshold) (+ bottom threshold))
 	 (not (and select-outline-only
@@ -255,16 +269,16 @@
 ;;; The rotate method for rectangles has the sometimes nasty side effect of
 ;;; turning the rectangle into a polygon.
 
-(define-method :rotate opal:rectangle (gob angle &optional
+(define-method :rotate RECTANGLE (gob angle &optional
 					   (center-x (center-x gob))
 					   (center-y (center-y gob)))
   (unless (zerop angle)
-    (let* ((top (g-value gob :top))
-	   (left (g-value gob :left))
-	   (right (+ left (g-value gob :width)))
-	   (bottom (+ top (g-value gob :height))))
+    (let* ((top (g-value-fixnum gob :top))
+	   (left (g-value-fixnum gob :left))
+	   (right (+ left (g-value-fixnum gob :width)))
+	   (bottom (+ top (g-value-fixnum gob :height))))
       ; convert into polyline and build point list.
-      (s-value gob :is-a (list opal:polyline))
+      (s-value gob :is-a (list polyline))
       (s-value gob :point-list 
 	       (list left bottom right bottom right top left top left bottom))
       ; rebuild :top, :left, :width, :height slots
@@ -272,15 +286,16 @@
 	(kr:destroy-slot gob slot))
 ;;    (kr::copy-down-formulas gob)	
       ; rebuild :update-slots and :update-slots-values slots
-      (s-value gob :update-slots (g-value opal:polyline :update-slots))
+      (s-value gob :update-slots (g-value polyline :update-slots))
       (s-value gob :update-slots-values nil)
       ; do the actual rotation
       (rotate gob angle center-x center-y))))
 
 
 (defun point-in-ellipse (x y cx cy rx ry)
-; Tells whether point <x,y> lies in ellipse with center <cx,cy>,
-; horizontal radius rx and vertical radius ry
+  "Tells whether point <x,y> lies in ellipse with center <cx,cy>,
+horizontal radius rx and vertical radius ry"
+  (declare (fixnum x y))
   (and (> rx 0)
        (> ry 0)
        (let ((dx (- cx x))
@@ -293,7 +308,7 @@
 ;;; For a raw multipoint, just draw the points, all unimplemented
 ;;; multipoints inherit this method.
 ;;; 
-(define-method :draw opal:multipoint (gob a-window)
+(define-method :draw MULTIPOINT (gob a-window)
   (let* ((update-vals  (g-local-value gob :update-slots-values))
 	 (point-list (aref update-vals +multi-point-list+)))
     (when point-list
@@ -302,7 +317,7 @@
 		       (aref update-vals +multi-lstyle+)))))
 
 
-(define-method :rotate opal:multipoint (gob angle &optional
+(define-method :rotate MULTIPOINT (gob angle &optional
 					    (center-x (center-x gob))
 					    (center-y (center-y gob)))
   "rotates a multipoint object about (center-x,center-y) by angle radians"
@@ -322,7 +337,7 @@
 ;;; Polyline objects
 ;;; 
 
-(define-method :draw opal:polyline (gob a-window)
+(define-method :draw POLYLINE (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
 	 (point-list (aref update-vals +polyline-point-list+)))
     (when point-list
@@ -332,49 +347,43 @@
 		      (aref update-vals +polyline-fstyle+)))))
 
 
-;;; Returns T if point <x2,y2> is within distance "threshold" of the line
-;;; segment with endpoints <x1,y1> and <x3,y3>.
-(defun between-polyline-points (x1 y1 x2 y2 x3 y3 threshold)
-  (when (and (<= (- (min x1 x3) threshold) x2 (+ (max x1 x3) threshold))
-	     (<= (- (min y1 y3) threshold) y2 (+ (max y1 y3) threshold)))
-    (let* ((a (- y1 y3))                 ; equation for line is
-	   (b (- x3 x1))                 ;  ax + by + c = 0
-	   (c (- (* x1 y3) (* x3 y1)))
-	   (d (+ (* a x2) (* b y2) c)))   ; d/sqrt(a^2+b^2) is the distance
-      (<= (* d d)                         ; between line and point <x,y>
-	  (* threshold threshold (+ (* a a) (* b b)))))))
-
 
 ;;; Returns non-zero if the line segment with endpoints <x1,y1> and <x3,y3>
 ;;; crosses the ray pointing to the right of <x2,y2>.
 (defun crosses-to-right-of (x1 y1 x2 y2 x3 y3)
+  (declare (fixnum x1 y1 x2 y2 x3 y3))
   (cond ((and (< y1 y2 y3)
-	      (< (* (- x3 x2) (- y1 y2)) (* (- x1 x2) (- y3 y2))))
+	      (< (* (- x3 x2) (- y1 y2))
+		 (* (- x1 x2) (- y3 y2))))
 	 1)
 	((and (< y3 y2 y1)
-	      (< (* (- x1 x2) (- y3 y2)) (* (- x3 x2) (- y1 y2))))
+	      (< (* (- x1 x2) (- y3 y2))
+		 (* (- x3 x2) (- y1 y2))))
 	 -1)
 	(t 0)))
 
 ;;; Returns T if point <x,y> is inside, or within distance "threshold", of
 ;;; polyline containing vertices "points".
 (defun point-in-polyline (x y points threshold outline-only full-interior)
+  (declare (fixnum x y threshold))
   (let ((crossings 0))
     (do ((ptr points (cddr ptr)))
 	((null ptr))
       ;; return T if P is near an edge.
-      (when (between-polyline-points (first ptr) (second ptr)
-		     x y
-		     (or (third ptr) (first points))
-		     (or (fourth ptr) (second points))
-	             threshold)
+      (when (between-segment-points
+	     (first ptr) (second ptr)
+	     x y
+	     (or (third ptr) (first points))
+	     (or (fourth ptr) (second points))
+	     threshold)
         (return-from point-in-polyline T))
       (unless outline-only
 	(incf crossings
-	  (crosses-to-right-of (first ptr) (second ptr)
-			       x y
-			       (or (third ptr) (first points))
-			       (or (fourth ptr) (second points))))))
+	  (crosses-to-right-of
+	   (first ptr) (second ptr)
+	   x y
+	   (or (third ptr) (first points))
+	   (or (fourth ptr) (second points))))))
     (if outline-only
 	nil
 	(if full-interior
@@ -382,37 +391,43 @@
 	    (oddp crossings)))))
   
 
-(define-method :point-in-gob opal:polyline (gob x y)
+(define-method :point-in-gob POLYLINE (gob x y)
+	       (declare (fixnum x y))
   (and (g-value gob :visible)
-    (point-in-polyline x y
-		       (g-value gob :point-list)
-		       (max (g-value gob :hit-threshold)
-                            (ceiling (get-thickness gob) 2))
-		       (g-value gob :select-outline-only)
-		       (g-value gob :hit-full-interior-p))))
+    (point-in-polyline
+     x y
+     (g-value gob :point-list)
+     (max (g-value-fixnum gob :hit-threshold)
+	  (ceiling (the fixnum (get-thickness gob)) 2))
+     (g-value gob :select-outline-only)
+     (g-value gob :hit-full-interior-p))))
 
 
 
 ;;; Bitmaps
 
-(define-method :draw opal:bitmap (gob a-window)
+(define-method :draw BITMAP (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
 	 (image (aref update-vals +bm-image+)))
     (when image
       (multiple-value-bind (width height)
 	  (gem:image-size a-window image)
-	(gem:draw-image a-window
-			(aref update-vals +bm-left+)
-			(aref update-vals +bm-top+)
-			width height
-			image
-			(aref update-vals +bm-draw-function+)
-			(aref update-vals +bm-fstyle+))))))
+	(declare (fixnum width height))
+	(gem:draw-image
+	 a-window
+	 (the fixnum (aref update-vals +bm-left+))
+	 (the fixnum (aref update-vals +bm-top+))
+	 width height
+	 image
+	 (aref update-vals +bm-draw-function+)
+	 (aref update-vals +bm-fstyle+))))))
 
 
 (defun image-bit-on? (image x y root-window)
+  (declare (fixnum x y))
   (multiple-value-bind (width height)
       (gem:image-size root-window image)
+    (declare (fixnum width height))
     (unless (or (null image)
 		(< x 0) (< y 0)
 		(>= x width)
@@ -420,32 +435,34 @@
       (gem:image-bit root-window image x y))))
 
 
-(define-method :point-in-gob opal:bitmap (gob x y)
+(define-method :point-in-gob BITMAP (gob x y)
+	       (declare (fixnum x y))
   (if (g-value gob :select-outline-only)
     (and (g-value gob :visible)
 	 (image-bit-on? (g-value gob :image)
-			(- x (g-value gob :left))
-			(- y (g-value gob :top))
+			(- x (g-value-fixnum gob :left))
+			(- y (g-value-fixnum gob :top))
 			(g-value gob :window)))
     (point-in-gob-method-view-object gob x y)))
 
 
 ;;; Arcs
-(define-method :draw opal:arc (gob a-window)
+(define-method :draw ARC (gob a-window)
   (let ((update-vals (g-local-value gob :update-slots-values)))
-    (gem:draw-arc a-window
-		  (aref update-vals opal::+arc-left+)
-		  (aref update-vals opal::+arc-top+)
-		  (aref update-vals opal::+arc-width+)
-		  (aref update-vals opal::+arc-height+)
-		  (aref update-vals opal::+arc-angle1+)
-		  (aref update-vals opal::+arc-angle2+)
-		  (aref update-vals opal::+arc-draw-function+)
-		  (aref update-vals opal::+arc-lstyle+)
-		  (aref update-vals opal::+arc-fstyle+))))
+    (gem:draw-arc
+     a-window
+     (the fixnum (aref update-vals +arc-left+))
+     (the fixnum (aref update-vals +arc-top+))
+     (the fixnum (aref update-vals +arc-width+))
+     (the fixnum (aref update-vals +arc-height+))
+     (aref update-vals +arc-angle1+)
+     (aref update-vals +arc-angle2+)
+     (aref update-vals +arc-draw-function+)
+     (aref update-vals +arc-lstyle+)
+     (aref update-vals +arc-fstyle+))))
 
 
-(define-method :rotate opal:arc (gob &optional center-x center-y)
+(define-method :rotate ARC (gob &optional center-x center-y)
   (declare (ignore gob center-x center-y))
   "This isn't a trivial computation, so we aren't going to do it at all.")
 
@@ -476,10 +493,12 @@
 ;;             (NOTE: angles must be normalized to be between 0 and 2PI)
 ;;
 (defun point-in-arc (x y cx cy rx ry angle1 angle2)
+  (declare (fixnum x y cx cy))
   ;; point must lay in the same quadrant as the arc AND within the ellipse
-  (and (opal::point-in-ellipse x y cx cy rx ry)
+  (and (point-in-ellipse x y cx cy rx ry)
        (let ((dx (- x cx))
 	     (dy (- cy y)))
+	 (declare (fixnum dx dy))
 	 (or (and (zerop dx) (zerop dy))
 	     (let ((angle (normalize-angle (atan dy dx)))
 		   (end-angle (normalize-angle (+ angle1 angle2))))
@@ -493,18 +512,20 @@
 		       (>= angle angle1)))))))))
 
 
-(define-method :point-in-gob opal:arc (gob x y)
+(define-method :point-in-gob ARC (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
-  (let* ((rx (/ (g-value gob :width) 2))
-	 (ry (/ (g-value gob :height) 2))
+  (let* ((rx (/ (g-value-fixnum gob :width) 2))
+	 (ry (/ (g-value-fixnum gob :height) 2))
 	 (thickness (get-thickness gob))
-	 (threshold (g-value gob :hit-threshold))
+	 (threshold (g-value-fixnum gob :hit-threshold))
 	 (outer-rx (+ rx threshold))
 	 (outer-ry (+ ry threshold))
 	 (cx (center-x gob))
 	 (cy (center-y gob))
 	 (angle1 (g-value gob :angle1))
 	 (angle2 (g-value gob :angle2)))
+    (declare (fixnum cx cy thickness threshold))
     (and (point-in-arc x y cx cy outer-rx outer-ry angle1 angle2)
 	 (not (and (g-value gob :select-outline-only)
 		   (let ((inner-rx (- rx thickness threshold))
@@ -516,7 +537,7 @@
 
 ;;;   Ovals
 ;;;
-(define-method :draw opal:oval (gob a-window)
+(define-method :draw OVAL (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
 	 (left   (aref update-vals +arc-left+))
 	 (top    (aref update-vals +arc-top+))
@@ -527,24 +548,27 @@
 	 (thickness (get-old-thickness gob +arc-lstyle+ update-vals))
 	 (fill-width (- width (* 2 thickness)))
 	 (fill-height (- height (* 2 thickness))))
+    (declare (fixnum left top width height thickness))
     (when (and (plusp width) (plusp height)) ; only draw if width, height > 0
       (if (or (< fill-width 1) (< fill-height 1))
 	;; if oval too small, just draw black oval
-	(setf fstyle opal:black-fill))
+	(setf fstyle black-fill))
       (gem:draw-arc a-window left top width height 0.0 +twopi+
 		    (aref update-vals +arc-draw-function+) lstyle fstyle))))
 
 
-(define-method :point-in-gob opal:oval (gob x y)
+(define-method :point-in-gob OVAL (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
-  (let* ((rx (/ (g-value gob :width) 2))
-	 (ry (/ (g-value gob :height) 2))
+  (let* ((rx (/ (g-value-fixnum gob :width) 2))
+	 (ry (/ (g-value-fixnum gob :height) 2))
 	 (thickness (get-thickness gob))
-	 (threshold (g-value gob :hit-threshold))
+	 (threshold (g-value-fixnum gob :hit-threshold))
 	 (outer-rx (+ rx threshold))
 	 (outer-ry (+ ry threshold))
 	 (cx (center-x gob))
 	 (cy (center-y gob)))
+    (declare (fixnum thickness threshold cx cy))
     (and (point-in-ellipse x y cx cy outer-rx outer-ry)
 	 (not (and (g-value gob :select-outline-only)
 		   (let ((inner-rx (- rx thickness threshold))
@@ -555,41 +579,43 @@
 
 ;;; Circles
 
-(define-method :draw opal:circle (gob a-window)
+(define-method :draw CIRCLE (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
-	 (width  (aref update-vals opal::+circle-width+))
-	 (height (aref update-vals opal::+circle-height+))
-	 (lstyle (aref update-vals opal::+circle-lstyle+))
-	 (fstyle (aref update-vals opal::+circle-fstyle+))
-	 (thickness (opal::get-old-thickness gob opal::+circle-lstyle+
-					     update-vals))
+	 (width  (aref update-vals +circle-width+))
+	 (height (aref update-vals +circle-height+))
+	 (lstyle (aref update-vals +circle-lstyle+))
+	 (fstyle (aref update-vals +circle-fstyle+))
+	 (thickness (get-old-thickness gob +circle-lstyle+ update-vals))
 	 (diameter (min width height))
 	 (fill-diameter (- diameter (* 2 thickness))))
+    (declare (fixnum width height thickness))
     (when (plusp diameter)		;don't draw unless diameter > 0
       (if (not (plusp fill-diameter))	; if circle is too small,
 					; just draw black circle
 	  (setf lstyle nil
-		fstyle opal:black-fill))
+		fstyle black-fill))
       (gem:draw-arc a-window
-		(aref update-vals opal::+circle-left+)
-		(aref update-vals opal::+circle-top+)
-		diameter diameter 0.0 opal::+twopi+
-		(aref update-vals opal::+circle-draw-function+)
+		(aref update-vals +circle-left+)
+		(aref update-vals +circle-top+)
+		diameter diameter 0.0 +twopi+
+		(aref update-vals +circle-draw-function+)
 		lstyle fstyle))))
 
 
-(define-method :point-in-gob opal:circle (gob x y)
+(define-method :point-in-gob CIRCLE (gob x y)
+	       (declare (fixnum x y))
  (and (g-value gob :visible)
-  (let* ((r (/ (min (g-value gob :width)
-		    (g-value gob :height)) 2))
+  (let* ((r (/ (min (g-value-fixnum gob :width)
+		    (g-value-fixnum gob :height)) 2))
 	 (thickness (get-thickness gob))
-	 (threshold (g-value gob :hit-threshold))
+	 (threshold (g-value-fixnum gob :hit-threshold))
 	 (outer-r (+ r threshold))
 	 ;; These next two values used to be (center-x gob) and
 	 ;; (center-y gob), but that doesn't work for a circle
 	 ;; whose width and height are unequal.
-	 (cx (+ (g-value gob :left) r))
-	 (cy (+ (g-value gob :top) r)))
+	 (cx (+ (g-value-fixnum gob :left) r))
+	 (cy (+ (g-value-fixnum gob :top) r)))
+    (declare (fixnum thickness threshold))
     (and (point-in-ellipse x y cx cy outer-r outer-r)
 	 (not (and (g-value gob :select-outline-only)
 		   (let ((inner-r (- r thickness threshold)))

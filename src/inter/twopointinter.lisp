@@ -1,30 +1,29 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 
 
-;;; This file contains the mouse and keyboard interactors to create new objects
-;;; defined by two points (e.g., rectangles and lines).  It should be
-;;; loaded after Interactor and after MoveGrowInter
+;;;; This file contains the mouse and keyboard interactors to create
+;;;  new objects defined by two points (e.g., rectangles and lines).
+;;;  It should be loaded after Interactor and after MoveGrowInter
 ;;;
-;;; Designed and implemented by Brad A. Myers
+;;;  Designed and implemented by Brad A. Myers
 
 
 (in-package "INTERACTORS")
 
-;;; Helper procedures for the default procedures to go into the slots
+;;;; Helper procedures for the default procedures to go into the slots
 ;;
 
 (defparameter *glo-two-points* (list 0 0 0 0))  ; use this to avoid cons-ing
 
-;;returns a list of x y w h or x1 y1 x2 y2 depending on whether is a
-;; rectangle or a line.  or returns NIL if should abort
+;; Returns a list of x y w h or x1 y1 x2 y2 depending on whether is a
+;; rectangle or a line. or returns NIL if should abort
 (defun TwoPCalcPoint (an-interactor whichpoint x y)
   (if (g-value an-interactor :line-p)
       (TwoPCalcLinePoint an-interactor whichpoint x y)
@@ -131,7 +130,7 @@
 (defun Two-Point-Interactor-Initialize (new-two-point-schema)
   (if-debug new-two-point-schema (format T "Two-point initialize ~s~%"
 					 new-two-point-schema))
-  (Check-Interactor-Type new-two-point-schema inter:Two-Point-Interactor)
+  (Check-Interactor-Type new-two-point-schema Two-Point-Interactor)
   (Check-Required-Slots new-two-point-schema)
   (Set-Up-Defaults new-two-point-schema)
   ) ;end initialize procedure
@@ -323,33 +322,33 @@
 ;;; Two-Point schema
 ;;
 
-(Create-Schema 'inter:Two-Point-Interactor
-		     (:is-a inter:interactor)
-		     (:name :First-Two-Point-interactor)
-		     (:start-action 'Two-Point-Int-Start-Action)
-		     (:running-action 'Two-Point-Int-Running-Action)
-		     (:stop-action 'Two-Point-Int-Stop-Action)
-		     (:abort-action 'Two-Point-Int-Abort-Action)
-		     (:outside-action 'Two-Point-Int-Outside-Action)
-		     (:back-inside-action 'Two-Point-Int-Back-Inside-Action)
-		     (:line-p NIL) ; line T, or rectangle NIL
-		     (:Min-width NIL); minimum allowed width and height
-		     (:Min-height NIL)
-		     (:Min-length NIL) ; minimum length for lines
-		     (:input-filter NIL)
-		     (:abort-if-too-small NIL)
-		     (:flip-if-change-side T) ; for rectangles-change left,top
-						; if move up left of it
-		     (:saved-last-points NIL) ; used if stop and outside and
-						; outside control is :last
-		     (:Go 'General-Go)  ; proc executed when events happen
-		     (:Do-Start 'Two-Point-Do-Start)     ; these are
-		     (:Do-Running 'Two-Point-Do-Running) ;   called by GO
-		     (:Do-Explicit-Stop 'Two-Point-Explicit-Stop) ;for stop-inter
-		     (:Do-Stop 'Two-Point-Do-Stop)       ;   to do
-		     (:Do-Abort 'Two-Point-Do-Abort)     ;   the real work.
-		     (:Do-Outside 'Two-Point-Do-Outside) ;   They call the
-		     (:Do-Back-Inside 'Two-Point-Do-Back-Inside)  ; appropriate
-		     (:Do-Outside-Stop 'Two-Point-Do-Outside-Stop); -action
-								     ; procedures
-		     (:initialize 'Two-Point-Interactor-Initialize))
+(Create-Schema 'Two-Point-Interactor
+	       (:is-a interactor)
+	       (:name :First-Two-Point-interactor)
+	       (:start-action 'Two-Point-Int-Start-Action)
+	       (:running-action 'Two-Point-Int-Running-Action)
+	       (:stop-action 'Two-Point-Int-Stop-Action)
+	       (:abort-action 'Two-Point-Int-Abort-Action)
+	       (:outside-action 'Two-Point-Int-Outside-Action)
+	       (:back-inside-action 'Two-Point-Int-Back-Inside-Action)
+	       (:line-p NIL)	      ; line T, or rectangle NIL
+	       (:Min-width NIL)	    ; minimum allowed width and height
+	       (:Min-height NIL)
+	       (:Min-length NIL)	; minimum length for lines
+	       (:input-filter NIL)
+	       (:abort-if-too-small NIL)
+	       (:flip-if-change-side T) ; for rectangles-change left,top
+					; if move up left of it
+	       (:saved-last-points NIL) ; used if stop and outside and
+					; outside control is :last
+	       (:Go 'General-Go)    ; proc executed when events happen
+	       (:Do-Start 'Two-Point-Do-Start)		 ; these are
+	       (:Do-Running 'Two-Point-Do-Running) ;   called by GO
+	       (:Do-Explicit-Stop 'Two-Point-Explicit-Stop) ;for stop-inter
+	       (:Do-Stop 'Two-Point-Do-Stop)		    ;   to do
+	       (:Do-Abort 'Two-Point-Do-Abort) ;   the real work.
+	       (:Do-Outside 'Two-Point-Do-Outside) ;   They call the
+	       (:Do-Back-Inside 'Two-Point-Do-Back-Inside) ; appropriate
+	       (:Do-Outside-Stop 'Two-Point-Do-Outside-Stop) ; -action
+					; procedures
+	       (:initialize 'Two-Point-Interactor-Initialize))

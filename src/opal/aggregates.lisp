@@ -27,7 +27,7 @@
 ;;; Initialize
 ;;; 
 ;;; The :aggregate-p slot is used by the update algorithm for efficiency
-(define-method :initialize opal:aggregate (a-aggregate)
+(define-method :initialize AGGREGATE (a-aggregate)
   (call-prototype-method a-aggregate)
   (let ((components (g-local-value a-aggregate :components)))
     (let ((kr::*constants-disabled* T))
@@ -47,34 +47,34 @@
 ;;; If, while trying to erase the aggregate, we hit illegal values, then the
 ;;; window will be updated fully (after the destroy).
 
-(define-method :destroy-me opal:aggregate (a-aggregate &optional (top-level-p T))
-  (if a-aggregate
-      (let* ((the-window (g-local-value a-aggregate :window))
-             (erase-p (and top-level-p the-window))
-             (parent  (g-local-value a-aggregate :parent))
-             total-update-p)
-        (if erase-p;; If at top-level, then erase...
-            (if (null parent)
-                (if (eq a-aggregate (g-value the-window :aggregate))
-                    (s-value the-window :aggregate NIL)
-                    (progn
-                      (format t "~%Warning in Destroy: aggregate '~A' has no parent,~%" a-aggregate)
-                      (format t   "        is in window '~A', but is not that window's:aggregate.~%"
-                              the-window)
-                      (setq erase-p NIL)))
-                (setq total-update-p (not (carefully-erase a-aggregate the-window)))))
-        (when (and top-level-p parent)
-          (s-value parent :components
-		   (delete a-aggregate (g-local-value parent :components)))
-          (mark-as-changed parent :components))
-        (let ((components (g-local-value a-aggregate :components)))
-          (with-constants-disabled (destroy-slot a-aggregate :components))
-          (dolist (component components)
-            (when (schema-p component)
-              (destroy component NIL))))
-        (destroy-schema a-aggregate)
-        (if erase-p
-            (update the-window total-update-p)))))
+(define-method :destroy-me AGGREGATE (a-aggregate &optional (top-level-p T))
+  (when a-aggregate
+    (let* ((the-window (g-local-value a-aggregate :window))
+	   (erase-p (and top-level-p the-window))
+	   (parent  (g-local-value a-aggregate :parent))
+	   total-update-p)
+      (when erase-p ;; If at top-level, then erase...
+	(if parent
+	    (setq total-update-p (not (carefully-erase a-aggregate the-window)))	    
+	    (if (eq a-aggregate (g-value the-window :aggregate))
+		(s-value the-window :aggregate NIL)
+		(progn
+		  (format t "~%Warning in Destroy: aggregate '~A' has no parent,~%" a-aggregate)
+		  (format t   "        is in window '~A', but is not that window's:aggregate.~%"
+			  the-window)
+		  (setq erase-p NIL)))))
+      (when (and top-level-p parent)
+	(s-value parent :components
+		 (delete a-aggregate (g-local-value parent :components)))
+	(mark-as-changed parent :components))
+      (let ((components (g-local-value a-aggregate :components)))
+	(with-constants-disabled (destroy-slot a-aggregate :components))
+	(dolist (component components)
+	  (when (schema-p component)
+	    (destroy component NIL))))
+      (destroy-schema a-aggregate)
+      (when erase-p
+	(update the-window total-update-p)))))
 
 
 
@@ -120,8 +120,10 @@
 			 locator a-aggregate)))))
       (:at
        (let* ((components (g-local-value a-aggregate :components))
-	      (remainder (unless (zerop locator)
-			   (nthcdr (1- locator) components))))
+	      (lindex locator)
+	      (remainder (unless (zerop lindex)
+			   (nthcdr (1- lindex) components))))
+	 (declare (fixnum lindex))
 	 (s-value a-aggregate :components
 		  (if (zerop locator)
 		      (cons gob components)
@@ -156,7 +158,7 @@
 ;;; (add-component foo :where :behind bar)  == (add-component foo :behind :bar)
 ;;; (add-component foo :where :at 2)        == (add-component foo :at 2)
 
-(define-method :add-component opal:aggregate (a-aggregate gob &rest args)
+(define-method :add-component AGGREGATE (a-aggregate gob &rest args)
   (if (eq gob (g-local-value gob :window))		;; Is this a window?
       (error "*** ~A is a WINDOW, and was not added to ~A~%"
 	     gob a-aggregate))
@@ -207,7 +209,7 @@
 
 ;;; Remove-component deletes the topmost occurance of gob in aggregate
 ;;; 
-(define-method :remove-component opal:aggregate (a-aggregate gob)
+(define-method :remove-component AGGREGATE (a-aggregate gob)
 
  (if (not (eq (g-local-value gob :parent) a-aggregate))
   (warn (format nil "Cannot remove-component ~A from ~A" gob a-aggregate))
@@ -253,7 +255,7 @@
 ;;; or perform any of the other overhead.  It merely sets the windows old-bbox,
 ;;; manually removes the object from the :components list, then reinstalls it
 
-(define-method :move-component opal:aggregate (a-aggregate gob &rest args)
+(define-method :move-component AGGREGATE (a-aggregate gob &rest args)
   (let* ((gob-update-info (g-local-value gob :update-info))
          (a-window (update-info-window gob-update-info))
 	 (a-window-update-info (g-local-value a-window :update-info)))
@@ -285,7 +287,7 @@
 
 ;;; Do-Components applies function to all children of aggregate
 
-(define-method :do-components opal:aggregate (a-aggregate a-function 
+(define-method :do-components AGGREGATE (a-aggregate a-function 
 					     &key (type t) (self nil))
   (let ((children (g-local-value a-aggregate :components)))
     (dolist (child children)
@@ -301,11 +303,11 @@
 ;;; Do-All-Components is like do-components, except it continued through all
 ;;; aggregates to their children
 
-(define-method :do-all-components opal:aggregate (a-aggregate a-function
+(define-method :do-all-components AGGREGATE (a-aggregate a-function
 						 &key (type t) (self nil))
   (let ((children (g-local-value a-aggregate :components)))
     (dolist (child children)
-      (if (is-a-p child opal:aggregate)
+      (if (is-a-p child aggregate)
 	  (do-all-components child a-function :type type :self t)
 	  (when (or (eq type t)
 		    (is-a-p child type))
@@ -329,8 +331,7 @@
 			(point-in-gob child x y))
 	       child)))))
   
-(define-method :point-to-component opal:aggregate
-	       (a-aggregate x y &key (type t))
+(define-method :point-to-component AGGREGATE (a-aggregate x y &key (type t))
   (when (point-in-gob a-aggregate x y)
     (point-to-component-recur (g-local-value a-aggregate :components) x y type)))
 
@@ -342,15 +343,14 @@
   (and component-list
        (or (point-to-leaf-recur (cdr component-list) x y type)
 	   (let ((child (car component-list)))
-	     (cond ((and (is-a-p child opal:aggregate)
+	     (cond ((and (is-a-p child aggregate)
 			 (not (g-value child :pretend-to-be-leaf)))
 		    (point-to-leaf child x y :type type))
 		   ((or (eq type t)
 			(my-is-a-p child type))
 		    (when (point-in-gob child x y) child)))))))
 
-(define-method :point-to-leaf opal:aggregate
-	       (a-aggregate x y &key (type t))
+(define-method :point-to-leaf AGGREGATE (a-aggregate x y &key (type t))
   (when (point-in-gob a-aggregate x y)
     (or (and (not (eq type t))
 	     (my-is-a-p a-aggregate type)
@@ -363,6 +363,9 @@
 ;; Returns T if two rectangles intersect
 (defun rectintersect (left1 top1 right1 bottom1
 		      left2 top2 right2 bottom2)
+  (declare (type (or null fixnum)
+		 left1 top1 right1 bottom1
+		 left2 top2 right2 bottom2))
   (and left1 top1 right1 bottom1
       (<= left1 right2)
        (<= left2 right1)
@@ -372,6 +375,9 @@
 ;; Returns T if rectangle1 is inside rectangle2
 (defun rectsubset (left1 top1 right1 bottom1
 		   left2 top2 right2 bottom2)
+  (declare (type (or null fixnum)
+		 left1 top1 right1 bottom1
+		 left2 top2 right2 bottom2))
   (and left1 top1 right1 bottom1
        (<= left2 left1)
        (<= right1 right2)
@@ -385,10 +391,11 @@
 (defun leaf-objects-in-rectangle (obj top left bottom right
 				 &key (type t) (intersect t))
   (if (g-value obj :visible)
-      (let* ((obj-left (g-value obj :left))
-	     (obj-top (g-value obj :top))
-	     (obj-right (+ obj-left -1 (g-value obj :width)))
-	     (obj-bottom (+ obj-top -1 (g-value obj :height))))
+      (let* ((obj-left (g-value-fixnum obj :left))
+	     (obj-top (g-value-fixnum obj :top))
+	     (obj-right (+ obj-left -1 (g-value-fixnum obj :width)))
+	     (obj-bottom (+ obj-top -1 (g-value-fixnum obj :height))))
+	(declare (fixnum obj-left obj-top obj-right obj-bottom))
 	(cond ((and (is-a-p obj aggregate)
 		    (not (g-value obj :pretend-to-be-leaf)))
 	       (when (rectintersect obj-left obj-top obj-right obj-bottom
@@ -444,7 +451,7 @@
 ;;; This routine sets the :hit-threshold slot of the aggregate
 ;;; agg to be the maximum of the hit-thresholds of its components.
 (defun set-aggregate-hit-threshold (agg)
-  (when (is-a-p agg opal:aggregate)
+  (when (is-a-p agg aggregate)
     (let ((max-hit 0))
       (declaim (fixnum max-hit))
       (dovalues (c agg :components :local t)

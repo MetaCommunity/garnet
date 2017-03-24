@@ -1,12 +1,11 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;; This code was written as part of the Garnet project at          ;;;
 ;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; domain.                                                         ;;;
+;;*******************************************************************;;
 ;;;
 ;;;  Multifont LISP text-editor
 ;;;  Matthew Goldberg
@@ -16,15 +15,6 @@
 ;;; $Id$
 ;;;
 ;;;
-;;; ============================================================
-;;; Change log:
-;;;     9/20/93 Fernando D. Mato Mira - Variable name: position ---> text-position
-;;;     8/05/93 Andrew Mickish - Added indent of kr:define-method
-;;;     7/13/93 Matt Goldberg - Rewrote many functions, using opal:marks.
-;;;     6/01/93 Matt Goldberg - Set interactor's :match-obj with the
-;;;                set-parenthesis message and added function LISPIFY
-;;;     5/26/93 Matt Goldberg - started
-;;; ============================================================
 
 (in-package "INTERACTORS")
 
@@ -42,9 +32,11 @@
 ;;;  returns: the number of characters to the word to tab to
 
 (defun word-tab (text-obj func-line func-char arg-num)
+  (declare (fixnum func-line func-char arg-num))
   (let* ((start (multiple-value-list
 		    (opal:get-cursor-line-char-position text-obj)))
 	 (start-line (first start)))
+    (declare (fixnum start-line))
     (cond
       ((= 0 start-line) nil)
       ((= 0 arg-num) (1+ func-char))
@@ -495,7 +487,7 @@
 		  (opal:set-text (g-value interact :match-obj)
 				(line-string (g-value text-obj :cursor-line))))))
 	    (progn
-	      (inter:beep)
+	      (beep)
 	      (s-value text-obj :curr-paren 0)
 	      (if (g-value interact :match-obj)
 		  (opal:set-text (g-value interact :match-obj) "No match."))))
@@ -1317,7 +1309,7 @@
 		       (opal:get-cursor-line-char-position text-obj))))
   (cond
    ((not legit-font)
-    (inter::paste-selection interact)
+    (paste-selection interact)
     (italicize text-obj text-position))
    (t
     (cond
@@ -1333,7 +1325,7 @@
 	 (opal::remove-mark text-obj (opal::search-for-mark-from line frag
 						:name :open-comment))
 	 (opal::calculate-size-of-line text-obj line))))
-    (inter::paste-selection interact)
+    (paste-selection interact)
     (let ((new-position (multiple-value-list
 			    (opal:get-cursor-line-char-position text-obj)))
 	  (last-char (opal:fetch-prev-char text-obj))

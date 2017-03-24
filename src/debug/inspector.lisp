@@ -78,6 +78,9 @@
 	(not (zerop (ccl::symbol-value-in-process
 		     'ccl::*break-level*
 		     opal::*main-event-loop-process*)))
+	#+cmu
+	;; Will this work???
+	debug:*in-the-debugger*
 	#+sbcl
 	;; A thread that is broken will bind the variable
 	;; sb-debug:*debug-condition* whereas in a running
@@ -86,13 +89,15 @@
 	  (sb-thread:symbol-value-in-thread
 	   'sb-debug:*debug-condition*
 	   *process-with-main-event-loop*))
-	#-(or allegro ccl sbcl) NIL
+	#-(or allegro ccl sbcl cmu) NIL
 	)
       ;; if not running the m-e-l process, then check if in debugger.
       ;; If so, then assume main-event-loop was in the process that crashed.
       ;; (This might be wrong if there are multiple processes in the
       ;; application, but the one that crashed is NOT the one running m-e-l).
       (if opal::*inside-main-event-loop*
+	  #+cmu
+	  debug:*in-the-debugger*
 	  #+sb-thread
 	  (ignore-errors
 	    (sb-thread:symbol-value-in-thread

@@ -20,33 +20,6 @@
 ;;;
 ;;; This file initializes character translation.
 ;;;
-#|
-============================================================
-Change log:
-        1/19/94 - Andrew Mickish - Renamed to x-define-keys.lisp
-	3/20/92 - Ed Pervin - Almost total rewrite.  Define-keysym takes
-			only one argument.  Number pad keys bound to ordinary
-			chars.  Minimize number of keyboard-dependent keys.
-	3/12/92 - Ed Pervin - Use #+ibm-rt-pc to see if machine is RT.
-	1/21/91 - Ed Pervin - Changes for CMUCL on Sparc station.
-	3/26/91 - Greg Sylvain - Changes for kcl.
-        8/22/90 - Brad Myers - Removed CMU #\F1, etc. use :F1 like others
-        8/21/90 - Ed Pervin - Added DECSystem keys
-	3/23/90 - Ed Pervin - Added Sun :F10
-	11/89 - Ed Pervin - Revised to work on Sun keyboard
-	3/89 - Incorporated into Garnet
-	Written by Bill Chiles
-============================================================
-|#
-;;; The IBM RT keyboard has X11 keysyms defined for the following modifier
-;;; keys, but we leave them mapped to nil indicating that they are non-events
-;;; to be ignored:
-;;;    ctrl		65507
-;;;    meta (left)	65513  -- 65511 on Sun
-;;;    meta (right)	65514  -- 65512 on Sun
-;;;    shift (left)	65505
-;;;    shift (right)	65506
-;;;    lock		65509
 
 (in-package "INTERACTORS")
 
@@ -242,29 +215,3 @@ Change log:
 (define-keysym 268500849 :Delete-Line)
 (define-keysym 268500850 :Insert-Char)
 (define-keysym 268500851 :Delete-Char)
-
-;;; Function keys which are defined in a
-;;; nonstandard way for the IBM RT.
-#+ibm-rt-pc
-(progn
-  (define-keysym 65291 :Clear-Display)
-  (define-keysym 65365 :pageup)
-  (define-keysym 65366 :pagedown)
-  (define-keysym 65377 :Print-Screen)
-) ; end +ibm-rt-pc
-
-;;; Function keys which are defined in a
-;;; nonstandard way for the DecStation keyboard
-#+(or vax dec3100 dec5000)
-(progn 
-  (define-keysym 65307 :F11)
-  (define-keysym 65312 :COMPOSE-CHARACTER)
-  (define-keysym 65379 :INSERT-HERE)
-  (define-keysym 65383 :DO)
-  (define-keysym 65482 :F13)
-  (define-keysym 65483 :F14)
-  (define-keysym 65486 :F17)
-  (define-keysym 65487 :F18)
-  (define-keysym 65488 :F19)
-  (define-keysym 65489 :F20)
-)

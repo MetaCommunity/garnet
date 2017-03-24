@@ -68,10 +68,7 @@
 ;;; Now makes the aggregate's :old-bbox valid at all times!!!
 ;;; DO NOT CALL THIS UNLESS THE AGGREGATE IS DEFINITELY VISIBLE!!!
 ;;;
-(define-method :update aggregate (agg update-info
-					   line-style-gc filling-style-gc
-					   bbox-1 bbox-2
-					   &optional (total-p NIL))
+(define-method :update AGGREGATE (agg update-info bbox-1 bbox-2 &optional (total-p NIL))
   (declare (optimize (speed 3) (safety 1)))
   (let ((dirty-p (update-info-dirty-p update-info))
 	(agg-bbox (update-info-old-bbox update-info)))
@@ -91,7 +88,7 @@
 			   (g-local-value child :update-info))))
 	      (if (is-a-p child aggregate)
 		(update child child-update-info
-			line-style-gc filling-style-gc bbox-1 bbox-2 total-p)
+			bbox-1 bbox-2 total-p)
 		(update child child-update-info bbox-1 bbox-2 total-p))
 	      (merge-bbox agg-bbox child-bbox));; and set the new one!
 					; else

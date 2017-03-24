@@ -25,12 +25,12 @@
 ;;
 (defun Selection-Timer-Handler (inter)
   (let* ((dir (g-value inter :direction-to-scroll))
-	 (obj (g-value inter :obj-being-changed))
-	 (line NIL) (char NIL))
-    (multiple-value-setq (line char) (opal:get-cursor-line-char-position obj))
-    (case dir
-      ((UP)   (opal:set-cursor-to-line-char-position obj (1- line) char))
-      ((DOWN) (opal:set-cursor-to-line-char-position obj (1+ line) char)))
+	 (obj (g-value inter :obj-being-changed)))
+    (multiple-value-bind (line char) (opal:get-cursor-line-char-position obj)
+      (declare (fixnum line char))
+      (case dir
+	((UP)   (opal:set-cursor-to-line-char-position obj (1- line) char))
+	((DOWN) (opal:set-cursor-to-line-char-position obj (1+ line) char))))
     (kr-send obj :auto-scroll obj)
     (curs-move inter obj)))		; curs-move defined in multifont-textinter.lisp
 
@@ -39,48 +39,50 @@
 ;;
 (defun prev-space (text-obj)
   (let ((frag (g-value text-obj :cursor-frag))
-	(frag-pos (g-value text-obj :cursor-frag-pos))
-	line-pos char-pos)
-    (multiple-value-setq (line-pos char-pos)
-      (opal:get-cursor-line-char-position text-obj))
-    (do ((char (and frag (not (opal::frag-object-p frag))
-		    (< frag-pos (opal::frag-length frag))
-		    (schar (opal::frag-string frag) frag-pos))
-	       (and frag (not (opal::frag-object-p frag))
-		    (schar (opal::frag-string frag) frag-pos))))
-	((or (null frag) (eq char #\space)) (values line-pos (1+ char-pos)))
-      (decf frag-pos)
-      (decf char-pos)
-      (when (< frag-pos 0)
-	(setf frag (opal::frag-prev frag))
-	(do () ((or (null frag) (> (opal::frag-length frag) 0)))
-	  (setf frag (opal::frag-prev frag)))
-	(when frag
-	  (setf frag-pos (1- (opal::frag-length frag))))))))
+	(frag-pos (g-value text-obj :cursor-frag-pos)))
+    (declare (fixnum frag-pos))
+    (multiple-value-bind (line-pos char-pos)
+	(opal:get-cursor-line-char-position text-obj)
+      (declare (fixnum line-pos char-pos))
+      (do ((char (and frag (not (opal::frag-object-p frag))
+		      (< frag-pos (opal::frag-length frag))
+		      (schar (opal::frag-string frag) frag-pos))
+		 (and frag (not (opal::frag-object-p frag))
+		      (schar (opal::frag-string frag) frag-pos))))
+	  ((or (null frag) (eq char #\space)) (values line-pos (1+ char-pos)))
+	(decf frag-pos)
+	(decf char-pos)
+	(when (< frag-pos 0)
+	  (setf frag (opal::frag-prev frag))
+	  (do () ((or (null frag) (> (opal::frag-length frag) 0)))
+	    (setf frag (opal::frag-prev frag)))
+	  (when frag
+	    (setf frag-pos (1- (opal::frag-length frag)))))))))
 
 (defun next-space (text-obj)
   (let ((frag (g-value text-obj :cursor-frag))
-	(frag-pos (g-value text-obj :cursor-frag-pos))
-	line-pos char-pos)
+	(frag-pos (g-value text-obj :cursor-frag-pos)))
+    (declare (fixnum frag-pos))
     (when (= frag-pos (opal::frag-length frag))
       (setf frag (opal::frag-next frag))
       (when frag
 	(setf frag-pos 0)))
-    (multiple-value-setq (line-pos char-pos)
-      (opal:get-cursor-line-char-position text-obj))
-    (do ((char (and frag (not (opal::frag-object-p frag))
-		    (schar (opal::frag-string frag) frag-pos))
-	       (and frag (not (opal::frag-object-p frag))
-		    (schar (opal::frag-string frag) frag-pos))))
-	((or (null frag) (eq char #\space)) (values line-pos char-pos))
-      (incf frag-pos)
-      (if (>= frag-pos (opal::frag-length frag))
-	  (progn
-	    (setf frag (opal::frag-next frag))
-	    (when frag
-	      (setf frag-pos 0)
-	      (incf char-pos)))
-	  (incf char-pos)))))
+    (multiple-value-bind (line-pos char-pos)
+	(opal:get-cursor-line-char-position text-obj)
+      (declare (fixnum line-pos char-pos))
+      (do ((char (and frag (not (opal::frag-object-p frag))
+		      (schar (opal::frag-string frag) frag-pos))
+		 (and frag (not (opal::frag-object-p frag))
+		      (schar (opal::frag-string frag) frag-pos))))
+	  ((or (null frag) (eq char #\space)) (values line-pos char-pos))
+	(incf frag-pos)
+	(if (>= frag-pos (opal::frag-length frag))
+	    (progn
+	      (setf frag (opal::frag-next frag))
+	      (when frag
+		(setf frag-pos 0)
+		(incf char-pos)))
+	    (incf char-pos))))))
 
 
 
@@ -92,7 +94,7 @@
 (defun Selection-Interactor-Initialize (new-selection-schema)
   (if-debug new-selection-schema (format T "Selection initialize ~s~%"
 					 new-selection-schema))
-  (Check-Interactor-Type new-selection-schema inter:Selection-Interactor)
+  (Check-Interactor-Type new-selection-schema Selection-Interactor)
   (Check-Required-Slots new-selection-schema)
   (Set-Up-Defaults new-selection-schema))
 
@@ -103,9 +105,10 @@
   (let ((focus-inter (g-value an-interactor :focus-interactor))
 	(x (car points))
 	(y (cadr points)))
+    (declare (fixnum x y))
     (when focus-inter
       (unless (eq object (g-value focus-inter :obj-to-change))
-	(inter:Set-focus focus-inter object)
+	(Set-focus focus-inter object)
 	(curs-move an-interactor object))) ; from multifont-textinter.lisp
     (when mouse-event
       (case mouse-event
@@ -127,7 +130,7 @@
 	      (s-value an-interactor :drag-mode 1))
 	   (1 (opal:set-selection-to-x-y-position object 0 y)
 	      (opal:set-cursor-to-x-y-position
-	       object (g-value object :width) y)
+	       object (g-value-fixnum object :width) y)
 	      (s-value an-interactor :drag-mode 2))
 	   (2 (opal:set-selection-to-line-char-position object 0 0)
 	      (opal:go-to-end-of-text object)))
@@ -254,7 +257,7 @@
 				      :saved-last-points points))
 	  (GoToRunningState an-interactor T)
 	  (kr-send an-interactor :start-action an-interactor obj
-		   (inter::Translate-key (event-char event) an-interactor)
+		   (Translate-key (event-char event) an-interactor)
 		   points))
 	;; else call stop-action
 	(progn
@@ -279,6 +282,7 @@
   (let* ((x (event-x event))
 	 (y (event-y event))
 	 (points (list x y)))
+    (declare (fixnum x y))
     (unless (eq (event-window event) (g-value an-interactor :saved-window))
       (multiple-value-setq (x y)
 	(opal:convert-coordinates (event-window event)
@@ -299,6 +303,7 @@
   (let* ((x (event-x event))
 	 (y (event-y event))
 	 (points (list x y)))
+    (declare (fixnum x y))
     (unless (eq (event-window event) (g-value an-interactor :saved-window))
       (multiple-value-setq (x y)
 	(opal:convert-coordinates (event-window event)
@@ -371,8 +376,8 @@
 
 ;;; Selection schema
 ;;
-(Create-Schema 'inter:Selection-Interactor
-   (:is-a inter:interactor)
+(Create-Schema 'Selection-Interactor
+   (:is-a interactor)
    (:match-parens-p NIL)
    (:match-obj NIL)
    (:after-cursor-moves-func (o-formula (when (gvl :match-parens-p)
@@ -443,5 +448,5 @@
     (bind-key-internal :rightdown :start-selection-continue ht)
     (bind-key-internal :double-rightdown :start-word-selection-continue ht)))
 
-(Set-Default-Button-Translations inter:selection-interactor)
+(Set-Default-Button-Translations selection-interactor)
 

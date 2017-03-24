@@ -308,7 +308,7 @@ clears the variable."
 ;;; Priority levels
 ;;
 
-(create-schema 'priority-level
+(create-schema 'PRIORITY-LEVEL
    ;; bam: the interactors list is now stored with the
    ;; windows, not here in the interactors list
    (:active T)				; if NIL, then this level is totally ignored,
@@ -327,22 +327,22 @@ clears the variable."
 					; stops at first to run
  )
 
-(create-schema 'normal-priority-level
+(create-schema 'NORMAL-PRIORITY-LEVEL
 	       (:is-a priority-level)
 	       (:active T)
 	       (:stop-when :if-any))
 
-(create-schema 'high-priority-level
+(create-schema 'HIGH-PRIORITY-LEVEL
 	       (:is-a priority-level)
 	       (:active T)
 	       (:stop-when :if-any))
 
-(create-schema 'running-priority-level
+(create-schema 'RUNNING-PRIORITY-LEVEL
 	       (:is-a priority-level)
 	       (:active T)
 	       (:stop-when :if-any))
 
-(Defparameter priority-level-list
+(defparameter priority-level-list
   (list running-priority-level high-priority-level normal-priority-level))
 
 
@@ -1083,7 +1083,7 @@ but already there~%" inter level win)
 	    (unless (and (event-mousep event) ; don't beep on mouse
 					; unless down press
 			 (not (event-downp event)))
-	      (inter:beep)) ;; Is beeping a good idea??
+	      (beep)) ;; Is beeping a good idea??
 	    (return-from process-event))
 	  ;; if no modal windows visible, then use this
 	  ;; gross hack in case press window set move to another Garnet window.
@@ -1421,12 +1421,12 @@ then will be the object itself.  Returns NIL if fails
   "handles the transformation of simple down events to up events.
 this may not be  the most elegant way of doing this, but for now it is acceptable"
   (cond ((null button-code) :any-mouseup)
-	((= inter::*left-button* button-code) :any-leftup)
-	((= inter::*middle-button* button-code) :any-middleup)
-	((= inter::*right-button* button-code) :any-rightup)
-	((= inter::*double-left-button*  button-code) :any-leftup)
-	((= inter::*double-middle-button* button-code) :any-middleup)
-	((= inter::*double-right-button* button-code) :any-rightup)))
+	((= *left-button* button-code) :any-leftup)
+	((= *middle-button* button-code) :any-middleup)
+	((= *right-button* button-code) :any-rightup)
+	((= *double-left-button*  button-code) :any-leftup)
+	((= *double-middle-button* button-code) :any-middleup)
+	((= *double-right-button* button-code) :any-rightup)))
 
 (defun compare-and-get-possible-stop-event (event event-desired)
   "checks to see if the event from the window manager (wm-event) matches
@@ -1437,17 +1437,17 @@ No checking for illegal keywords, they just always fail.
 
 Converting and checking are combined, because they both have to go through
 the same cases (for all the special keywords)."
-  (let ((mousep (inter::event-mousep event))
-	(code (inter::event-code event))
-	(key-button (inter::event-char event))
-	(downp (inter::event-downp event)))
+  (let ((mousep (event-mousep event))
+	(code (event-code event))
+	(key-button (event-char event))
+	(downp (event-downp event)))
     
     (cond ((eq event-desired key-button)
 	   (cond ((eq key-button :window-enter) :window-exit)
 		 ((eq key-button :window-exit) :window-exit)
 		 ((and mousep
 		       ;; returns the right value
-		       (inter::convert-mouse-down code)))
+		       (convert-mouse-down code)))
 		 (T key-button)))	; otherwise, just use value
 	  ((and (eq event-desired :any-keyboard)
 		(not mousep)
@@ -1461,18 +1461,18 @@ the same cases (for all the special keywords)."
 	   :any-mouseup)
 	  
 	  ((and (eq event-desired :any-leftdown)
-		mousep downp (eq code inter::*left-button*)) :any-leftup)
+		mousep downp (eq code *left-button*)) :any-leftup)
 	  ((and (eq event-desired :any-middledown)
-		mousep downp (eq code inter::*middle-button*)) :any-middleup)
+		mousep downp (eq code *middle-button*)) :any-middleup)
 	  ((and (eq event-desired :any-rightdown)
-		mousep downp (eq code inter::*right-button*)) :any-rightup)
+		mousep downp (eq code *right-button*)) :any-rightup)
 	  
 	  ((and (eq event-desired :any-leftup)
-		mousep (null downp) (eq code inter::*left-button*)) :any-leftup)
+		mousep (null downp) (eq code *left-button*)) :any-leftup)
 	  ((and (eq event-desired :any-middleup)
-		mousep (null downp) (eq code inter::*middle-button*)) :any-middleup)
+		mousep (null downp) (eq code *middle-button*)) :any-middleup)
 	  ((and (eq event-desired :any-rightup)
-		mousep (null downp) (eq code inter::*right-button*)) :any-rightup))))
+		mousep (null downp) (eq code *right-button*)) :any-rightup))))
 ;; if none of these pass, then the event doesn't match
 
   
@@ -1759,9 +1759,9 @@ and stop. We cannot count on getting different events for this."
 ;;============================================================
 ;; Main, top level inter:interactor object
 
-(Create-Schema 'interactor
+(Create-Schema 'INTERACTOR
     :declare ((:type (inter-window-type :window)
-		     ((is-a-p inter::priority-level)
+		     ((is-a-p priority-level)
 		      :waiting-priority :running-priority)))
     (:current-state :start)
 

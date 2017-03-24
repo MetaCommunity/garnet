@@ -64,16 +64,7 @@
   (when (and (boundp 'garnet-image-date) garnet-image-date)
     (format t "*** Image creation date: ~A ***~%" garnet-image-date))
   (announce-debug-state)
-  (opal:reconnect-garnet))
-
-
-#-(and)
-(defun garnet-restart-function ()
-  (format t "*** Restarting Garnet ~A image created on ~A ***~%"
-	  common-lisp-user::Garnet-Version-Number
-	  garnet-image-date)
-  (announce-debug-state)
-  (opal:reconnect-garnet))
+  (reconnect-garnet))
 
 
 (defun Extract-Image-Args (args)
@@ -120,7 +111,7 @@ Please consult your lisp's user manual for instructions.~%")
 
   (progn
     (when verbose (format t "Disconnecting Garnet..."))
-    (opal:disconnect-garnet)
+    (disconnect-garnet)
     (when verbose (format t "disconnected.~%")))
 
   (setf garnet-image-date (time-to-string))
@@ -189,13 +180,13 @@ Please consult your lisp's user manual for instructions.~%")
      )
     (t
      (when verbose (format t "Reconnecting Garnet..."))
-     (opal:reconnect-garnet)
+     (reconnect-garnet)
      (when verbose (format t "reconnected.~%"))
      ))
   ))
 
 (defun Get-Garnet-Bitmap (bitmapname)
-  (opal:read-image (merge-pathnames bitmapname cl-user::Garnet-Bitmap-PathName)))
+  (read-image (merge-pathnames bitmapname cl-user::Garnet-Bitmap-PathName)))
 
 
 ;;;============================================================
