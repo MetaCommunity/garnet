@@ -17,7 +17,7 @@
    (:file "package") ;; defined in gem package.lisp
 
    ;; key translation files
-    (:file "garnet-keytrans") ;; ???
+    (:file "garnet-keytrans")
     (:file "define-mouse-keys")
     (:file "x-define-keys")
     (:file "x-inter")

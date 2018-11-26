@@ -14,4 +14,5 @@
 	       ;; ...
 	       )
   :defsystem-depends-on (#:garnet-shared)
+  ;; FIXME see gilt-loader.lisp
   :components ())

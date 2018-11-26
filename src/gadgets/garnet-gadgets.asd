@@ -15,18 +15,19 @@
   :components
   (; (:file "package") ;; package defined in garnet-opal
    ;;
-   ;; The original sytem uses numerous <foo>-loader files,
+   ;; The original system uses numerous <foo>-loader files,
    ;; those defining the deps of each <foo>.
    ;;
    ;; The <foo>-loader flies are defined in
    ;; gadgets-compiler.lisp
    ;;
    ;; Additionally, gadgets-loader.lisp defines some files
-   ;; for which there's no explicitly <foo>-loader
+   ;; for which there's no explicit <foo>-loader
    ;;
-   ;; Note that the dependencies, below, are extracted from
-   ;; the respective <foo>-loader files, and may not exactly
-   ;; represent actual component dependencies.
+   ;; The dependencies, below, are derived from the respective
+   ;; <foo>-loader files.
+   ;;
+   ;; FIXME Double-check component linkage.
 
 
    (:file "prop-value-gadgets")

@@ -7,14 +7,20 @@
 	(pushnew ':garnet.asdf *features*
 		 :test #'eq))
 
+;; FIXME Document this system definition
+;; See also garnet-desktop-shared.asd
+
+
   #-asdf
   (require #:asdf)
-  
-  (asdf:operate 'asdf:load-op 
+
+  (asdf:operate 'asdf:load-op
+                ;; FIXME the following sysdef/defpackage
+                ;; has been renamed
 		'#:info.metacommunity.cltl.utils)
 
   (defpackage #:garnet-systems
-    (:use 
+    (:use
      #:info.metacommunity.cltl.utils
      #:asdf #:cl)))
 
@@ -35,10 +41,10 @@ a specific module. They emphasize debuggability at the cost of some speed.
 
 With SBCL:
 
-- These settings are type-safe. 
+- These settings are type-safe.
 
-- They prevent functions declared inline from being expanded inline. 
-  Note that as part of this version I have tried to make most 
+- They prevent functions declared inline from being expanded inline.
+  Note that as part of this version I have tried to make most
   non-syntactic macros into inline functions.
 
 - They allow all possible debugging features.")
@@ -48,7 +54,7 @@ With SBCL:
   '(optimize (speed 3) (safety 1) (space 0) (debug 2) (compilation-speed 0))
   "Production compiler policy settings. Emphasize speed, de-emphasize debugging.")
 
-  
+
 (defvar *default-garnet-proclaim*
   (if *garnet-compile-debug-mode*
       *garnet-compile-debug-settings*
@@ -61,7 +67,7 @@ With SBCL:
    to nil. Then set the variable in the modules you want debugged to enable
    debugging that module.
 
-3. Otherwise (for 'production' builds) just set *garnet-compile-debug-mode* 
+3. Otherwise (for 'production' builds) just set *garnet-compile-debug-mode*
    to nil and leave everything else alone.")
 
 
@@ -74,7 +80,7 @@ With SBCL:
     (proclaim cl-user::*default-garnet-proclaim*)
     (call-next-method)))
 
-#+NIL 
+#+NIL ;; FIXME QA
 (defvar %garnet-systems%
   ;; must be compiled/loaded in this serial order
   ;; pending a closer dependency analysis
@@ -98,6 +104,7 @@ With SBCL:
     "lapidary"))
 
 (defsystem #:garnet-shared
+  ;; FIXME sysdef renamed:
   :defsystem-depends-on (#:info.metacommunity.cltl.utils)
   :default-component-class garnet-source-file
   :components ((:file "shared")))

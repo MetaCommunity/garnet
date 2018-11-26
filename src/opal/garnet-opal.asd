@@ -12,9 +12,10 @@
   :default-component-class garnet-source-file
   :serial t
   :defsystem-depends-on (#:garnet-shared)
-  :depends-on (#:garnet-gem 
+  :depends-on (#:garnet-gem
 	       #:garnet-bitmaps
-	       #:info.metacommunity.cltl.utils)
+	       #:info.metacommunity.cltl.utils ;; FIXME renamed
+               )
   :perform (load-op :after (o c)
              (let ((s (find-symbol  #.(symbol-name '#:init-device)
                                     '#:gem)))

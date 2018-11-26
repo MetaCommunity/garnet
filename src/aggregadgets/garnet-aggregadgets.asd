@@ -12,7 +12,10 @@
 (defsystem #:garnet-aggregadgets
   :default-component-class garnet-source-file
  :serial t
-  :depends-on (#:garnet-shared #:garnet-opal #:garnet-inter
+  :depends-on (#:garnet-shared
+               #:garnet-opal
+               #:garnet-inter
+               ;; FIXME document the following conditional
 	       #-(or allegro CMU) #:clx-truetype
 	       )
   :components

@@ -20,6 +20,9 @@
 
   :description "System for Garnet pixmaps"
 
+  ;; FIXME Document the pixmap compoment class
+  ;; FIXME Integrate this w/ Garnet runtime code
+  ;;        - NB ASDF pathname translations
   :components
   ((pixmap "arrdown")
    (pixmap "arrleft")
