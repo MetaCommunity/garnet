@@ -11,10 +11,11 @@
   :default-component-class garnet-source-file
   :serial t
   :version "1.0"
-  :depends-on (#:garnet-shared 
-	       #:clx 
+  :depends-on (#:garnet-shared
+	       #:clx
 	       #:garnet-kr
-	       #:info.metacommunity.cltl.utils)
+	       #:info.metacommunity.cltl.utils ;; FIXME sysdef renamed (LTP)
+               )
   :perform (load-op :after (o c)
 	       (with-safe-frefs ((ensure #:ensure-device-initializer
 					 #:gem)

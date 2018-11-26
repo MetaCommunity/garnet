@@ -9,12 +9,17 @@
 (in-package #:garnet-systems)
 
 
+;; FIXME Document this system definition
+;; See also garnet-shared.asd
+
 (defsystem #:garnet-desktop-shared
   :defsystem-depends-on (#:garnet-shared)
   :default-component-class garnet-source-file
-  :depends-on (#:info.metacommunity.cltl.utils)
+  :depends-on (;; FIXME the following sysdef has been renamed
+               #:info.metacommunity.cltl.utils
+               )
   :serial t
   :version "1.0"
-  :components 
+  :components
   ((:file "desktop-shared")
    ))

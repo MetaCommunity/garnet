@@ -12,7 +12,7 @@
   :version "2.0"
   :serial t
   ;; specific gadgets that garnetdraw depends on
-  ;; (see garnetdraw.lisp)
+  ;; (see garnetdraw.lisp) ;; FIXME integrate w/ sysdef
   #+NIL ("multi-selection-loader" "polyline-creator-loader"
 		    "arrow-line-loader"
 		    "motif-menubar-loader"

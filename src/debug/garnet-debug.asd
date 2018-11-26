@@ -16,7 +16,9 @@
   ;;   text-buttons
   ;;   error-gadget-utils
   ;;
-  ;; see also: debug-loader.lisp
+  ;; see also: debug-loader.lisp, debug-compiler.lisp
+  ;;
+  ;; FIXME: Integrate direct component dependencies w/ system defn
   :serial t
   :version "2.0"
   :defsystem-depends-on (#:garnet-shared)

@@ -13,9 +13,9 @@
   :serial t
   :defsystem-depends-on (#:garnet-shared)
   :depends-on (#:garnet-opal)
-  ;; NOTES: 
+  ;; NOTES:
   ;; * Garnet-PS defines objects in the #:OPAL package
-  ;; * Garnet-PS defpends specifically on the 'multifont'
+  ;; * Garnet-PS depends specifically on the 'multifont'
   ;;   component within the #:Garnet-Opal system
   :components ((:file "ps")
 	       (:file "ps-multifont")))
