@@ -1,0 +1,68 @@
+COPYING						-*- text -*-
+
+Except where expressly stated, source files in this repository are
+provided under the original terms of the following license:
+
+  This code was written as part of the Garnet project at Carnegie
+  Mellon University, and has been placed in the public domain. 
+
+The text of that license is avaialble in the file doc/GPD.txt
+
+----------------------------------------------------------------------
+
+The following files are licensed under terms of the LLGPL, as
+extensional to the LGPL
+
+see doc/LLGPL-preamble.txt
+
+  src/contrib/choice-gadget.lisp
+  src/contrib/choice-gadget.lisp
+  src/contrib/dsi-popup-menu.lisp
+  src/contrib/garnet-loop.lisp
+  src/contrib/garnet-loop.lisp
+  src/contrib/popup-inter.lisp
+  src/contrib/popup-inter.lisp
+  src/contrib/popup-menu.lisp
+  src/contrib/popup-menu.lisp
+  src/utils/bsd.lisp
+
+----------------------------------------------------------------------
+
+The following files are licensed under terms of the EPL version 1.0,
+the text of which is available in the file doc/EPL-1.0.txt
+
+  lib/bitmaps/garnet-bitmaps.asd
+  lib/c32/garnet-c32-resources.asd
+  lib/pixmaps/garnet-pixmaps.asd
+  src/aggregadgets/garnet-aggregadgets.asd
+  src/aggregadgets/package.lisp
+  src/c32/garnet-c32.asd
+  src/c32/package.lisp
+  src/debug/garnet-debug.asd
+  src/demos/garnetdraw.asd
+  src/demos/garnetdraw-package.lisp
+  src/demos/garnet-demos.asd
+  src/demos/demos-package.lisp
+  src/gadgets/garnet-gadgets.asd
+  src/gem/garnet-gem.asd
+  src/gem/package.lisp
+  src/gesture/garnet-gesture.asd
+  src/gesture/package.lisp
+  src/gilt/garnet-gilt.asd
+  src/gilt/package.lisp
+  src/inter/garnet-inter.asd
+  src/kr/garnet-kr.asd
+  src/kr/package.lisp
+  src/lapidary/garnet-lapidary.asd
+  src/lapidary/package.lisp
+  src/opal/garnet-opal.asd
+  src/opal/package.lisp
+  src/protected-eval/garnet-protected-eval.asd
+  src/protected-eval/package.lisp
+  src/ps/garnet-ps.asd
+  src/shared/desktop-shared.lisp
+  src/shared/garnet-desktop-shared.asd
+  src/shared/garnet-shared.asd
+  src/shared/shared.lisp
+  src/utils/garnet-utils.asd
+  src/utils/package.lisp
