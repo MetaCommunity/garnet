@@ -1,40 +1,66 @@
-;; garnet-gadgets.asd			-*-lisp-*-
+;; garnet-gadgets.asd				-*-lisp-*-
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;;
+;; Contributors: Sean Champ - Porting from garnet-loader.lisp onto ASDF
+;;
+;;------------------------------------------------------------------------------
+;;
+;; This system contains source code derived from source code that was
+;; originally published under the following license stipulations:
+;;
+;;   This code was written as part of the Garnet project at
+;;   Carnegie Mellon University, and has been placed in the public
+;;   domain.  If you are using this code or any part of Garnet,
+;;   please contact garnet@cs.cmu.edu to be put on the mailing list
 
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (asdf:find-system '#:garnet-shared))
 
-(in-package #:garnet-systems)
+(in-package #:garnet-sys)
 
 (defsystem #:garnet-gadgets
-  :version "1.0"
+  :version "1.0" ;; NB from gadgets-loader.lisp
+  :desystem-depends-on #:garnet-shared
   :default-component-class garnet-source-file
   :serial nil
   :depends-on (#:garnet-shared #:garnet-aggregadgets)
   :components
-  (; (:file "package") ;; package defined in garnet-opal
+  (;; NB: In this representation for ASDF, the #:GG package
+   ;;     is defined in the granet-opal system
+
+   ;; Commentary - Porting from Garnet-Loader and Subsq.
    ;;
-   ;; The original system uses numerous <foo>-loader files,
-   ;; those defining the deps of each <foo>.
+   ;; The original Garnet Gadgets system uses numerous
+   ;; <component>-loader files, those defining dependencies of each
+   ;; <component>.
    ;;
-   ;; The <foo>-loader flies are defined in
-   ;; gadgets-compiler.lisp
+   ;; The <component>-loader flies are each named in
+   ;; ./gadgets-compiler.lisp within the top-level garnet-copy-files form,
+   ;; in the source file
    ;;
-   ;; Additionally, gadgets-loader.lisp defines some files
-   ;; for which there's no explicit <foo>-loader
-   ;;
+   ;; Additionally, gadgets-loader.lisp may define some files
+   ;; for which there's no explicit <component>-loader, namely under
+   ;; GARNET-GADGETS-FILES
+
    ;; The dependencies, below, are derived from the respective
-   ;; <foo>-loader files.
+   ;; <foo>-loader files. The annotations in comments are derived mostly
+   ;; from ./gadgets-compiler.lisp
    ;;
    ;; FIXME Double-check component linkage.
-
 
    (:file "prop-value-gadgets")
    ;; ^ FIXME: Depends on aggregadgets - schema opal:aggregadget
    ;
-   ;; TO DO: move prop-value-gadgets, and every component
-   ;; depending on it, into system 'aggregadget'
+   ;; TO DO: consider moving prop-value-gadgets, and every component
+   ;; depending on it, into the garnet-aggregadgets system
    (:file "prop-sheet"
           :depends-on ("error-gadget"
                        "prop-value-gadgets"))

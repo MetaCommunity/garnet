@@ -1,6 +1,18 @@
 ;; desktop-shared.lisp - shared resources for Garnet desktop applications
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;;
+;; Contributors: Sean Champ - Initial API and implementation
+;;
+;;------------------------------------------------------------------------------
 
-;; FIXME: SIDEBAR : What feature GARNET-PROCESSES ?
+;; NB #+GARNET-PROCESSES cf. garnet-loader.lisp and ./shared.lisp
+
 
 ;; FIXME: Parse source code for each of:
 ;;  Garnet-Bitmap-Pathname
@@ -14,9 +26,7 @@
 ;;  #+Garnet.ASDF
 ;;    (find-bitmap-pathname <name> :system <system>)
 
-;; FIXME: Sysem deps
-;;
-;;
+;; FIXME: System deps
 ;;  A. Depending on garnet-bitmaps :
 ;;       garnet-demos (incl. stand-alone garnetdraw system)
 ;;       garnet-gadgets (various specific gadgets)
@@ -28,13 +38,12 @@
 ;;       garnet-gilt
 ;;       garnet-debug
 
-
-
-;; FIXME: cf. cl-user::Garnet-Bitmap-Pathname in legacy Garnet system definitions
-;; e.g systems using definition of that var:
+;; FIXME: cf. cl-user::Garnet-Bitmap-Pathname in original Garnet system definitions
+;;
+;; e.g systems
 ;;  garnet-demos [FIXME: use GET-GARNET-BITMAP]
 ;;  garnet-gadgets (used with OPAL:READ-IMAGE) [FIXME: use GET-GARNET-BITMAP]
-;;  garnet-opal (used by GET-GARNET-BITMAP [FIXME: revise pathname eval, move into GADGETS]
+;;  garnet-opal (used by GET-GARNET-BITMAP [FIXME: note pathname eval and GADGETS system deps??]
 ;;  garnet-lapidary (cf. LAPIDARY::INIT-CURSORS) [FIXME: use GET-GARNET-BITMAP]
 
 (in-package #:garnet-systems)
@@ -47,7 +56,6 @@
 ;;    <name>.cursor
 ;;    <name>.mask
 ;; both files, in bitmap format
-
 
 
 (export '(bitmap cursor cursor-cursor-bitmap cursor-mask-bitmap
@@ -154,7 +162,7 @@
     ;;
     ;; So, to set the component's pathname to a custom value,
     ;; simply a "hack" onto the initargs...
-    (setf (getf initargs :pathname)	  
+    (setf (getf initargs :pathname)
 	  (cond
 	    (parent (component-pathname parent))
 	    (t (make-pathname  :directory '(:relative))))))
@@ -206,157 +214,12 @@
 
 
 
-;;; NOTES
-
-#|
-
-FIXME: Define a "Resource System" compression framework, for
-application when installing a "Resource system" with Common
-Lisp, onto a thin client mobile device.
-
---
-
-## Towards A concept: "Resource system"
-
-example: The garnet-bitmaps system (defined heredin)
-
-### Summary:
-
-A Common Lisp application may be defined, such that -- for the
-application's normal functioning -- would require resources not
-expressly representing Common Lisp source files. For example,
-a "local dictionary" application would need to access
-"local" dictionary data files. Similary, a graphical user application
-such as Garnet Draw would require access to bitmap files or other
-image files used in the application's graphical user interface.
-
-(If "resource system" may be defined expressly as a class ... ?)
-
---
-
-## "Origins"
-
-Initial Question: How to derive CL-USER::GARNET-BITMAP-PATHNAME  from
-this system definition, portably?
-
-
-* Note the variable cl-user::Garnet-Bitmap-Pathname
-is used in current revisiosn of Garnet source tree -- eg. within
-the function, GET-GARNET-BITMAP -- and as used within some
-demonstration programs -- for instance, Garnet Draw. That variable,
-essentially, must define the root directory in which the Garnet
-system's bitmap files are stored
-
-
-* In a revision of Garnet using ASDF, CL-USER::GARNET-BITMAP-PATHNAME
-can be bound to the source pathname of the GARNET-BITMAPS
-system. However, that would prevent compatibility onto any
-non-source distributions of the Garnet system.
-
-How then may one determine when to define GARNET-BITMAP-PATHNAME
-1. using the SOURCE-PATHNAME of the GARNET-BITMAPS system?
-2. or using ASDF:APPLY-OUTPUT-TRANSLATIONS onto the GARNET-BITMAPS sytsem?
-
-* That may be resolvable with a simple <PLATFORM>//<INCLUDE-SOURCE-P>
-property, such as may be defined as a "configuration property,"
-in "some sort of a lexical environment." That, in itself, may not
-serve to answer a broader question, however,
-
-"Why would it matter?"
-
-Towards such a question, the following sections might serve to
-provide something in a form of an explanation.
-
-* Towards a second question, "How would that be implemented?"
-
-some ideas:
-
-* <PLATFORM>//<INCLUDE-SOURCE-P>
-
-* refers to ASDF system definitions, specifically those
-representing "Resource systems" within any single
-application
-
-* may be referenced from "platform builder" programs
-
-* would be expressly relevant for appliation functioning,
-as with regards to how that 'property' would affect
-the availability of <resource systems> in a target
-<platform>
-
-* IDE <=> Source distribution management tooling
-
-* Source distribution management tooling in Common Lisp?
-* xref: Eclipse IDE (Java) [Platform Element]
-* xref: Eclipse IDE for embedded systems [!] [Platform Element]
-* xref: Dandelion extension for the Eclipse IDE [Platform Element]
-
-
-* Concept: User/developer option, "Install system source code?"
-
-
-* Sidebar: Referencing TimeSource LinuxLink [Existing Work]
-
-* Concept: RTOS and thin client embedded systems development
-* Concept: Extending on existing RTOS developments
-in the Linux Kernel and GNU LibC
-
-* Development environment <=> device image builder
-* Kernel
-* RootFS
-* Platform Libraries
-
-* Concern: Minimization of file size of compiled binary files -
-e.g. using GCC or uClibc for C programs - and tradeoffs
-with regards to minimizing "compiled binary file size"
-
-* Concern: Optimization for target architectures, in a
-platform-centric regards
-
-* Sidebar: compressed filesystems may or may not be "ideal"
-for realtime architectures (e.g due to latency across the
-                                filesystem compression interface) ?
---
-
-## Towards a Common Lisp Installation for a Graphing Calculator
-
-* Conceivably, for a use case in which Garnet could be used to define
-a graphical user interface system for a Common Lisp implementation
-installed onto a portable calculator device, "Then it would matter",
-as namely: That any Common Lisp systems installed onto such a thin
-client platform may not be installed with their source forms.
-Rather, a "Resource system" such as the garnet-bitmaps system may
-be installed into some sort of a compressed form - to be
-decompressed at system runtime - without the corresponding source
-code of the system then being available on the calculator, itself.
-
-* In short, then, this may serve to call towards a matter of defining
-a "System compression" and related "Component compression" model for
-Common Lisp systems using ASDF, ostensibly for application on
-thin-client platforms - e.g. CCL for the Advanced RISC Machine (ARM)
-architecture.
-
-----
-
-As a sidebar; The Texas Instruments nSpire platform,
-with some effort, could possibly serve as a demonstration
-platform, a sort of "proof of concept" of a kind, for
-"Common Lisp on a Calculator". Such a platform would
-then allow for extension of the baseline calculator
-platform, using Common Lisp. (Comparatively, in a sense,
-                                             the TI nSpire platform supports user extension with
-                                             Lua scripting. Lua is also used in the TOME 4 grapical
-                                             adventure game platform, incidentally)
-
-|#
-
-
 ;;; FIND-BITMAP-PATHNAME
 
 
 (deftype image ()
   ;; cf. GEM::X-READ-AN-IMAGE
-  #-:xlib t
+  #-:xlib t ;; ...
   #+:xlib
   '(or xlib:image-z xlib:image-xy xlib:image-x))
 
@@ -367,18 +230,18 @@ platform, using Common Lisp. (Comparatively, in a sense,
                                     submodule)
   ;; FIXME: should rename this function, across the source tree
   ;; => find-resource-pathname
-  ;; wheras this function applies both for bitmaps and cursors now
+  ;; whereas this function applies both for bitmaps and cursors now
   ;;
   ;; FIXME: Must also generalize this for application e.g. onto the Gilt
   ;; resource system (bitmaps, pixmaps)
   ;;
   ;; Therefore: TO DO
-  ;;  1) [X] Move this into a (new) garnet-desktop-shared system
-  ;;  2) [X] Add a keyword arg :SYSTEM
+  ;;  1) [X] Move this into a (new) garnet-desktop-shared system [DONE]
+  ;;  2) [X] Add a keyword arg :SYSTEM [DONE]
   ;;  3) Use for all of the systems:
   ;;       [X] garnet-bitmaps
   ;;       [X] garnet-pixmaps
-  ;;       [x] garnet-c32-resources
+  ;;       [X] garnet-c32-resources
   ;;       garnet-gesture-resources [TO DO] (*.classifier ?)
   ;;       garnet-gilt-resources [TO DO]
   ;;       ?? ../data/cirles.data used in demo-virtual-agg [TO DO]
@@ -391,7 +254,9 @@ platform, using Common Lisp. (Comparatively, in a sense,
          (c (cond
               (submodule
                (let* ((%submodule (asdf:coerce-name submodule))
+                      ;; FIXME: LTP DEP ;; !! ONLY INSTANCE. REMOVE THIS [spchamp]
                       (module (utils:find-component* %submodule sys)))
+
                  (utils:find-component* %name module nil)))
               (t (utils:find-component* %name sys nil)))))
     (cond

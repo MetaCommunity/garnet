@@ -2653,5 +2653,5 @@ integer.  We want to specify nice keywords instead of those silly
 
 ;;; Make the initializer function available to the outside world.
 ;;;
-#-ASDF
+#-Garnet.ASDF
 (push (cons :X #'X-TOP-LEVEL-INITIALIZE) *device-initializers*)

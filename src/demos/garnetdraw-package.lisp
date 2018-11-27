@@ -1,4 +1,4 @@
-;; package.lisp - Garnet C32
+;; package.lisp -- garnetdraw package definitions
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
@@ -25,6 +25,7 @@
 
 (in-package #:cl-user)
 
-(defpackage #:c32
+(defpackage #:garnetdraw
   ;; derived from garnet-loader.lisp
-  (:use #:common-lisp #:kr))
+  (:use #:common-lisp #:kr)
+  (:export #:do-go #:do-stop))

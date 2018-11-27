@@ -45,16 +45,19 @@
 (declaim (special WIN1 AGG1 BT QBT DEMOS-MOUSELINE WIN2 TEXT))
 
 ;; Load multifont stuff.
+#-Garnet.ASDF
 (unless (get :garnet-modules :multifont)
    (load (common-lisp-user::garnet-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)
          :verbose T))
 
+#-Garnet.ASDF
 (dolist (file '("x-buttons-loader"
 		"text-buttons-loader"
 		"scrolling-window-loader"
 		"mouseline-loader"))
   (common-lisp-user::garnet-load (concatenate 'string "gadgets:" file)))
 
+#-Garnet.ASDF
 (common-lisp-user::garnet-load "demos:demo-logo")
 
 

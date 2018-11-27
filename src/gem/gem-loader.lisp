@@ -9,6 +9,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Changes:
+;;; 27-Nov-18 spchamp - Moved mac.lisp into gem; use conditional load
+;;;                     from opal-loader.lisp
 ;;;  1-Nov-93 Mickish - Created
 
 (in-package "COMMON-LISP-USER")
@@ -26,7 +28,8 @@
   '(
     "gem"
     "define-methods"
-    "x"
+    #-(and apple (not clx)) "x"
+    #+(and apple (not clx)) "mac"
     ))
 
 (unless (get :garnet-modules :gem)

@@ -1,6 +1,6 @@
+;;; FIXME remove this file
 
-
-(in-package #:garnet-systems)
+(in-package #:garnet-syss)
 
 (progn
 
