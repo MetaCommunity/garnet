@@ -1,4 +1,4 @@
-;; package.lisp -- garnetdraw package definitions
+;; garnetdraw-package.lisp -- garnetdraw package definitions
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
