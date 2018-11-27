@@ -18,18 +18,30 @@
 
 
 ;;; CHANGE LOG:
-;;  12/15/93 Andrew Mickish - Moved shared macros here from x.lisp
-;;  11/11/93 Andrew Mickish - Put into CLTL2 form
+;;;  9/20/14 Sean Champ - Add functional interface for *device-initializers*
+;;; 12/15/93 Andrew Mickish - Moved shared macros here from x.lisp
+;;; 11/11/93 Andrew Mickish - Put into CLTL2 form
 
 
 (in-package "GEM")
 
 (declaim (special *root-window*))
 
+;;; This file defines gem-method, which is used to declare, create, and
+;;; export the generic Gem methods.  Methods are implemented as macros which
+;;; dispatch on the :methods slot of a window (or font) to find the appropriate
+;;; method for each device.
+
+
+
 (eval-when (:execute :compile-toplevel :load-toplevel)
   (defvar *method-names* nil
     "Holds the method names.  This is used to create the Gem interface
    macros."))
+
+
+;;; Functional interface for *device-initializers*
+
 
 (eval-when (:execute :compile-toplevel :load-toplevel)
   (defvar *device-initializers* nil
@@ -60,7 +72,7 @@ the updated FDEFINITIONS, as unique to the DEVICE designator."
       (existing
        (setf (cdr existing) fn)
        (values fn))
-      (t 
+      (t
        ;; FIXME: Thread safety for *DEVICE-INITIALIZERS*
        ;; r/w locks and symbol macros?
        (setf *device-initializers* 
@@ -251,6 +263,7 @@ the updated FDEFINITIONS, as unique to the DEVICE designator."
 		;; Arguments list is OK as is.
 		args)))
       (export ',macro-name))))
+|#
 
 
 
@@ -266,6 +279,9 @@ the updated FDEFINITIONS, as unique to the DEVICE designator."
       (funcall (cdr entry) display-name)
       (error "gem::init-device: the specified device ~S does not exist."
              device-type))))
+
+
+
 
 ;;; --------------------------------------------------
 
