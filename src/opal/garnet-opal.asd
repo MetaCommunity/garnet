@@ -45,8 +45,8 @@
                       ;;
                       ;; NB: referenced onto ./opal-loader.lisp
                       (funcall init
-                               #-(and :apple (not :clx) :X
-                               #+(and :apple (not :clx) :MAC
+                               #-(and :apple (not :clx)) :X
+                               #+(and :apple (not :clx)) :MAC
                                nil)))
   :components
   ((:file "package")
