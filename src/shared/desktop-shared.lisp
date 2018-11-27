@@ -46,7 +46,7 @@
 ;;  garnet-opal (used by GET-GARNET-BITMAP [FIXME: note pathname eval and GADGETS system deps??]
 ;;  garnet-lapidary (cf. LAPIDARY::INIT-CURSORS) [FIXME: use GET-GARNET-BITMAP]
 
-(in-package #:garnet-systems)
+(in-package #:garnet-sys)
 
 ;; for a Garnet bitmap named <name>
 ;; one file exists: <name>.bm
