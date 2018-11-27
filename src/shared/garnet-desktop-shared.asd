@@ -31,7 +31,7 @@
 (defsystem #:garnet-desktop-shared
   :defsystem-depends-on (#:garnet-shared)
   :default-component-class garnet-source-file
-  :documentation "System Components for Garnet Desktop Applications"
+  :description "System Components for Garnet Desktop Applications"
   :serial t
   :version "1.0"
   ;; :depends-on (#:clx) ;; only cf. deftype image
