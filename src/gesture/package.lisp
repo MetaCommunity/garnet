@@ -25,6 +25,9 @@
 
 (in-package #:cl-user)
 
-(defpackage #:c32
+(defpackage #:agate
   ;; derived from garnet-loader.lisp
-  (:use #:common-lisp #:kr))
+  (:use #:common-lisp #:kr)
+  ;; also from ./gesture-loader.lisp
+  (:export #:do-go #:do-stop)
+  )

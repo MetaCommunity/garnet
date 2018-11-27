@@ -1711,4 +1711,5 @@
 
 ;;; Make the initializer function available to the outside world.
 ;;;
+#-Garnet.ASDF
 (setf *device-initializers* (list (cons :MAC #'MAC-TOP-LEVEL-INITIALIZE)))

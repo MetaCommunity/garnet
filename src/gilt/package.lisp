@@ -1,4 +1,4 @@
-;; package.lisp - Garnet C32
+;; package.lisp -- garnet kr package definitions
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
@@ -25,6 +25,6 @@
 
 (in-package #:cl-user)
 
-(defpackage #:c32
+(defpackage #:gilt
   ;; derived from garnet-loader.lisp
   (:use #:common-lisp #:kr))

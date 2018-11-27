@@ -2,6 +2,14 @@
 ;; asdf-systems-gen.lisp - generate ASDF system definitions
 ;;                         for Garnet systems
 
+;; This file contains source code originally published in garnet-loader.lisp
+;; under the following license stipulations:
+;;
+;;   This code was written as part of the Garnet project at
+;;   Carnegie Mellon University, and has been placed in the public
+;;   domain.  If you are using this code or any part of Garnet,
+;;   please contact garnet@cs.cmu.edu to be put on the mailing list.
+
 ;; License: LLGPL 2.1 - see file doc/LLGPL-preamble.txt
 
 (in-package #:cl-user)
@@ -31,9 +39,7 @@
     "kr"
     "gem"
     "opal"
-    #-(or allegro CMU) "truetype"
-    ;; ^ why is truetype-compiler spec #-(or allegro CMU) in garnet-compiler.lisp?
-    ;; note also: the truetype compiler file includes a loop calling 'require'
+    "truetype"
     "inter"
     "ps"
     "aggregadgets"
@@ -58,7 +64,7 @@
 
 (in-package #:cl-user)
 
-;; Legacy Garnet Pathname Variables
+;; Garnet Pathname Variables
 
 (defvar your-garnet-pathname
   (namestring (make-pathname :directory
@@ -81,7 +87,6 @@
 (defun garnet-probe (pathname &key (prefer-source nil)
                                 (source-type "lisp")
                                 (errorp t))
-  ;; New feature in Garnet API
   (labels ((foo ()
              (make-pathname
               :name (pathname-name pathname)
@@ -151,7 +156,7 @@
 ;; NOTE: A closer conversion to ASDF system definitions
 ;; may seve to work around the hairy pathname issues
 
-;; Ports of Legacy Garnet System Functions
+;; Ports of Garnet System Functions
 
 (defun garnet-load (pathname &key (prefer-source nil))
   ;; frob, nothing with regards to garnet-load-alist
@@ -189,7 +194,7 @@
 (when *default-garnet-proclaim*
   (proclaim *default-garnet-proclaim*))
 
-;; -- features and legacy variables, directly from garnet-loader.lisp
+;; -- features and variables directly from garnet-loader.lisp
 
 (defparameter Garnet-Version-Number "3.3")
 (pushnew :GARNET *features*)
@@ -383,12 +388,13 @@ With SBCL:
 ;;
 ;; note : src/kr/kr-doc.lisp is compiled/loaded individually
 ;; when compile-kr-doc-p / load-kr-doc-p => t / t
+;; per garnet-loader.lisp / garnet-compiler.lisp
 ;;
 ;; ****
 
 
 
-;; define garnet legacy system directories, for loading the legacy
+;; define garnet system directories, for loading the garnet
 ;; <foo>-loader and <foo>-compiler files
 ;;
 ;; garnet-<FOO>-pathname [var] : <FOO> system binary directory
@@ -418,7 +424,7 @@ With SBCL:
                             %garnet-systems%))))
   (frob-toplevel))
 
-;; ^ NB: in SBCL (1.2.3) a (SET NAME VALUE) call does not in itself
+;; ^ NB: in SBCL (1.2.3) a (SET NAME VALUE) call may not in itself
 ;;   register the value of NAME as a defined variable. So, that form
 ;;   was revised to use a macro definition and DEFVAR instead of SET.
 
@@ -466,7 +472,7 @@ With SBCL:
      :depends-on (when previous (list previous))
      :pathname *load-truename*)))
 
-;; FIXME: kr-loader assumes that kr-compiler has been run previously
+;; NB: kr-loader may assume kr-compiler has been run previously
 
 ;; (asdf:operate 'asdf:compile-op '#:kr)
 ;; (asdf:operate 'asdf:load-op '#:kr)
@@ -476,13 +482,12 @@ With SBCL:
 ;; (dolist (s %garnet-systems%) (asdf:operate 'asdf:compile-op s))
 ;; ^ NOTE: The truetype <thing> loads additional system definitions
 
-;; FIXME: gadgets:GAD-scroll-parts.lisp is NOT missing
-;; but gadgets-compiler.lisp isn't finding it
+;; NB: gadgets:GAD-scroll-parts.lisp is not missing
+;; but gadgets-compiler.lisp was not finding it
 ;;     during garnet-load
 ;;         during load of gadgets-compiler.lisp (within COMPILE-OP)
 
-;;; FIXME: MOVE DEFPACKGE DECLARATIONS INTO INDIVIDUAL SYSTEMS
-;;
+
 ;;; source: garnet-compiler.lisp
 (defpackage :GARNET-UTILS (:use :COMMON-LISP) (:nicknames :GU))
 (defpackage :KR-DEBUG (:use :COMMON-LISP))
@@ -550,6 +555,7 @@ With SBCL:
                      GO-INITIALIZE EDITOR-SHOW-WINDOW))
 (defpackage :DEMO-MOVELINE (:use :KR :COMMON-LISP) (:export DO-GO DO-STOP))
 
+;; prototype code
 
 ;; (let ((cl-user-pkg (find-package '#:cl-user)))
 ;;   ;; derive components (TO DO)

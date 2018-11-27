@@ -1,4 +1,4 @@
-;; garnet-c32-resources.asd			-*-lisp-*-
+;; garnet-gesture.asd				-*-lisp-*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
@@ -7,7 +7,7 @@
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
 ;;
-;; Contributors: Sean Champ - Initial API and implementation
+;; Contributors: Sean Champ - Porting from garnet-loader.lisp onto ASDF
 ;;
 ;;------------------------------------------------------------------------------
 ;;
@@ -17,23 +17,31 @@
 ;;   This code was written as part of the Garnet project at
 ;;   Carnegie Mellon University, and has been placed in the public
 ;;   domain.  If you are using this code or any part of Garnet,
-;;   please contact garnet@cs.cmu.edu to be put on the mailing list
-
-;; NB: Pixmaps data files from original Garnet source code
+;;   please contact garnet@cs.cmu.edu to be put on the mailing lis
 
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require '#:asdf)
-  (asdf:operate 'asdf:load-op '#:garnet-desktop-shared)
-  (dolist (s '(#:garnet-desktop-shared))
-    (asdf:operate 'asdf:load-op s)))
+  (asdf:find-system '#:garnet-shared)
+  )
 
-(in-package #:garnet-sys)
+(in-package #:garnet-systems)
 
-(defsystem #:garnet-c32-resources
+(defsystem #:garnet-gesture
   :default-component-class garnet-source-file
+  :version "1.0" ;; from gesture-interactor-version-number in ./gesture-loader.lisp
   :serial t
-  :defsystem-depends-on (#:garnet-desktop-shared)
-  :components ((bitmap "formula-icon")
-               (bitmap "inherited-icon")))
+  ;; FIXME QA these DEPS
+  :depends-on (#:garnet-shared
+	       #:garnet-gilt
+	       #:garnet-opal
+	       #:garnet-gadgets)
+  :components
+  ((:file "package") ;; NB The #:AGATE Package - See also: GARNET-GEM system
+   (:file "gestureinter")
+   (:file "classify")
+   (:file "features")
+   (:file "fileio")
+   (:file "matrix")
+   ))

@@ -1,4 +1,4 @@
-;; garnet-c32-resources.asd			-*-lisp-*-
+;; garnet-protected-eval.asd				-*-lisp-*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2018 Sean Champ and others. All rights reserved.
@@ -7,7 +7,7 @@
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
 ;;
-;; Contributors: Sean Champ - Initial API and implementation
+;; Contributors: Sean Champ - Porting from garnet-loader.lisp onto ASDF
 ;;
 ;;------------------------------------------------------------------------------
 ;;
@@ -19,21 +19,24 @@
 ;;   domain.  If you are using this code or any part of Garnet,
 ;;   please contact garnet@cs.cmu.edu to be put on the mailing list
 
-;; NB: Pixmaps data files from original Garnet source code
-
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require '#:asdf)
-  (asdf:operate 'asdf:load-op '#:garnet-desktop-shared)
-  (dolist (s '(#:garnet-desktop-shared))
-    (asdf:operate 'asdf:load-op s)))
+  (asdf:find-system '#:garnet-shared))
 
 (in-package #:garnet-sys)
 
-(defsystem #:garnet-c32-resources
+(defsystem #:garnet-protected-eval
   :default-component-class garnet-source-file
   :serial t
-  :defsystem-depends-on (#:garnet-desktop-shared)
-  :components ((bitmap "formula-icon")
-               (bitmap "inherited-icon")))
+  ;; NB: Gadget deps
+  ;; - error-gadget
+  ;; - scrolling-unlabeled-box
+  :depends-on (#:TBD
+               )
+  ;; NB: This system uses the #:GG package
+  :components ((:file "protected-eval")
+               (:file "prompter")
+               (:file "new-protected-eval")
+               ))

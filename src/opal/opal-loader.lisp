@@ -10,7 +10,7 @@
 ;;;
 ;;; $Id::                                                             $
 
-;;; Changes:
+;;; 27/11/18 spchamp Moved mac.lisp into gem (pre-rebase onto 3.3-devel)
 ;;; 10/2/03 RGA --- Changed from switching on #+apple to #+(and apple (not clx))
 ;;; 11/8/93 AMICKISH Added x.lisp and called gem:init-device
 ;;;  3/5/93 AMICKISH Added utils.lisp
@@ -71,7 +71,8 @@
     "virtual-aggregates"
     "pixmaps"
     "open-and-close"
-;;;    "x"
+    ;; #-(and apple (not clx)) "x" ;; src moved into gem
+    ;; #+(and apple (not clx)) "mac" ;; src moved into gem
     ))
 
 (dolist (file Garnet-Opal-Files)
@@ -81,5 +82,5 @@
 (setf (get :garnet-modules :opal) t)
 (format t "...Done Opal.~%")
 
-(gem:init-device :X NIL)
-
+#-(and apple (not clx)) (gem:init-device :X NIL)
+#+(and apple (not clx)) (gem:init-device :MAC NIL)

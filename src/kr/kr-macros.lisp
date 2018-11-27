@@ -45,7 +45,8 @@
 	    GET-TYPE-DOCUMENTATION SET-TYPE-DOCUMENTATION GET-TYPE-DEFINITION
 	    GET-DECLARATIONS GET-SLOT-DECLARATIONS
 	    G-FORMULA-VALUE S-FORMULA-VALUE
-	    SELF-OLD-VALUE
+	    ;;; This should be exported but is not - LispWorks bug:
+	    ;;; SELF-OLD-VALUE
 	    )))
 
 
@@ -58,10 +59,16 @@
 ;; This enables the eager-evaluation version.
 ;;  Currently turned off.
 
-;;;     (eval-when (:execute :load-toplevel :compile-toplevel)
-;;;       (unless (find :lazy *features*)
-;;;         (pushnew :eager *features*)))
 
+
+;;; This enables the eager-evaluation version.
+;;; 
+#|
+;;; Currently turned off.
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (unless (find :lazy *features*)
+    (pushnew :eager *features*)))
+|#
 
 ;;; Internal structures.
 
@@ -75,12 +82,14 @@
   bins					; bins of lists of slots
   )
 
-;;;    (ts (locally (declare (optimize (speed 3) (safety 0) (debug 0)))
-;;;      (schema-bins a)) 100000)
+#|
+(ts (locally (declare (optimize (speed 3) (safety 0) (debug 0)))
+      (schema-bins a)) 100000)
 
-;;;     (defun foo (object)
-;;;        (locally (declare (optimize (speed 3) (safety 0) (debug 0)))
-;;;        (schema-bins object)))
+(defun foo (object)
+  (locally (declare (optimize (speed 3) (safety 0) (debug 0)))
+    (schema-bins object)))
+|#
 
 
 ;; This structure is similar to a schema, but is used to store formulas.
@@ -118,16 +127,16 @@
   )
 
 
-;; The value in a slot is represented as a structure of this type.
-;;
+;;; The value in a slot is represented as a structure of this type.
+;;;
 (defstruct (sl (:print-function print-the-slot))
   name
   value
   (bits 0 :type fixnum))
 
 
-;; This is similar; it includes room to store dependent formulas.
-;;
+;;; This is similar; it includes room to store dependent formulas.
+;;;
 (defstruct (full-sl (:include sl))
   dependents
   ;; demons
@@ -135,6 +144,18 @@
 
 
 ;;; Variables, etc.
+
+;; NB Merging code during rebase onto 3.3-devel [spchamp]
+;;     I've not yet been able to review the status of GARNET-BINS implementation.
+;;     Retaining this GARNET-BINS code, in the merge, in case it's referenced 
+;;     elsewhere in source - should review/lint this later (FIXME)
+;;
+;;     At changeset: [d230cad]
+
+#+GARNET-BINS
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *bins-length* 8))
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *store-lambdas* T
@@ -223,26 +244,40 @@
   "An a-list of relations known to the system, with their inverse(s).
    Used for the creation of automatic reverse-links.")
 
-;; FMG Is this SMP safe? Seems like locking would be needed to do it correctly, 
-;;     but the garbage collector seems to work fast enough these days.
-#-(and)
-(defparameter *reuse-formulas* (make-array 1 :adjustable t :fill-pointer 0)
-"A list of formulas that have been destroyed and can be reused.  This
- avoids the need to allocate and deallocate formulas all the time.")
+;;;
+;;; The following scheme is not SMP-safe, and breaks under SBCL.  Locking would be necessary to
+;;; do this correctly, but the garbage collector seems to work fast enough these days....
 
-#+(and)
+;; NB Retained across rebase/merge onto 3.3-devel - needs review (FIXME) [spchamp]
+
+#-sb-thread
+(defparameter *reuse-formulas* (make-array 1 :adjustable t :fill-pointer 0)
+  "A list of formulas that have been destroyed and can be reused.  This
+   avoids the need to allocate and deallocate formulas all the time.")
+
+#+sb-thread
 (defparameter *reuse-formulas* nil
   "A list of formulas that have been destroyed and can be reused.  This
    avoids the need to allocate and deallocate formulas all the time.")
 
-;; FMG This doesn't seem to be used.
-;; (defparameter *reuse-slots* (make-array 1 :adjustable t :fill-pointer 0)
-;;   "An array of slot arrays that have been destroyed and can be reused.  This
-;;    avoids the need to allocate and deallocate arrays all the time.")
+#-sb-thread
+(defparameter *reuse-slots* (make-array 1 :adjustable t :fill-pointer 0)
+  "An array of slot arrays that have been destroyed and can be reused.  This
+   avoids the need to allocate and deallocate arrays all the time.")
 
-;; FMG This doesn't seem to be used.
-;; (defparameter *reuse-directories* (make-array 1 :adjustable t :fill-pointer 0)
-;;   "An array of directory arrays that have been destroyed and can be reused..")
+#+sb-thread
+(defparameter *reuse-slots* nil
+  "An array of slot arrays that have been destroyed and can be reused.  This
+   avoids the need to allocate and deallocate arrays all the time.")
+
+#-sb-thread
+(defparameter *reuse-directories* (make-array 1 :adjustable t :fill-pointer 0)
+  "An array of directory arrays that have been destroyed and can be reused..")
+
+#+sb-thread
+(defparameter *reuse-directories* nil
+  "An array of directory arrays that have been destroyed and can be reused..")
+
 
 (defvar *schema-is-new* nil
   "If non-nil, we are inside the creation of a new schema.  This guarantees
@@ -328,6 +363,21 @@
   "Name of the current object being defined by Create-Instance.  Used for
    debugging only.")
 
+
+;;; This macro will output the <forms> only if GARNET-DEBUG is defined.
+;;;
+(defmacro when-debug (&rest forms)
+  #+GARNET-DEBUG
+  `(progn ,@forms)
+  #-GARNET-DEBUG
+  (declare (ignore forms))
+  #-GARNET-DEBUG
+  nil)
+
+;; NB These two macros retained across rebase/merge onto 3.3-devel - needs review/linting [spchamp]
+
+(defmacro formula-p (thing)
+  `(a-formula-p ,thing))
 
 
 ;;; EAGER EVALUATION
@@ -793,37 +843,77 @@ prematurely."
   (values (gethash slot (schema-bins schema))))
 
 
-(defmacro set-slot-accessor (schema slot value bits dependents)
+;; NB More of the original GARNET-BINS code, retained across rebase/merge 
+;;    onto 3.3-devel. This needs review (FIXME) [spchamp]
+
+(defmacro set-slot-accessor (schema slot value bits the-dependents)
   "Returns the slot structure it created or modified.
 SIDE EFFECTS: if <dependents> is specified, the slot structure is
 modified to be a full-slot structure."
-  (let ((the-bins (gensym))
+  #+GARNET-BINS
+  (let ((the-index (gensym))
+	(the-bins (gensym))
 	(the-entry (gensym))
-	(the-dependents (gensym)))
-    `(let* ((,the-bins (schema-bins ,schema))
-	    (,the-entry (gethash ,slot ,the-bins))
-	    (,the-dependents ,dependents))
-       (if ,the-entry
-	   (progn
-	     (when (and ,the-dependents (not (full-sl-p ,the-entry)))
-	       ;; Need to use a full slot, only have a short one.
-	       (setf (gethash ,slot ,the-bins) (setf ,the-entry (make-full-sl)))
-	       (setf (sl-name ,the-entry) ,slot))
-	     ;; Slot is present - update it.
-	     (setf (sl-value ,the-entry) ,value)
-	     (setf (sl-bits ,the-entry) ,bits)
-	     (when ,the-dependents
-	       (setf (full-sl-dependents ,the-entry) ,the-dependents))
-	     ,the-entry)
-	   ;; Slot is not present - create it.
-	   (progn
-	     (setf ,the-entry (if ,the-dependents (make-full-sl) (make-sl)))
-	     (setf (sl-name ,the-entry) ,slot)
-	     (setf (sl-value ,the-entry) ,value)
-	     (setf (sl-bits ,the-entry) ,bits)
-	     (when ,the-dependents
-	       (setf (full-sl-dependents ,the-entry) ,the-dependents))
-	     (setf (gethash ,slot ,the-bins) ,the-entry))))))
+	(rest (gensym))
+	(dependents (gensym)))
+    `(locally (declare ,*special-kr-optimization*)
+       (let* ((,the-index (slot-to-bin-index ,slot))
+	    (,the-bins (schema-bins ,schema))
+	    (,dependents ,the-dependents))
+      (unless (do ((,rest (svref ,the-bins ,the-index) (cdr ,rest))
+		   ,the-entry)
+		  ((null ,rest))
+		(setf ,the-entry (car ,rest))
+		(when (eq (sl-name ,the-entry) ,slot)
+		  (when (and ,dependents (not (full-sl-p ,the-entry)))
+		    ;; Need to use a full slot, only have a short one.
+		    (setf (car ,rest)
+			  (setf ,the-entry (make-full-sl)))
+		    (setf (sl-name ,the-entry) ,slot))
+		  ;; Slot is present - update it.
+		  (setf (sl-value ,the-entry) ,value)
+		  (setf (sl-bits ,the-entry) ,bits)
+		  (if ,dependents
+		    (setf (full-sl-dependents ,the-entry) ,dependents))
+		  (return ,the-entry)))
+	;; Slot is not present - create it.
+	(let ((,the-entry (if ,dependents (make-full-sl) (make-sl))))
+	  (setf (sl-name ,the-entry) ,slot)
+	  (setf (sl-value ,the-entry) ,value)
+	  (setf (sl-bits ,the-entry) ,bits)
+	  (if ,dependents
+	    (setf (full-sl-dependents ,the-entry) ,dependents))
+	  (push ,the-entry (svref ,the-bins ,the-index))
+	  ,the-entry)))))
+   #-GARNET-BINS
+   (let ((the-bins (gensym))
+	 (the-entry (gensym))
+	 (dependents (gensym)))
+     `(let* ((,the-bins (schema-bins ,schema))
+	     (,the-entry (gethash ,slot ,the-bins))
+	     (,dependents ,the-dependents))
+        (if ,the-entry
+	    (progn
+	      (when (and ,dependents (not (full-sl-p ,the-entry)))
+		;; Need to use a full slot, only have a short one.
+		(setf (gethash ,slot ,the-bins) (setf ,the-entry (make-full-sl)))
+		(setf (sl-name ,the-entry) ,slot))
+	      ;; Slot is present - update it.
+	      (setf (sl-value ,the-entry) ,value)
+	      (setf (sl-bits ,the-entry) ,bits)
+	      (if ,dependents
+		  (setf (full-sl-dependents ,the-entry) ,dependents))
+	      ,the-entry)
+	  ;; Slot is not present - create it.
+	  (progn
+	    (setf ,the-entry (if ,dependents (make-full-sl) (make-sl)))
+	    (setf (sl-name ,the-entry) ,slot)
+	    (setf (sl-value ,the-entry) ,value)
+	    (setf (sl-bits ,the-entry) ,bits)
+	    (if ,dependents
+		(setf (full-sl-dependents ,the-entry) ,dependents))
+	    (setf (gethash ,slot ,the-bins) ,the-entry)))))
+   )
 
 
 ;;; A few specialized accessors for formula slots.
