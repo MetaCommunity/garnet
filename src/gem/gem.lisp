@@ -9,9 +9,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; CHANGE LOG:
+;;;  9/20/14 Sean Champ - Add functional interface for *device-initializers*
 ;;; 12/15/93 Andrew Mickish - Moved shared macros here from x.lisp
 ;;; 11/11/93 Andrew Mickish - Put into CLTL2 form
-
 
 (in-package "GEM")
 
@@ -59,7 +59,7 @@ the updated FDEFINITIONS, as unique to the DEVICE designator."
       (existing
        (setf (cdr existing) fn)
        (values fn))
-      (t 
+      (t
        ;; FIXME: Thread safety for *DEVICE-INITIALIZERS*
        ;; r/w locks and symbol macros?
        (setf *device-initializers* 
