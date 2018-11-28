@@ -71,34 +71,3 @@
     ;; ... unless set in something like an 'adds-features' slot on the
     ;; COMPONENT 
     (asdf:operate op component)))
-
-#+NIL T.D
-(defclass the-veree-featureful-thing (component)
-  ((modifies-features
-    :initarg :adds-features
-    :accessor store-it-because-derived-features-and-do-not-warn
-    :accessor component-modifies-features
-    )
-   (uses-features ;; Configurable Eval ... as a concept (??)
-    :initarg :uses-features
-    :accessor store-it-when-feature-is-configurable-or-is-not-p
-    :accessor component-uses-features
-    )
-   (was-built-with-features
-    ;; FIXME: Define a way to store this data portably, only under a
-    ;; specific policy declaration.
-    ;;
-    ;; NB: object (CONS) reuse, and system reflection/debug/profiling
-    ;;
-    ;; NB: Should store this instead in the 'op' instance
-    :initarg :it-was-the-features-there-were
-    :accessor store-it-because-otherwise-that-side-effect-data-is-lost
-    :reader component-build-time-features
-    )
-   (modified-features
-    :accessor rare-but-exhaustive-option-p
-    ;; NB: see previous note
-    )))
-
-
-
