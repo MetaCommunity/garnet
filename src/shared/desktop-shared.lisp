@@ -64,6 +64,40 @@
           ))
 
 
+;; ----
+
+(defclass resource (component)
+  ;; NB abstract component class
+  ())
+
+(defclass resource-module (resource module)
+  ;; NB: XDG APP DIRS
+  ())
+
+
+(defclass resource-system (resource-module system)
+  ;; NB: XDG APP DIRS
+  ())
+
+(defclass resource-file (resource source-file)
+  ())
+
+(defmethod asdf/component:module-default-component-class
+    ((module resource-module))
+  (find-class 'resource-file))
+
+;; ltp-utils::call-next-method*
+
+(defmacro call-next-method* (&rest args)
+  ;;; ported from ltp-utils
+  (let ((%nmp (make-symbol "%nmp")))
+    `(let ((,%nmp (next-method-p)))
+       (cond
+	 (,%nmp (call-next-method ,@args))
+	 (t (values nil nil))))))
+
+;; ----
+
 ;;; PIXMAP component class
 
 (defclass pixmap (resource-file)
@@ -250,15 +284,16 @@
            (values (or pathname null)
                    (or pathname null)))
   (let* ((%name (asdf:coerce-name name))
-         (sys (utils:find-component* system nil))
+         ;; FIXME: Un-depend on ltp-utils
+         (sys (ltp-asdf-utils:find-component* system nil))
          (c (cond
               (submodule
                (let* ((%submodule (asdf:coerce-name submodule))
-                      ;; FIXME: LTP DEP ;; !! ONLY INSTANCE. REMOVE THIS [spchamp]
-                      (module (utils:find-component* %submodule sys)))
+                      ;; FIXME: LTP DEP ;; !! REMOVE THIS [spchamp]
+                      (module (ltp-asdf-utils:find-component* %submodule sys)))
 
-                 (utils:find-component* %name module nil)))
-              (t (utils:find-component* %name sys nil)))))
+                 (ltp-asdf-utils:find-component* %name module nil)))
+              (t (ltp-asdf-utils:find-component* %name sys nil)))))
     (cond
       (c
        (typecase c
