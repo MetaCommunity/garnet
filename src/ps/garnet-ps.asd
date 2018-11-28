@@ -22,7 +22,7 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require '#:adsf)
+  (require '#:asdf)
   (asdf:find-system '#:garnet-shared))
 
 (in-package #:garnet-sys)
