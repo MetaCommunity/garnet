@@ -26,7 +26,7 @@
   (asdf:find-system '#:garnet-shared)
   )
 
-(in-package #:garnet-systems)
+(in-package #:garnet-sys)
 
 (defsystem #:garnet-gesture
   :default-component-class garnet-source-file
