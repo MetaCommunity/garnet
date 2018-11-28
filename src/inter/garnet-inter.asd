@@ -22,6 +22,7 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (require '#:asdf)
   (asdf:find-system '#:garnet-shared))
 
 (in-package #:garnet-sys)
@@ -36,15 +37,15 @@
   :components
   (;; NB: This system uses the Garnet GEM package
 
+   ;; cf inter-loader.lisp
     (:file "garnet-keytrans")
     (:file "define-mouse-keys")
-    (:file "x-define-keys")
-    (:file "x-inter"
-    #-(and apple (not clx)) "x-define-keys"
-    #-(and apple (not clx)) "x-inter"
 
-    #+(and apple (not clx))"mac-define-keys"
-    #+(and apple (not clx))"mac-inter"
+    #-(and apple (not clx)) (:file "x-define-keys")
+    #-(and apple (not clx)) (:file "x-inter")
+
+    #+(and apple (not clx)) (:file "mac-define-keys")
+    #+(and apple (not clx)) (:file "mac-inter")
 
     (:file "interactors")
     (:file "accelerators")
