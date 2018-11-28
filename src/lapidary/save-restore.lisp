@@ -38,10 +38,10 @@
 	(cursor-ident (gensym "hourglass-cursor-bitmap-"))
 	(mask-ident (gensym "hourglass-cursor-mask-")))
     (macrolet ((frob (ident accessor)
-		 `(create-instance ,ident opal:bitmap 
+		 `(create-instance ,ident opal:bitmap
 		    (:image (,accessor cursor)))))
-      (cons (frob cursor-ident garnet-systems:cursor-cursor-bitmap)
-	    (frob mask-ident garnet-systems:cursor-mask-bitmap))))
+      (cons (frob cursor-ident garnet-sys:cursor-cursor-bitmap)
+	    (frob mask-ident garnet-sys:cursor-mask-bitmap))))
   #-Garnet.ASDF
   (cons (create-instance NIL opal:bitmap
 			 (:image (opal:Get-Garnet-Bitmap "hourglass.cursor")))
@@ -64,11 +64,11 @@
 
 ;; These are slots that should not be put into the file from any objects
 (defparameter save-time-do-not-dump-slots
-  (list :p-selected :s-selected :selection-type :do-not-dump-slots 
+  (list :p-selected :s-selected :selection-type :do-not-dump-slots
 	:p-feedback-obj :s-feedback-obj :box :points :final-feed-inuse
 	:final-feed-avail :selected :save-values :obj-over
 	:copy-old-window :constant :behaviors :cursor-index
-	:saved-cursor-index :mark :current-priority-level 
+	:saved-cursor-index :mark :current-priority-level
 	:parameters-defined-in-lapidary))
 
 (defvar *editor-agg* nil
@@ -103,7 +103,7 @@
   (dolist (win extrawindows)
     (s-value win :cursor RegularCursor)
     (opal:update win)))
- 
+
 ;;; compare the given string with the :title slot in each of Lapidary's
 ;;; drawing windows and return the window that the string matches
 (defun get-window-from-string (window-name)
@@ -152,7 +152,7 @@ This can be done before or after the window is shown."
 
 (defun standard-Apply-function (top-gadget)
 "This is embedded in Gilt-created gadgets to call the user-specified
-OK function, but does not take down the window" 
+OK function, but does not take down the window"
   (kr-send top-gadget :function-for-ok top-gadget (gadget-values top-gadget)))
 
 (defun standard-Cancel-function (top-gadget)
@@ -183,7 +183,7 @@ are used."
 	  (when x (s-value win :left x))
 	  (when y (s-value win :top y))
 	  (s-value win :visible T))
-        (progn 
+        (progn
           (setq win
             (create-instance NIL inter:interactor-window
               (:left   (or x (g-value top-gadget :window-left)))
@@ -196,7 +196,7 @@ are used."
     (opal:update win)
     win))
 |#
-;;; This pops up the save dialog box, after determining the default values 
+;;; This pops up the save dialog box, after determining the default values
 (defun Show-Save-Dialog (gadget stringsel)
   (declare (ignore gadget stringsel))
   (let* ((filename *Last-Filename*)
@@ -222,10 +222,10 @@ are used."
   (format T ";;; -*- Mode: LISP; Syntax: Common-Lisp; Package: ~a; Base: 10 -*-~%"
 	  package)
   (format T ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%")
-  (format T ";;; This file created by LAPIDARY ~a: A Garnet Interface Builder~%" 
+  (format T ";;; This file created by LAPIDARY ~a: A Garnet Interface Builder~%"
 	  Common-Lisp-User::Garnet-Version-Number)
   (format T ";;; on ~a~%" (inter::time-to-string))
-  (format T ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%~%")  
+  (format T ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%~%")
   (format T "(in-package ~s)~%~%" package)
   (Format T "(setf common-lisp-user::*Used-Garnet-Version* ~s)~%~%" Common-Lisp-User::Garnet-Version-Number)
   (format t ";;;~%")
@@ -246,7 +246,7 @@ are used."
 	(inter (g-value gadget :inter))
 	; window-p indicates if window is being saved
 	(window-p (not (or inter
-			   (g-value *selection-info* :selected)))) 
+			   (g-value *selection-info* :selected))))
 	(package (string-upcase (value-of :package-name values)))
 	(export-p (if (car (value-of :export-p values))
 		      T NIL)) ;use T instead of string name
@@ -257,20 +257,20 @@ are used."
 	((and window-p (string= "" window-title))
 	 (Lapidary-Error "Window name must be supplied--A valid window title is
 one that appears on a window's title-bar or on a window's icon"))
-	((and window-p 
+	((and window-p
 	      (null (setf window (get-window-from-string window-title))))
-	 (lapidary-error 
+	 (lapidary-error
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon"
 		  window-title)))
 	((string= "" package) (Lapidary-Error "Package name must be supplied"))
-	(T 
+	(T
 	 ;; find objects to be saved
 	 (setf *original-save-objs*
 	       (or (when inter (list inter))
 		   (when window
 			 (let ((agg (g-value window :editor-agg)))
-			   (s-value agg :known-as 
+			   (s-value agg :known-as
 				    (keyword-from-string gadget-name))
 			   (list agg)))
 		   (g-value *selection-info* :selected)))
@@ -283,9 +283,9 @@ one that appears on a window's title-bar or on a window's icon"
 	 ;; to get rid of these copies.
 	 (opal:update-all)
 
-	 ;; destroy corrupted slots in the objects to be saved and 
+	 ;; destroy corrupted slots in the objects to be saved and
 	 ;; determine if there are any links that might be parameters
-	 
+
 	 (dolist (obj *original-save-objs*)
 		 (fix-up-obj obj)
 		 (check-for-links obj obj
@@ -296,9 +296,9 @@ one that appears on a window's title-bar or on a window's icon"
 	 ;; slots and then write out the copies.
 	 (with-constants-disabled
 	  (setf *save-objects*
-	       (mapcar #'(lambda (obj) 
+	       (mapcar #'(lambda (obj)
 			   (let ((new-obj (opal:copy-gadget obj nil)))
-			     (setf (kr::schema-name new-obj) 
+			     (setf (kr::schema-name new-obj)
 				   (kr::schema-name obj))
 			     new-obj))
 		       *original-save-objs*))
@@ -320,7 +320,7 @@ one that appears on a window's title-bar or on a window's icon"
 					    :if-exists :supersede)
 	   (unless (find-package package)
 		   (make-package package))
-      
+
 	   ;; now start dumping
 	   (write-standard-header package)
 	   (when export-p
@@ -347,7 +347,7 @@ one that appears on a window's title-bar or on a window's icon"
 	   ;; set initialize flag for write-gadget to nil for remaining objects
 	   (dolist (obj (cdr *save-objects*))
 		   (opal:write-gadget obj t nil))
-	   (Format T "))~%~%"))	 
+	   (Format T "))~%~%"))
 	 ;; clean up after save--destroy the copied objects
 	 (dolist (obj *save-objects*)
 		 (opal:destroy obj))
@@ -375,10 +375,10 @@ one that appears on a window's title-bar or on a window's icon"
 #+Garnet.ASDF
 (defun init-cursors ()
   (macrolet ((frob (name)
-	       (with-gensym (%name cursor-bm-sym mask-bm-sym 
+	       (with-gensym (%name cursor-bm-sym mask-bm-sym
 				   component bm-c mask-c)
 		 `(labels ((img-do (component)
-			     (opal:read-image 
+			     (opal:read-image
 			      (asdf:component-pathname component))))
 		    (let* ((,%name ,name)
 
@@ -388,14 +388,14 @@ one that appears on a window's title-bar or on a window's icon"
 			    (intern-formatted "#:~A-mask-bitmap" ,%name))
 
 			   (,component
-			    (garnet-systems:find-bitmap-pathname
+			    (garnet-sys:find-bitmap-pathname
 			     (format* "lapidary-~A" ,%name)))
 
-			   (,bm-c 
-			    (garnet-systems:cursor-cursor-bitmap ,component))
-			   (,mask-c 
-			    (garnet-systems:cursor-maske-bitmap ,component))
-			   
+			   (,bm-c
+			    (garnet-sys:cursor-cursor-bitmap ,component))
+			   (,mask-c
+			    (garnet-sys:cursor-maske-bitmap ,component))
+
 			   (,pair-sym (intern-formatted "#:~A-cursor-pair"
 							,%name)))
 
@@ -404,13 +404,13 @@ one that appears on a window's title-bar or on a window's icon"
 
 		      (create-instance ,mask-bm-sym
 			  (:image (img-do ,mask-c)))
-		      
-		      (set ,pair-sym 
+
+		      (set ,pair-sym
 			   (cons ,cursor-bm-sym ,mask-bm-sym)))))))
-			     
+
     ;; copy cursor
     (frob "copy")
-    ;; instance cursor    
+    ;; instance cursor
     (frob "instance")
     ;; load cursor
     (frob "load")
@@ -514,9 +514,9 @@ one that appears on a window's title-bar or on a window's icon"
 
   (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied"))
 	((null window)
-	 (lapidary-error 
+	 (lapidary-error
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon"
 		  window-name)))
 	(T (format T "Loading bitmap from file ~s...~%" filename)
 	   (setq *Last-WindowName* window-name)
@@ -539,7 +539,7 @@ one that appears on a window's title-bar or on a window's icon"
 		   (format t "~% To continue, type (inter:main-event-loop)~%")
 		   (opal:update-all)))
 	   ;; name the new object
-	   (s-value new-obj :known-as 
+	   (s-value new-obj :known-as
 		    (keyword-from-string (princ-to-string (kr::schema-name new-obj))))
 
 	   (opal:add-component editor-agg new-obj)
@@ -561,9 +561,9 @@ one that appears on a window's title-bar or on a window's icon"
 ; set up the cursor when file is loaded
 (init-cursors)
 
-;;; find a valid window to read a set of gadgets into. The following 
+;;; find a valid window to read a set of gadgets into. The following
 ;;; rules, in order of priority, are used to find a window:
-;;; 1. If there are selected objects, the window should be the window 
+;;; 1. If there are selected objects, the window should be the window
 ;;;      the selected objects are in
 ;;; 2. If the last window that was read into still exists, use that
 ;;;      window
@@ -576,14 +576,14 @@ one that appears on a window's title-bar or on a window's icon"
       (get-window-from-string *Last-WindowName*)
       (car (g-value *selection-info* :window))))
 
-;;; This pops up the read dialog box, after determining the default values 
+;;; This pops up the read dialog box, after determining the default values
 (defun Show-Read-Dialog (gadget stringsel)
   (declare (ignore gadget stringsel))
   (let* ((filename *Last-Filename*)
 	 (window (find-read-window))
 	 (window-name (if window (g-value window :title) ""))
 	 (editor-agg (if window (g-value window :editor-agg)))
-	 (add-replace-invalid (if (and window 
+	 (add-replace-invalid (if (and window
 				       (g-value editor-agg :components))
 				  NIL T)))
     (set-initial-value read-file :filename filename)
@@ -607,9 +607,9 @@ one that appears on a window's title-bar or on a window's icon"
 	new-obj-list)
   (cond ((string= "" filename) (Lapidary-Error "Filename must be supplied"))
 	((null window)
-	 (lapidary-error 
+	 (lapidary-error
 	  (format nil "Could not find window ~S--A valid window title is
-one that appears on a window's title-bar or on a window's icon" 
+one that appears on a window's title-bar or on a window's icon"
 		  window-name)))
 	(T (format T "Loading gadgets from file ~s...~%" filename)
 	   (SetHourGlassCursor readdialogwindow)
@@ -620,7 +620,7 @@ one that appears on a window's title-bar or on a window's icon"
 		 (format T "Restoring objects...~%")
 		 (Load filename))
 	     ;; only do the next operations if the load was successful--we
-	     ;; assume that the load is successful if 
+	     ;; assume that the load is successful if
 	     ;; *Garnet-Objects-Just-Created* is set to a non-nil value
 	     (if common-lisp-user::*Garnet-Objects-Just-Created*
 		 (progn
@@ -650,13 +650,13 @@ one that appears on a window's title-bar or on a window's icon"
 			   (s-value window :height
 				    (if addp ; if adding objects, then higher
 					(max (+ (max-bottom-side) 10)
-					     (g-value window :height))	
+					     (g-value window :height))
 		           ;; otherwise, maximum bottom side of created objects
 				      (+ (max-bottom-side) 10)))
 
 			   (setf editor-agg (g-value window :editor-agg))
- 
-			   (unless addp 
+
+			   (unless addp
 			   ; if not add, then replace, so use new file's values
 				   (s-value editor-agg :package-name
 					    (g-value first-obj :package-name))
@@ -677,7 +677,7 @@ one that appears on a window's title-bar or on a window's icon"
 				       (or (name-for-schema first-obj)
 					   *Top-Gadget-Name*)))
 			     (setf new-obj-list common-lisp-user::*Garnet-Objects-Just-Created*))
-		   
+
 			   (dolist (obj new-obj-list)
 				   (fix-all-interactors obj nil)
 				   (when (is-a-p obj opal:view-object)
@@ -696,4 +696,4 @@ one that appears on a window's title-bar or on a window's icon"
 
 
 
-	   
+

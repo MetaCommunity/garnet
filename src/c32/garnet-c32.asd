@@ -24,7 +24,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (asdf:find-system '#:garnet-shared))
 
-(in-package #:garnet-systems)
+(in-package #:garnet-sys)
 
 (defsystem #:garnet-c32
   :default-component-class garnet-source-file
