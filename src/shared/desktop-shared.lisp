@@ -82,6 +82,21 @@
 (defclass resource-file (resource source-file)
   ())
 
+(defmethod perform ((op compile-op) (component resource-file))
+  (declare (ignore op component))
+  ;; no-op
+  )
+
+(defmethod perform ((op load-op) (component resource-file))
+  (declare (ignore op component))
+  ;; no-op
+  )
+
+(defmethod perform ((op load-source-op) (component resource-file))
+  (declare (ignore op component))
+  ;; no-op
+  )
+
 (defmethod asdf/component:module-default-component-class
     ((module resource-module))
   (find-class 'resource-file))
