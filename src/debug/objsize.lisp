@@ -63,7 +63,7 @@ ChangeLog:
 
 (in-package "GARNET-DEBUG")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(OBJBYTES AGGBYTES INTERBYTES
 	    *avoid-shared-values* *avoid-equal-values* *count-symbols*
 	    COUNT-FORMULAS WHY-NOT-CONSTANT)))

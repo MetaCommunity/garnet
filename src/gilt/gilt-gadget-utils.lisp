@@ -202,12 +202,12 @@ Change log:
 
 ;;; This function loads the bitmap specified from the Gilt directory
 (defun Get-Gilt-Bitmap (bitmapname)
-  (opal:read-image (common-lisp-user::garnet-pathnames bitmapname
-			 common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
+  (opal:read-image (merge-pathnames bitmapname
+				    common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
 ;;; This function loads the pixmap specified from the Gilt directory
 (defun Get-Gilt-Pixmap (pixmapname)
-  (opal:read-xpm-file (common-lisp-user::garnet-pathnames pixmapname
+  (opal:read-xpm-file (merge-pathnames pixmapname
 				       common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
 

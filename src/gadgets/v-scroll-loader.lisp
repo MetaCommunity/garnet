@@ -35,9 +35,7 @@ Change log:
 		  (:GAD-v-boxes "GAD-v-boxes")
 		  (:v-scroll-bar "v-scroll-bar")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done V-Scroll-Bar.~%"))
 

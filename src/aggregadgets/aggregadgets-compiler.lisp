@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; Changes:
 ;;; 10/2/03 RGA --- New compile/load protocol
 ;;; 7/28/96 RGA --- changed to use garnet-compile/load
@@ -24,6 +26,18 @@
 ;;; 3/22/90 Robert Cook - Define the package "OPAL" for the TI Explorer
 
 (in-package "COMMON-LISP-USER")
+
+(defvar *debug-aggregadgets-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-aggregadgets-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
 
 (Defvar Garnet-Aggregadgets-Files
   '(
@@ -43,18 +57,18 @@
     "scalable-aggregraph-image"
     ))
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-Aggregadgets-Pathname))
 
-(dolist (file Garnet-Aggregadgets-Files)
-  (let ((gfile (concatenate 'string "aggregadgets:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
+(with-compilation-unit ()
+  (dolist (file Garnet-Aggregadgets-Files)
+    (let ((gfile (concatenate 'string "aggregadgets:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Aggregadgets-Src Garnet-Aggregadgets-Pathname
 		   '("aggregadgets-loader.lisp"
 		     "aggregraphs-loader.lisp"))
-#+allegro-v3.1 (gc t)
 
 (setf (get :garnet-modules :aggregadgets) t)
 (setf (get :garnet-modules :aggregraphs) t)

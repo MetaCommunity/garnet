@@ -1,89 +1,91 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
 ;; 
 ;; Originally written by meltsner@chipman.crd.ge.com,
 ;;
 
+;;; $Id$
+
+
 ;;; CHANGE LOG:
-#|
-[2003/11/20:rpg]        - Fred Gilham's fix does not seem to me to work.
-                          When one specifies depth as a parameter to
-                          gem:create-image, one can get it wrong, whereas
-                          gem:create-image will ask the display and get
-                          a correct number of bits per pixel from the depth.
-17-DEC-1999 Fred Gilham - Fix problem where pixmap format doesn't match valid
-                          pixmap formats in displays with different `depth' and
-                          `bits-per-pixel' values.
-10/20/99 Fred Gilham    - Fixed bug in write-xpm-file that caused it to write
-                          unnecessarily long xpm files when dumping pixmaps
-                          with many colors.
-09/01/98 Fred Gilham    - Re-wrote write-xpm-file to use new algorithm not
-                          dependent on display depth.
-08/01/98 Fred Gilham    - Fixed problems with depth > 8 bits.
-                          Write-xpm-file still broken for > 8-bit displays.
-9/22/93 Bruno Haible    - CLISP doesn't allow declarations in flet
-8/26/93 Andrew Mickish  - Added Reset-Pixmap-Images
-6-Apr-93 koz            - Converted with-*-styles macros to set-*-style fns
-                          And omitted "clip-mask" as argument to draw function.
-12/01/92 Andrew Mickish - Added bitmap-p switches so pixmaps will work
-                          on b/w screens
-10/05/92 Martin Sjolin  - Removed CMCUL compiler warnings
-09/12/92 Andrew Mickish - Added :xpm-format switch to Write-xpm-File,
-                          implemented XPM2 output format.
-09/10/92 Andrew Mickish - Repaired bugs introduced when adding pedro-format
-09/09/92 Pedro Szekely  - Added :format :z-pixmap parameter to
-                          xlib:get-image call in Window-To-Pximap-Image;
-                          reimplemented Write-xpm-File with write-char instead of format
-08/11/92 Andrew Mickish - Added pedro-format to read-xpm-file
-09/16/03 Robert Goldman - XPM files seem to sometime have a colormap entry of "None," causing crash in
-                          read-xpm-file.  Modified read-xpm-file to ignore these entries.
-|#
+;;
+;; [2003/11/20:rpg]        - Fred Gilham's fix does not seem to me to work.
+;;                           When one specifies depth as a parameter to
+;;                           gem:create-image, one can get it wrong, whereas
+;;                           gem:create-image will ask the display and get
+;;                           a correct number of bits per pixel from the depth.
+;; 17-DEC-1999 Fred Gilham - Fix problem where pixmap format doesn't match valid
+;;                           pixmap formats in displays with different `depth' and
+;;                           `bits-per-pixel' values.
+;; 10/20/99 Fred Gilham    - Fixed bug in write-xpm-file that caused it to write
+;;                           unnecessarily long xpm files when dumping pixmaps
+;;                           with many colors.
+;; 09/01/98 Fred Gilham    - Re-wrote write-xpm-file to use new algorithm not
+;;                           dependent on display depth.
+;; 08/01/98 Fred Gilham    - Fixed problems with depth > 8 bits.
+;;                           Write-xpm-file still broken for > 8-bit displays.
+;; 9/22/93 Bruno Haible    - CLISP doesn't allow declarations in flet
+;; 8/26/93 Andrew Mickish  - Added Reset-Pixmap-Images
+;; 6-Apr-93 koz            - Converted with-*-styles macros to set-*-style fns
+;;                           And omitted "clip-mask" as argument to draw function.
+;; 12/01/92 Andrew Mickish - Added bitmap-p switches so pixmaps will work
+;;                           on b/w screens
+;; 10/05/92 Martin Sjolin  - Removed CMCUL compiler warnings
+;; 09/12/92 Andrew Mickish - Added :xpm-format switch to Write-xpm-File,
+;;                           implemented XPM2 output format.
+;; 09/10/92 Andrew Mickish - Repaired bugs introduced when adding pedro-format
+;; 09/09/92 Pedro Szekely  - Added :format :z-pixmap parameter to
+;;                           xlib:get-image call in Window-To-Pximap-Image;
+;;                           reimplemented Write-xpm-File with write-char instead of format
+;; 08/11/92 Andrew Mickish - Added pedro-format to read-xpm-file
+;; 09/16/03 Robert Goldman - XPM files seem to sometime have a colormap entry of "None,"
+;;                           causing crash in read-xpm-file.  Modified read-xpm-file to
+;;                           ignore these entries.
 
-
+
 (in-package "OPAL")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(pixmap write-xpm-file read-xpm-file
 	    create-pixmap-image window-to-pixmap-image)))
 
-;    This function was originally written to handle two types of
-;    pixmaps --
-; those of the meltsner-format (XPM2) and those not of the meltsner-format
-; (XPM1).  I added the pedro-format, which is a subset of the meltsner-format
-; (an XPM2 format from the Sun Icon Editor).
-; Non-metlsner (XPM1) format files look like
-;     #define foo_format 1
-;     #define foo_width  32
-;     #define foo_height 32
-;     #define foo_ncolors 4
-;     #define foo_chars_per_pixel 1
-;     static char *foo_colors[] = {
-;        " ", "#FFFFFFFFFFFF",
-;     ...
-; Meltsner-format files look like
-;     /* XPM */
-;     static char * move_3xpm[] = {
-;     "16 16 3 1",
-;     " 	c #FFFFFFFFFFFF",
-;     ...
-; while pedro-format files look like
-;     ! XPM2  
-;     16 16 3 1
-;       c #FFFFFFFFFFFF
-;     ...
-;
-;    Some files have garbage between the color information and the pixel
-; information, and care should be taken to ignore the garbage only after
-; ascertaining that it is definitely not data!  This may be difficult,
-; because spaces that are garbage and spaces that are data tend to look
-; similar.
+;;    This function was originally written to handle two types of
+;;    pixmaps --
+;; those of the meltsner-format (XPM2) and those not of the meltsner-format
+;; (XPM1).  I added the pedro-format, which is a subset of the meltsner-format
+;; (an XPM2 format from the Sun Icon Editor).
+;; Non-metlsner (XPM1) format files look like
+;;     #define foo_format 1
+;;     #define foo_width  32
+;;     #define foo_height 32
+;;     #define foo_ncolors 4
+;;     #define foo_chars_per_pixel 1
+;;     static char *foo_colors[] = {
+;;        " ", "#FFFFFFFFFFFF",
+;;     ...
+;; Meltsner-format files look like
+;;     /* XPM */
+;;     static char * move_3xpm[] = {
+;;     "16 16 3 1",
+;;     " 	c #FFFFFFFFFFFF",
+;;     ...
+;; while pedro-format files look like
+;;     ! XPM2  
+;;     16 16 3 1
+;;       c #FFFFFFFFFFFF
+;;     ...
+;;
+;;    Some files have garbage between the color information and the pixel
+;; information, and care should be taken to ignore the garbage only after
+;; ascertaining that it is definitely not data!  This may be difficult,
+;; because spaces that are garbage and spaces that are data tend to look
+;; similar.
 
 (defun read-xpm-file (pathname &optional root-window)
   (declare (type (or pathname string stream) pathname))
@@ -139,10 +141,10 @@
 	 (when (char= (aref line 0) #\") (return))
 	 (setq line (read-line fstream)))
 	(setq line (read-from-string line)))
-      (let ((bitmap-p (not (g-value opal:color :color-p)))
-	    ;; RGA This next will loose on a Mac.  ***TODO:  Fix
+      (let ((bitmap-p (not (g-value color :color-p)))
+	    ;; RGA This next will lose on a Mac.  ***TODO:  Fix
 	    ;; this.*** 
-	    (depth (gem::x-window-depth root-window))
+	    (depth (gem:window-depth root-window))
 	    width height ncolors left-pad chars-per-pixel)
 	;; DZG (declare (type (or null xlib:card16) width height)
 	;; DZG	 (type (or null xlib:image-depth) depth)
@@ -179,7 +181,7 @@
 	(let* ((color-sequence (make-array ncolors))
 	       (chars-sequence (make-array ncolors))
 	       (bits-per-pixel
-		(if bitmap-p 1 #+apple depth #-apple (gem::depth-to-bits-per-pixel depth)))
+		(if bitmap-p 1 (gem::depth-to-bits-per-pixel depth)))
 	       (data (gem:create-image-array root-window
 					     width height
 					     ;; Change: use `bits-per-pixel' when creating
@@ -196,7 +198,6 @@
 				    (#\8  8) (#\9  9) (#\a 10) (#\b 11)
 				    (#\c 12) (#\d 13) (#\e 14) (#\f 15))
 				  :test #'char-equal))))
-	    #-clisp
 	    (declare (inline parse-hex))
 	    (dotimes (cind ncolors)
 	      ;; Eat garbage until we get to a line like
@@ -304,28 +305,23 @@
 	  (unless (zerop left-pad)
 	    (decf width left-pad)
 	    (decf (getf properties :x-hot) left-pad))
-	  ;; DZG (xlib::index-decf width left-pad)
-	  ;; DZG (if (getf properties :x-hot)
-	  ;; DZG  (xlib::index-decf (getf properties :x-hot) left-pad))
           (gem:create-image root-window width height depth T ; from data
                             data properties bits-per-pixel
                             left-pad data))))))
 
 
+
+#-(and)					; Dead code.
 (defun digit-to-hex (n)
   (code-char (+ (if (< n 10) 48 55) n)))
 
-
 (defun print-hex (f n)
-  (format f "~A~A~A~A" (digit-to-hex (mod (floor n 4096) 16))
-		       (digit-to-hex (mod (floor n 256) 16))
-		       (digit-to-hex (mod (floor n 16) 16))
-		       (digit-to-hex (mod n 16))))
+  (format f "~4,'0X" n))
 
-
+
 ;;;
-;;; The following info is obtained from scan.c in XPM-3.4k library.
-;;;
+;; The following info is obtained from scan.c in XPM-3.4k library.
+;;
 #+sbcl
 (defmacro define-constant (name value &optional doc)
        `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
@@ -333,7 +329,6 @@
 (#+sbcl define-constant
  #-sbcl defconstant
  +printable+
-#+nil   " .XoO+@#$%&*=-;:>,<1234567890qwertyuipasdfghjklzxcvbnmMNBVCZASDFGHJKLPIUYTREWQ!~^/()_`'][{}|"
   ".XoO+@#$%&*=-;:>,<1234567890qwertyuipasdfghjklzxcvbnmMNBVCZASDFGHJKLPIUYTREWQ!~^/()_`'][{}|"
   "Sequence of printable characters; taken from scan.c in XPM-3.4k library.")
 
@@ -422,39 +417,40 @@
 	  (close f))))))
 
 
-(create-instance 'opal:pixmap opal:bitmap
+(create-instance 'pixmap bitmap
   :declare ((:parameters :left :top :image :line-style :draw-function :visible)
 	    ;; Have to recompute the image when you change displays
 	    (:maybe-constant T :except :image))
-  (:line-style opal:default-line-style)
+  (:line-style default-line-style)
   (:pixarray (o-formula (if (gvl :image)
 			    (gem:image-to-array (gv-local :self :window)
 						(gvl :image))))))
 
 
 
-(define-method :draw opal:pixmap (gob a-window)
+(define-method :draw pixmap (gob a-window)
   (let* ((update-vals (get-local-value gob :update-slots-values))
-	 (function (aref update-vals *bm-draw-function*))
-	 (image (aref update-vals *bm-image*))
-	 (line-style (aref update-vals *bm-lstyle*))
-	 (left (aref update-vals *bm-left*))
-	 (top (aref update-vals *bm-top*)))
+	 (function (aref update-vals +bm-draw-function+))
+	 (image (aref update-vals +bm-image+))
+	 (line-style (aref update-vals +bm-lstyle+))
+	 (left (aref update-vals +bm-left+))
+	 (top (aref update-vals +bm-top+)))
     (multiple-value-bind (width height depth)
 	(gem:image-size a-window image)
       (if (and image line-style)
 	(if (or (= depth 1)
-		(g-value opal:color :color-p))
+		(g-value color :color-p))
 	  (gem:draw-image a-window left top width height image function
-			  (aref update-vals *bm-fstyle*))
+			  (aref update-vals +bm-fstyle+))
 	  (gem:draw-rectangle a-window left top width height
 			      function line-style nil))))))
 
 
 
 (defun create-pixmap-image (width height
-				  &optional color
-				            (window (g-value device-info :current-root)))
+			    &optional 
+			      color
+			      (window (g-value device-info :current-root)))
   (let ((depth (gem::x-window-depth window)))
     ;; Passing the display depth as the `bits-per-pixel' optional
     ;; parameter seems to avoid problems of displays where the depth
@@ -469,8 +465,8 @@
     (gem:create-image window width height depth NIL color NIL)))
 
 
-;;; Creates a pixmap image containing whatever is in the window.
-;;;
+;; Creates a pixmap image containing whatever is in the window.
+;;
 (defun window-to-pixmap-image (window &key left top width height)
   (gem:window-to-image window
 		       (or left 0)
@@ -479,10 +475,9 @@
 		       (or height (g-value window :height))))
 
 
-
 (defun reset-pixmap-images ()
-  (opal::do-all-instances opal::pixmap
+  (do-all-instances pixmap
     #'(lambda (p)
 	(recompute-formula p :image))))
 
-(push #'reset-pixmap-images opal::*auxilliary-reconnect-routines*)
+(push #'reset-pixmap-images *auxilliary-reconnect-routines*)

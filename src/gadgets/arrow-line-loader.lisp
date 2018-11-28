@@ -29,7 +29,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :arrow-line)
   (format t "Loading Arrow-Line...~%")
-  (load (garnet-pathnames "arrow-line" Garnet-Gadgets-PathName)
+  (load (merge-pathnames "arrow-line" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done Arrow-Line.~%"))
 

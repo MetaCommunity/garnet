@@ -45,12 +45,12 @@
 (defvar *cursor+++half+++width* (ceiling *cursor-width* 2))
 (defvar *cursor-draw-fn*        (get :xor :x-draw-function))
 
-(create-instance 'opal:TEXT opal:graphical-object
+(create-instance 'TEXT graphical-object
   :declare ((:parameters :left :top :string :font :actual-heightp
 			 :justification :fill-background-p :line-style
 			 :cursor-index :draw-function :visible)
 	    (:type (string :string)
-                   ((or (is-a-p opal:font) (is-a-p opal:font-from-file)) :font)
+                   ((or (is-a-p font) (is-a-p font-from-file)) :font)
 		   ((member :left :center :right) :justification))
 	    (:maybe-constant :left :top :string :font :actual-heightp
                              :line-style :visible)
@@ -64,7 +64,7 @@
 			   :line-style :draw-function :cursor-offset
 			   :justification :cut-strings :line-number))
   (:string            "")
-  (:font              opal:default-font)
+  (:font              default-font)
   (:actual-heightp    nil)
   (:fill-background-p nil)
   (:cursor-index NIL)
@@ -72,10 +72,10 @@
   (:xfont (o-formula (gvl :font :xfont)))
   (:cut-strings
    (o-formula
-    (let* ((string (gvl :string))
-	   (font (gvl :xfont))
-	   ;; Structs will be NIL if formula has never been evaluated
-	   (structs (g-value (gv :self) :cut-string-structs)))
+    (let ((string (gvl :string))
+;;	  (font (gvl :xfont))
+	  ;; Structs will be NIL if formula has never been evaluated
+	  (structs (g-value (gv :self) :cut-string-structs)))
       (do* ((old-structs structs (cdr old-structs))
 	    (struct (car old-structs) (car old-structs))
 	    (i -1 j)
@@ -97,7 +97,8 @@
 	(multiple-value-bind (width dummy2 dummy3 left-bearing)
 	    (gem:text-extents (or (gvl :window)
 				  (gv device-info :current-root))
-			      (gvl :font) substring)
+			      (gvl :font)
+			      substring)
 	  (declare (ignore dummy2 dummy3))
 	  ;; Reuse an old struct, if possible
 	  (cond
@@ -133,6 +134,7 @@
 	(let* ((cut-strings (gvl :cut-strings))
 	       (line-number (gvl :line-number))
 	       (n 0)   (prev-len 0))
+	  (declare (fixnum n prev-len))
 	  ;; Count up all the characters in the lines before the cursor's line
 	  (dolist (a-cut-string cut-strings)
 	    (if (eq n line-number)
@@ -176,23 +178,23 @@
 		  (t 0)))))))))))
 
 
-(create-instance 'opal::CURSOR-TEXT opal::text)
-(create-instance 'opal::MULTI-TEXT opal::text)
-(create-instance 'opal::CURSOR-MULTI-TEXT opal::multi-text)
+(create-instance 'CURSOR-TEXT text)
+(create-instance 'MULTI-TEXT text)
+(create-instance 'CURSOR-MULTI-TEXT multi-text)
 
 
-(define-method :draw opal:text (gob a-window)
+(define-method :draw text (gob a-window)
   (let* ((update-vals   (g-local-value gob :update-slots-values))
 	 (font (g-value gob :font))
-         (lstyle (aref update-vals opal::*text-lstyle*)))
+         (lstyle (aref update-vals +text-lstyle+)))
     (if (and lstyle font)
-      (let* ((left           (aref update-vals opal::*text-left*))
-	     (top            (aref update-vals opal::*text-top*))
-	     (cursor-offset  (aref update-vals opal::*text-cursor-offset*))
-	     (cut-strings    (aref update-vals *text-cut-strings*))
-	     (max-line-width (aref update-vals *text-width*))
-	     (justification  (aref update-vals *text-justification*))
-	     (line-number    (aref update-vals *text-line-number*))
+      (let* ((left           (aref update-vals +text-left+))
+	     (top            (aref update-vals +text-top+))
+	     (cursor-offset  (aref update-vals +text-cursor-offset+))
+	     (cut-strings    (aref update-vals +text-cut-strings+))
+	     (max-line-width (aref update-vals +text-width+))
+	     (justification  (aref update-vals +text-justification+))
+	     (line-number    (aref update-vals +text-line-number+))
 	     (ascent 	     (gem:max-character-ascent a-window font))
 	     (line-height    (+ ascent (gem:max-character-descent
                                         a-window font))))
@@ -209,19 +211,18 @@
 		       (:center (floor (- max-line-width width) 2))
 		       (t 0)))
 	     (+ top ascent (* count line-height))
-	     string font (aref update-vals opal::*text-draw-function*)
-	     lstyle (aref update-vals *text-fill-background-p*))))
+	     string font (aref update-vals +text-draw-function+)
+	     lstyle (aref update-vals +text-fill-background-p+))))
 	(when cursor-offset
 	  (let ((cursor-left (+ left cursor-offset))
 		(cursor-top (+ top (* line-number line-height))))
 	    (gem:draw-line a-window
                            cursor-left
-                           #-apple cursor-top #+apple (+ 2 cursor-top)
+			   cursor-top
 		           cursor-left
-                           #-apple (+ cursor-top line-height)
-                           #+apple (- (+ cursor-top line-height) 4)
+			   (+ cursor-top line-height)
 		           :XOR
-		           opal:line-2)))))))
+		           line-2)))))))
 
 
 (defun cursor-index-to-line-number (cut-strings index)
@@ -243,7 +244,7 @@
 	   (line-number (g-value gob :line-number)))
       (when (< line-number (1- (length cut-strings)))
 	(s-value gob :cursor-index
-		 (opal::get-cursor-index
+		 (get-cursor-index
 		  gob
 		  (+ (g-value gob :left) (g-value gob :cursor-offset))
 		  (+ (g-value gob :top)
@@ -255,7 +256,7 @@
 	   (line-number (g-value gob :line-number)))
       (when (> line-number 0)
 	(s-value gob :cursor-index
-		 (opal::get-cursor-index
+		 (get-cursor-index
 		  gob
 		  (+ (g-value gob :left) (g-value gob :cursor-offset))
 		  (+ (g-value gob :top)
@@ -278,11 +279,11 @@
       (s-value gob :cursor-index (length (g-value gob :string)))))
 
 
-(define-method :string-set-func OPAL::TEXT
+(define-method :string-set-func TEXT
     (gadget-obj str-obj final-event final-string)
   (declare (ignore final-event))
   (if (eq str-obj gadget-obj)
-      ; then is me (otherwise, is probably an error)
+      ;; then is me (otherwise, is probably an error)
       (s-value str-obj :string final-string)
-      ; else return NIL
+      ;; else return NIL
       NIL))

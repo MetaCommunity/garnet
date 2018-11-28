@@ -55,7 +55,7 @@
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(HALF K-FRAMED-TEXT)))
 (defmacro half (n)
   `(truncate ,n 2))
@@ -75,18 +75,18 @@
 
 (define-method :draw opal:k-framed-text (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
-	 (left (aref update-vals *rect-left*))
-	 (top (aref update-vals *rect-top*))
-	 (width (aref update-vals *rect-width*))
-	 (height (aref update-vals *rect-height*))
-	 (lstyle (aref update-vals *rect-lstyle*))
+	 (left (aref update-vals +rect-left+))
+	 (top (aref update-vals +rect-top+))
+	 (width (aref update-vals +rect-width+))
+	 (height (aref update-vals +rect-height+))
+	 (lstyle (aref update-vals +rect-lstyle+))
 	 (min-width-height (min width height))
-	 (draw-fn (aref update-vals *rect-draw-function*))
-	 (rect-fstyle (aref update-vals *rect-fstyle*))
-	 (thickness (get-old-thickness gob *rect-lstyle* update-vals))
+	 (draw-fn (aref update-vals +rect-draw-function+))
+	 (rect-fstyle (aref update-vals +rect-fstyle+))
+	 (thickness (get-old-thickness gob +rect-lstyle+ update-vals))
 
-         (font (aref update-vals *kft-font*))
-         (string (aref update-vals *kft-string*))
+         (font (aref update-vals +kft-font+))
+         (string (aref update-vals +kft-string+))
 	 (ascent (gem:max-character-ascent a-window font))
 	 (text-height (+ ascent (gem:max-character-descent a-window font)))
          (text-left-offset (half (- width
@@ -164,40 +164,40 @@
 
 (defvar *Demo-App-Obj* NIL)
 
-(defconstant *main-win-top*      #-apple 10  #+apple 50)
-(defconstant *main-win-left*     #-apple 700 #+apple 300)
-(defconstant *main-win-width*    235)
-(defconstant *main-win-height*   245)
-(defvar      *main-win-color*    opal:motif-green)
+(defconstant +main-win-top+      10)
+(defconstant +main-win-left+    700)
+(defconstant +main-win-width+   235)
+(defconstant +main-win-height+  245)
+(defvar      *main-win-color*   opal:motif-green)
 
-(defconstant *frame-top*              5)
-(defconstant *frame-left*             10)
-(defconstant *frame-width*            158)
-(defconstant *frame-height*           45)
+(defconstant +frame-top+              5)
+(defconstant +frame-left+             10)
+(defconstant +frame-width+            158)
+(defconstant +frame-height+           45)
 (defvar      *frame-line-style*       opal:line-4)
-(defconstant *frame-filling-style*    opal:motif-gray-fill)
-(defconstant *result-top*             5)
-(defconstant *result-right*           150)
+(defconstant +frame-filling-style+    opal:motif-gray-fill)
+(defconstant +result-top+             5)
+(defconstant +result-right+           150)
 (defvar      *result-font*            (opal:get-standard-font
 					:fixed :bold :large))
-(defconstant *drg-left*               10)
-(defconstant *drg-top*                30)
+(defconstant +drg-left+               10)
+(defconstant +drg-top+                30)
 
-(defconstant *cut-paste-width*        44)
+(defconstant +cut-paste-width+        44)
 
-(defconstant *button-top*            60)
-(defconstant *button-left*           10)
-(defconstant *button-width*          30)
-(defconstant *button-height*         20)
-(defconstant *button-h-spacing*       4)
-(defconstant *button-v-spacing*       3)
+(defconstant +button-top+            60)
+(defconstant +button-left+           10)
+(defconstant +button-width+          30)
+(defconstant +button-height+         20)
+(defconstant +button-h-spacing+       4)
+(defconstant +button-v-spacing+       3)
 (defvar      *button-filling-style*  opal:motif-gray-fill)
 (defvar      *button-line-style*     opal:default-line-style)
 (defvar      *button-font*           opal:default-font)
 
 (defvar      *greeting-font*         (opal:get-standard-font
                                       :serif :italic :very-large))
-(defconstant *greeting*
+(defconstant +greeting+
 "
 
 The Garnet Calculator
@@ -207,13 +207,13 @@ by
 David S. Kosbie")
 
 
-(defconstant *cut-paste-column*
+(defconstant +cut-paste-column+
        '(       ("Copy"  #\X    copy-button)
 	        ("Paste" #\P    paste-button)
 	        ("Keys"  #\K    keys-button)
 	        ("Quit"  #\Q    quit-button) )  )
 
-(defconstant *button-list*		 
+(defconstant +button-list+		 
   '(    (	("1/x"  #\i    1/x-button)
 		("INV"  #\I    inv-button)
 		("e"    #\e    e-button)
@@ -263,11 +263,11 @@ David S. Kosbie")
 
 (defun my-/ (a b) (if (zerop b) :error (/ a b)))
 
-(defconstant *+-op-spec* (cons #'+     1))
-(defconstant *--op-spec* (cons #'-     1))
-(defconstant **-op-spec* (cons #'*     2))
-(defconstant */-op-spec* (cons 'my-/  2))
-(defconstant *^-op-spec* (cons #'expt  3))
+(defconstant ++-op-spec+ (cons #'+     1))
+(defconstant +--op-spec+ (cons #'-     1))
+(defconstant +*-op-spec+ (cons #'*     2))
+(defconstant +/-op-spec+ (cons 'my-/  2))
+(defconstant +^-op-spec+ (cons #'expt  3))
 
 
                      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -279,7 +279,7 @@ David S. Kosbie")
 
 (defun do-update (app-object &optional result-object)
   (let ((result (or result-object (kr:g-value app-object :result))))
-    (kr:s-value result :left (- *result-right* (kr:g-value result :width)))
+    (kr:s-value result :left (- +result-right+ (kr:g-value result :width)))
     (opal:update (kr:g-value app-object :frame-window))))
 
 (defun do-error (app-object)
@@ -607,11 +607,11 @@ top-tag
   (kr:s-value app-object :new-number? T)
   (kr:s-value app-object :prev-key prev-key))
 
-(defun Y^X-BUTTON (app-object) (do-binary-op app-object #\^ *^-op-spec*))
-(defun /-BUTTON (app-object)   (do-binary-op app-object #\/ */-op-spec*))
-(defun *-BUTTON (app-object)   (do-binary-op app-object #\* **-op-spec*))
-(defun --BUTTON (app-object)   (do-binary-op app-object #\- *--op-spec*))
-(defun +-BUTTON (app-object)   (do-binary-op app-object #\+ *+-op-spec*))
+(defun Y^X-BUTTON (app-object) (do-binary-op app-object #\^ +^-op-spec+))
+(defun /-BUTTON (app-object)   (do-binary-op app-object #\/ +/-op-spec+))
+(defun *-BUTTON (app-object)   (do-binary-op app-object #\* +*-op-spec+))
+(defun --BUTTON (app-object)   (do-binary-op app-object #\- +--op-spec+))
+(defun +-BUTTON (app-object)   (do-binary-op app-object #\+ ++-op-spec+))
 
 (defun =-BUTTON (app-object)
   (eval-stack app-object 0)
@@ -669,7 +669,7 @@ top-tag
 			   (:hot-key     (princ-to-string hot-key))
 			   (:dispatch-fn dispatch-fn)))
       (setf (gethash hot-key hashtable) dispatch-fn)
-      (incf top (+ *button-height* *button-v-spacing*)))
+      (incf top (+ +button-height+ +button-v-spacing+)))
     (opal:add-component main-agg agg)))
 
 (defun setup-main-window (app-object double-buffered-p)
@@ -677,10 +677,10 @@ top-tag
        (main-window
          (unnamed-instance inter:interactor-window
 	       (:app-object       app-object)
-	       (:top              *main-win-top*)
-	       (:left             *main-win-left*)
-	       (:width            *main-win-width*)
-	       (:height           *main-win-height*)
+	       (:top              +main-win-top+)
+	       (:left             +main-win-left+)
+	       (:width            +main-win-width+)
+	       (:height           +main-win-height+)
 	       (:title            "Garnet Calculator")
 	       (:icon-title       "gcalc")
 	       (:background-color *main-win-color*)
@@ -691,15 +691,15 @@ top-tag
   (kr:s-value app-object :main-window main-window)
 
   (setq greeting (unnamed-instance opal:multi-text
-	(:string        *greeting*)
+	(:string        +greeting+)
 	(:justification :center)
 	(:font          *greeting-font*)
-	(:top           (opal:half (- *main-win-height*
+	(:top           (opal:half (- +main-win-height+
 				      (opal:string-height
-				       *greeting-font* *greeting*))))
-	(:left          (opal:half (- *main-win-width*
+				       *greeting-font* +greeting+))))
+	(:left          (opal:half (- +main-win-width+
 				      (opal:string-width
-				       *greeting-font* *greeting*))))))
+				       *greeting-font* +greeting+))))))
 
   (opal:add-component main-agg greeting)
 
@@ -709,10 +709,10 @@ top-tag
 
   (kr:s-value app-object :frame-window
      (unnamed-instance inter:interactor-window
-	(:left          *frame-left*)
-	(:top           *frame-top*)
-	(:width         *frame-width*)
-	(:height        *frame-height*)
+	(:left          +frame-left+)
+	(:top           +frame-top+)
+	(:width         +frame-width+)
+	(:height        +frame-height+)
 	(:border-width  4)
 	(:aggregate     frame-agg)
 	(:parent        main-window)
@@ -722,14 +722,14 @@ top-tag
 
     (kr:s-value app-object :result
        (unnamed-instance opal:text
-	  (:top        *result-top*)
+	  (:top        +result-top+)
 	  (:line-style *frame-line-style*)
 	  (:font       *result-font*)))
 
     (kr:s-value app-object :drg
        (unnamed-instance opal:text
-	  (:top        *drg-top*)
-	  (:left       *drg-left*)
+	  (:top        +drg-top+)
+	  (:left       +drg-left+)
 	  (:font       *button-font*)
 	  (:line-style *frame-line-style*)
 	  (:string     "DEG"))))
@@ -739,8 +739,8 @@ top-tag
   (kr:s-value app-object :proto-button
     (setq proto-button
       (unnamed-instance opal:k-framed-text
-	(:width         *button-width*)
-	(:height        *button-height*)
+	(:width         +button-width+)
+	(:height        +button-height+)
 	(:filling-style *button-filling-style*)
 	(:line-style    *button-line-style*)
 	(:font          *button-font*))))
@@ -748,19 +748,19 @@ top-tag
   (kr:s-value app-object :proto-cut-paste-button
     (setq proto-cut-paste-button
       (unnamed-instance proto-button
-        (:width     *cut-paste-width*)
-	(:left     (+ *frame-left* *frame-width* *button-h-spacing*)))))
+        (:width     +cut-paste-width+)
+	(:left     (+ +frame-left+ +frame-width+ +button-h-spacing+)))))
 
-  (let ((left *button-left*))
-    (dolist (column *button-list*)
-      (make-button-column app-object main-agg *button-top*
+  (let ((left +button-left+))
+    (dolist (column +button-list+)
+      (make-button-column app-object main-agg +button-top+
 			  left column proto-button)
-      (incf left (+ *button-width* *button-h-spacing*)))
+      (incf left (+ +button-width+ +button-h-spacing+)))
     (make-button-column app-object
                         main-agg
-                        (+ *frame-top* *button-v-spacing*)
+                        (+ +frame-top+ +button-v-spacing+)
 			left
-			*cut-paste-column*
+			+cut-paste-column+
 			proto-cut-paste-button))
 
   (opal:remove-component main-agg greeting)

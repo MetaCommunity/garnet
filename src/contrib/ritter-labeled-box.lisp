@@ -88,7 +88,7 @@
     ;; make sure it gets clicked if really-modal-p
   (if (g-value box-gadget :really-modal-p)
       (prog ((sleep-time (g-value box-gadget :sleep-time))
-	     (display (let ((win1 (caar (opal::get-table-contents))))
+	     (display (let ((win1 #-(and)(caar (opal::get-table-contents)) #+(and)(car opal::*garnet-windows*)))
 	                (if win1
  			    (xlib:window-display win1)
                             opal::*default-x-display*))) )

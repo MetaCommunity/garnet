@@ -47,7 +47,7 @@
 ;; Load multifont stuff.
 #-Garnet.ASDF
 (unless (get :garnet-modules :multifont)
-   (load (common-lisp-user::garnet-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)
+   (load (merge-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)
          :verbose T))
 
 #-Garnet.ASDF
@@ -173,18 +173,14 @@ devised by David Goldberg at Xerox PARC.")
     (:help-string "Quits the demos-controller and all demos.")
     (:selection-function #'quit*))
 
-  #-(and apple (not ccl-3))
   (create-instance 'demos-mouseline gg:mouselinepopup
-    #+garnet-processes (:wait-amount 2)
-    #-garnet-processes (:wait-amount NIL))
+    (:wait-amount 2))
 
-  (opal:add-components agg1 bt qbt 
-    #-(and apple (not ccl-3)) demos-mouseline)
+  (opal:add-components agg1 bt qbt  demos-mouseline)
 
   (create-instance 'win2 garnet-gadgets:scrolling-window-with-bars
     (:constant T :except :top :left :width :height :title :total-height)
-    #-apple(:left 0) #-apple(:top 720)
-    #+apple(:left 300) #+apple(:top 50)
+    (:left 0) (:top 720)
     (:width 700)(:height 180)
     (:title "Instructions for Demos")
     (:h-scroll-bar-p NIL)
@@ -243,7 +239,7 @@ Click the button to start the demo."))
 
       (when (member (car objlist) *unloaded* :test #'string=)
             (load 
-              (common-lisp-user::garnet-pathnames
+              (merge-pathnames
 	       (string-downcase package-name) common-lisp-user::Garnet-Demos-PathName))
             (setq *unloaded* (remove (car objlist) *unloaded* :test #'string=)))
       (opal:set-text text (string-trim (list #\newline #\space)

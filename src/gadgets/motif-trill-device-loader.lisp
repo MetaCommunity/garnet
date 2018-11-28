@@ -8,6 +8,9 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $	
+
+
 ;;;  MOTIF-TRILL-DEVICE-LOADER:  Loads the modules "motif-h-scroll-bar"
 ;;;                              and "motif-trill-device"
 ;;;
@@ -26,9 +29,7 @@
 		  (:motif-trill-device "motif-trill-device")
 		  ))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Motif-Trill-Device.~%"))
 

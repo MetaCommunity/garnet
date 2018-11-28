@@ -1,116 +1,121 @@
 ;;; -*- mode: Lisp; syntax: common-lisp; package: GARNET-GADGETS; base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; 
-;;;; file            : choice-gadget.lisp
-;;;; author          : frank ritter
-;;;; created on      : fri feb 22 13:41:50 1991
-;;;; last modified by: Roberto L. Ong
-;;;; last modified on: Tue Jan 24 11:55:04 1995
-;;;; update count    : 78
-;;;; 
-;;;; purpose
-;;;; 	provides a gadget for presenting a multiple valued choice to the user.
-;;;  
-;;;; table of contents
-;;;;
-;;;;	i.	disclaimer and programmer notes
-;;;;	ii.	package initialization and such
-;;;;
-;;;;	I.	display-choice function
-;;;;	IB.	graphic-yes-or-no-p
-;;;;	ii.	new change-priority level
-;;;; 
-;;;; Copyright 1991, frank ritter.
-;;;; The material in this file is made available according to the
-;;;; terms of the GNU LGPL, modified by the Lisp LGPL preamble.  Both
-;;;; of those documents are available in the doc subdirectory of the
-;;;; Garnet distribution.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; HISTORY
-;;;; 21Jun04 - per agreement with Frank Ritter, the license terms of
-;;;; this file are clarified to be LLGPL. [2004/06/21:rpg]
-;;;; 24Jan95 - added modifications to run in Garnet 2.2
-;;;; (RLO)
-;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;****************************************************************************
+;;
+;;   Copyright 1991, frank ritter.
+;;   The material in this file is made available according to the
+;;   terms of the GNU LGPL, modified by the Lisp LGPL preamble.  Both
+;;   of those documents are available in the doc subdirectory of the
+;;   Garnet distribution.
+;;
+;;****************************************************************************
+
+
+;;; HISTORY
+;;  21Jun04 - per agreement with Frank Ritter, the license terms of
+;;  this file are clarified to be LLGPL. [2004/06/21:rpg]
+;;  24Jan95 - added modifications to run in Garnet 2.2
+;;  (RLO)
+;;  02/26/91  created fer
+;;
+;;; $Id$
+;;****************************************************************************
 
 
 
-;;;
-;;;	i.	disclaimer and programmer notes
-;;;___________________________________________________________________
-;;; the garnet user interface development environment
-;;; copyright (c) 1990, carnegie mellon university
-;;; all rights reserved.  the cmu software license agreement specifies
-;;; the terms and conditions for use and redistribution.
-;;;
-;;; if you want to use this code or anything developed as part of the
-;;; garnet project, please contact brad myers (brad.myers@cs.cmu.edu).
-;;;___________________________________________________________________
-;;;
-;;;  choice gadget, copyright 1991, frank ritter
-;;;
-;;;   features: the choice-gadget can be used in applications where
-;;;   the designer wants to allow (or force) the user to make a
-;;;   choice.  when the display-choice function (described below) is
-;;;   called, the choice window becomes visible (at the appropriate
-;;;   size) and displays the choices.  if modal-p the user must then
-;;;   click on a choice button before proceeding graphically.  if
-;;;   really-modal-p, then lisp hangs also.  the slot names and
-;;;   behavior are similar to the error-gadget and the labeled box gadget.
-;;;
-;;;  customizable slots: 
-;;;   1) parent-window - the window that the choice window should be centered
-;;;          inside of
-;;;   2) font - the font for the prompt, and help string
-;;;      items-font - the font for the items
-;;;   3) justification - how to justify the multi-line message
-;;;   4) modal-p - whether to shut down all other interactors until a
-;;;          button has been pressed
-;;;   4b) really-modal-p - whether to hang all lisp processing until a
-;;;      button has been pressed.
-;;;   5) window-left, window-top -- where the window will appear.  the default
-;;;          is centered in the parent window, or at 100, 200.  you can set these.
-;;;      window-width, window-height - dimensions of the choice window
-;;;          (automagically set, you should  not set these slots)
-;;;   6) window - the window created by the error-gadget (do not set this slot)
-;;;   7) sleep-time - how often to check (really-modal-p)
-;;;          to see if the user has done anything.
-;;;   8) choices -- the default choices are "yes" and "no".  these can be set
-;;;          by hand, or with display-choice
-;;;
-;;;  programmer's interface:
-;;;   in order to associate an choice window with an application, an instance
-;;;   of the choice-gadget should be created with the :parent-window slot
-;;;   set to the window of the application.  to activate the choice
-;;;   window, call the function display-choice, which takes the instance of
-;;;   the choice-gadget, the choices and the desired message as parameters.
-;;;   this is very similar to the error gadget.
-;;;
-;;;  caveats:
-;;;   1) update the parent window before instantiating the choice-gadget.
-;;;   2) the instance of the choice-gadget should not be added to an aggregate.
-;;;      bookkeeping for the parent window is automatically taken care of
-;;;      during the create-instance call.
-;;;
-;;; change log
-;;; 02/26/91  created fer
-;;;
+;;; file            : choice-gadget.lisp
+;;  author          : frank ritter
+;;  created on      : fri feb 22 13:41:50 1991
+;;  last modified by: Roberto L. Ong
+;;  last modified on: Tue Jan 24 11:55:04 1995
+;;  update count    : 78
+;;   
+;;; purpose
+;;     provides a gadget for presenting a multiple valued choice to the user.
+;;
+;;; table of contents
+;;
+;;     i.	disclaimer and programmer notes
+;;     ii.	package initialization and such
+;;
+;;     I.	display-choice function
+;;     IB.	graphic-yes-or-no-p
+;;     ii.	new change-priority level
+;;
+
 
 
-;;;
-;;;	ii.	package initialization and such
-;;;
+;;; i.		disclaimer and programmer notes
+;;____________________________________________________________________
+;;  the garnet user interface development environment
+;;  copyright (c) 1990, carnegie mellon university
+;;  all rights reserved.  the cmu software license agreement specifies
+;;  the terms and conditions for use and redistribution.
+;; 
+;;____________________________________________________________________
+;; 
+;;   choice gadget, copyright 1991, frank ritter
+;; 
+;;; features: 
+;;    the choice-gadget can be used in applications where
+;;    the designer wants to allow (or force) the user to make a
+;;    choice.  when the display-choice function (described below) is
+;;    called, the choice window becomes visible (at the appropriate
+;;    size) and displays the choices.  if modal-p the user must then
+;;    click on a choice button before proceeding graphically.  if
+;;    really-modal-p, then lisp hangs also.  the slot names and
+;;    behavior are similar to the error-gadget and the labeled box gadget.
+;; 
+;;; customizable slots: 
+;;   1) parent-window - the window that the choice window should be centered
+;;       inside of
+;;   2) font - the font for the prompt, and help string
+;;       items-font - the font for the items
+;;   3) justification - how to justify the multi-line message
+;;   4) modal-p - whether to shut down all other interactors until a
+;;       button has been pressed
+;;  4b) really-modal-p - whether to hang all lisp processing until a
+;;       button has been pressed.
+;;   5) window-left, window-top -- where the window will appear.  the default
+;;       is centered in the parent window, or at 100, 200.  you can set these.
+;;       window-width, window-height - dimensions of the choice window
+;;       (automagically set, you should  not set these slots)
+;;   6) window - the window created by the error-gadget (do not set this slot)
+;;   7) sleep-time - how often to check (really-modal-p)
+;;       to see if the user has done anything.
+;;   8) choices -- the default choices are "yes" and "no".  these can be set
+;;       by hand, or with display-choice
+;; 
+;;; programmer's interface:
+;;    in order to associate an choice window with an application, an instance
+;;    of the choice-gadget should be created with the :parent-window slot
+;;    set to the window of the application.  to activate the choice
+;;    window, call the function display-choice, which takes the instance of
+;;    the choice-gadget, the choices and the desired message as parameters.
+;;    this is very similar to the error gadget.
+;; 
+;;; caveats:
+;;   1) update the parent window before instantiating the choice-gadget.
+;;   2) the instance of the choice-gadget should not be added to an aggregate.
+;;      bookkeeping for the parent window is automatically taken care of
+;;      during the create-instance call.
+;; 
+;;
 
-(in-package "GARNET-GADGETS" :use '("LISP" "KR"))
+
+;;; ii.		package initialization and such
+;; 
+
+(in-package "GARNET-GADGETS")
+
+
+;; :use '("COMMON-LISP" "KR"))
 
 (export '(choice-gadget display-choice graphic-yes-or-no-p)
    	(find-package "GARNET-GADGETS"))
 
 
-;;;
-;;;	i.	display-choice function
-;;;
+;;; i.		display-choice function
+;;
 
 (defun display-choice (&optional choice-gadget prompt choices)
   "Display the choice-gadget using choices and prompt."
@@ -150,27 +155,27 @@
 			;; (caar (opal::get-table-contents))))
 	                (if win1
 			    opal::*default-x-display*
-			  (xlib:window-display win1)))) )
-	                    ;; original code that does not seem to work
-			    ;; on version 1.4
-	                    ;; -RLO (17Jan95)
- 			    ;; (xlib:window-display win1)
-                            ;; opal::*default-x-display*))) )
+			    (xlib:window-display win1)))) )
+	 ;; original code that does not seem to work
+	 ;; on version 1.4
+	 ;; -RLO (17Jan95)
+	 ;; (xlib:window-display win1)
+	 ;; opal::*default-x-display*))) )
 
-	    start
-	    ;; call the event handler to get anything
-	    ;; this only works on Garnet 1.4 (not on 2.2)
-	    ;; - RLO (18Jan95)
-            ;; (opal::default-event-handler display :timeout 0)
-            (sleep sleep-time)
-	    (if (g-value choice-gadget :window :visible)
-		(go start))
-	    (return (g-value choice-gadget :value))))
+       start
+       ;; call the event handler to get anything
+       ;; this only works on Garnet 1.4 (not on 2.2)
+       ;; - RLO (18Jan95)
+       ;; (opal::default-event-handler display :timeout 0)
+       (sleep sleep-time)
+       (if (g-value choice-gadget :window :visible)
+	   (go start))
+       (return (g-value choice-gadget :value))))
   (g-value choice-gadget :buttons :value)  )
 
-;;;
-;;;	IB.	graphic-yes-or-no-p
-;;; 
+
+;;; IB.		graphic-yes-or-no-p
+;;
 
 (defun graphic-yes-or-no-p (gadget prompt &optional (choices '("Yes" "No")))
   (if (string= (first choices)
@@ -180,9 +185,8 @@
 
 
 
-;;;
-;;;	II.	New change-priority level
-;;;
+;;; II.		New change-priority level
+;;
 
 ;;    This function creates a new priority level and adds it to the front
 ;; of the interactors priority level list.  Thus, this level has higher
@@ -205,9 +209,8 @@
 (add-choice-priority-level)
 
 
-;;;
-;;;	III.	Choice-gadget
-;;;
+;;; III.	Choice-gadget
+;;
 
 ;; NOTE:  If :parent-window is specified, then the parent window must already
 ;; have been opal:update'd when the instance of CHOICE-GADGET is created.
@@ -280,9 +283,8 @@
 )
 
 
-;;;
-;;;	IV.	initialize & destroy methods for Choice-Gadget
-;;;
+;;; IV.		initialize & destroy methods for Choice-Gadget
+;;
 
 (define-method :initialize CHOICE-GADGET (choice-gadget)
   (call-prototype-method choice-gadget)
@@ -297,7 +299,7 @@
 	    (:visible NIL)))
 	(aggregate (create-instance NIL opal:aggregate)))
     (s-value window :aggregate aggregate)
-    ;;; The :window slot of choice-gadget is automatically set by add-component
+    ;; The :window slot of choice-gadget is automatically set by add-component
     (opal:add-component aggregate choice-gadget)
     (opal:update window)))
 
@@ -319,12 +321,8 @@
     (call-prototype-method choice-gadget erase)))
 
 
-;;;
-;;;	V.	Demo code
-;;;
-
-
-;;; Take off # | comments markers at front and end to run
+;;; V.		Demo code
+;;
 
 #+garnet-test
 (defparameter test-choice NIL)

@@ -1,57 +1,61 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id::                                                             $
+;;
+
+
 ;;;  MOTIF-PARTS
-;;;
-;;;  This module is a collection of schema definitions required by the motif
-;;;  gadgets.
-;;;
-;;;  Written by Andrew Mickish
+;;
+;;   This module is a collection of schema definitions required by the motif
+;;   gadgets.
+;; 
+;;   Written by Andrew Mickish
 
+
 ;;;  CHANGE LOG
-;;;  04/19/93  Andrew Mickish - Added :field-stippled-line-style
-;;;  02/22/93  Brad Myers - Added MOTIF-RECT
-;;;  12/15/92  Andrew Mickish - Added type and parameter declarations;
-;;;              removed references to ERROR-PRIORITY-LEVEL
-;;;  06/24/92  Andrew Mickish - Added auto-repeating MOTIF-JUMP interactor
-;;;  04/09/92  Ed Pervin - Changed defvar of motif-tab-priority-level
-;;;		 and error-priority-level to proclaim (to eliminate warning).
-;;;  04/07/92  Andrew Mickish - Changed default-fs's and default-ls's to
-;;;                             regular filling-styles and line-styles
-;;;  04/06/92  Andrew Mickish - Increased contrast in *shadow-value* and
-;;;                             *highlight-value*
-;;;  03/02/92  Andrew Mickish - Added field-stippled-ls to style-array
-;;;  02/28/92  Andrew Mickish - Implemented hash-table-oriented generation of
-;;;              motif line styles and filling styles.
-;;;  02/27/92  Andrew Mickish - Removed :leftdown case from stop-action of
-;;;              MOTIF-TAB-INTER
-;;;  02/26/92  Ed Pervin - Changed convert-aux to merely return three values,
-;;;		 rather than creating an new (unneeded) opal:color object.
-;;;  01/28/92  Ed Pervin - Provide is not defined in CMUCL.
-;;;  12/05/91  Andrew Mickish - Changed :active formula of MOTIF-TRILL.
-;;;  10/13/91  Andrew Mickish - Changed :stop-when from :if-any to NIL.
-;;;              Added :leftdown case to stop-action of MOTIF-TAB-INTER.
-;;;  10/08/91  Andrew Mickish - Added fast-redraw to motif-selection-box
-;;;  05/13/91  Edward Pervin - In case statement, changed (NIL NIL)
-;;;		 to ((NIL) NIL)
-;;;  04/17/91  Andrew Mickish - Fixed MOTIF-TAB-INTER to consider single
-;;;              object case
-;;;  04/17/91  Andrew Mickish - Changed occurrences of "motif-scrolling-text-
-;;;              box" to "motif-scrolling-labeled-box"
-;;;  04/08/91  Edward Pervin - #\control-tab not defined in KCL.
-;;;  03/01/91  Andrew Mickish - Created
-;;;
+;;   04/19/93  Andrew Mickish - Added :field-stippled-line-style
+;;   02/22/93  Brad Myers - Added MOTIF-RECT
+;;   12/15/92  Andrew Mickish - Added type and parameter declarations;
+;;               removed references to ERROR-PRIORITY-LEVEL
+;;   06/24/92  Andrew Mickish - Added auto-repeating MOTIF-JUMP interactor
+;;   04/09/92  Ed Pervin - Changed defvar of motif-tab-priority-level
+;; 		 and error-priority-level to proclaim (to eliminate warning).
+;;   04/07/92  Andrew Mickish - Changed default-fs's and default-ls's to
+;;                              regular filling-styles and line-styles
+;;   04/06/92  Andrew Mickish - Increased contrast in *shadow-value* and
+;;                              *highlight-value*
+;;   03/02/92  Andrew Mickish - Added field-stippled-ls to style-array
+;;   02/28/92  Andrew Mickish - Implemented hash-table-oriented generation of
+;;               motif line styles and filling styles.
+;;   02/27/92  Andrew Mickish - Removed :leftdown case from stop-action of
+;;               MOTIF-TAB-INTER
+;;   02/26/92  Ed Pervin - Changed convert-aux to merely return three values,
+;; 		 rather than creating an new (unneeded) opal:color object.
+;;   01/28/92  Ed Pervin - Provide is not defined in CMUCL.
+;;   12/05/91  Andrew Mickish - Changed :active formula of MOTIF-TRILL.
+;;   10/13/91  Andrew Mickish - Changed :stop-when from :if-any to NIL.
+;;               Added :leftdown case to stop-action of MOTIF-TAB-INTER.
+;;   10/08/91  Andrew Mickish - Added fast-redraw to motif-selection-box
+;;   05/13/91  Edward Pervin - In case statement, changed (NIL NIL)
+;; 		 to ((NIL) NIL)
+;;   04/17/91  Andrew Mickish - Fixed MOTIF-TAB-INTER to consider single
+;;               object case
+;;   04/17/91  Andrew Mickish - Changed occurrences of "motif-scrolling-text-
+;;               box" to "motif-scrolling-labeled-box"
+;;   04/08/91  Edward Pervin - #\control-tab not defined in KCL.
+;;   03/01/91  Andrew Mickish - Created
 
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(MOTIF-TAB-PRIORITY-LEVEL MOTIF-TAB-INTER MOTIF-MENU-INTER
 	    MOTIF-BACKGROUND MOTIF-RECT))
   (proclaim '(special MOTIF-TAB-PRIORITY-LEVEL MOTIF-SCROLLING-LABELED-BOX)))
@@ -61,33 +65,31 @@
 (defvar MOTIF-GADGETS-INIT
   (dolist (pair '((:GAD-scroll-parts "GAD-scroll-parts")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) common-lisp-user::Garnet-Gadgets-PathName)))))
+      (load (merge-pathnames (cadr pair) CL-USER::Garnet-Gadgets-PathName)))))
 
 
-;;;  Values for changing the brightness of the foreground-color
+;;  Values for changing the brightness of the foreground-color
 (defvar *BACKGROUND-VALUE* .85)
 (defvar *SHADOW-VALUE* .24)
 (defvar *HIGHLIGHT-VALUE* 1.45)
 
-;;;
-;;;  Color Utility Functions
-;;;
+
+;;; Color Utility Functions
+;;
 
-;;; This function is used to compute the shades of the Motif colors in the
-;;; Motif gadgets.  Given a color and a brightness adjustment, the function
-;;; returns a color which is "brighter" or "dimmer" based on the adjustment
-;;; factor.
-;;;        | Y |   | .3   .59  .11 | | R |
-;;;        | I | = | .6  -.28 -.32 | | G |       ( Y = Brightness )
-;;;        | G |   | .21 -.52  .31 | | B |
-;;; Given the RGB values, multiply by the above matrix to get YIG values.
-;;; Multiply Y by the adjustment to get the new brightness, then multiply
-;;; the new YIG matrix by the inverse of the original 3x3 matrix.
+;; This function is used to compute the shades of the Motif colors in the
+;; Motif gadgets.  Given a color and a brightness adjustment, the function
+;; returns a color which is "brighter" or "dimmer" based on the adjustment
+;; factor.
+;;        | Y |   | .3   .59  .11 | | R |
+;;        | I | = | .6  -.28 -.32 | | G |       ( Y = Brightness )
+;;        | G |   | .21 -.52  .31 | | B |
+;; Given the RGB values, multiply by the above matrix to get YIG values.
+;; Multiply Y by the adjustment to get the new brightness, then multiply
+;; the new YIG matrix by the inverse of the original 3x3 matrix.
 (defun CONVERT-AUX (color adjustment)
   (if color
-      ; Return three values
+      ;; Return three values
       (let* ((red (g-value color :red))
 	     (green (g-value color :green))
 	     (blue (g-value color :blue))
@@ -136,10 +138,10 @@
    (:stipple opal::gray-fill-bitmap))
 
 
-;;;
+
 ;;; Predefined motif line-styles and filling-styles to improve performance
-;;; in the usual case that everything is motif-gray.
-;;;
+;;  in the usual case that everything is motif-gray.
+;;
 (defvar *foreground-fill-index* 0)
 (defvar *background-fill-index* 1)
 (defvar *shadow-fill-index* 2)
@@ -230,9 +232,9 @@
     
 
 
-;;; This function is used as the :start-where of the button panel interactors
-;;; to make sure that "invalid" items are not selected.
-;;;
+;; This function is used as the :start-where of the button panel interactors
+;; to make sure that "invalid" items are not selected.
+;;
 (defun MOTIF-ELEMENT-OF-NOT-ILLEGAL (obj inter event)
   (declare (ignore inter))
   (when (eq (g-value obj :window) (inter:event-window event)) ;--bam
@@ -241,10 +243,10 @@
       (if (and el (g-value el :active-p)) el NIL))))
 
 
-;;; This function is called when the mouse is clicked in the trough of the
-;;; scroll bars or the slider.  It causes the :value to be inc/decremented
-;;; by :page-incr.
-;;;
+;; This function is called when the mouse is clicked in the trough of the
+;; scroll bars or the slider.  It causes the :value to be inc/decremented
+;; by :page-incr.
+;;
 (defun MOTIF-JUMP-FN (interactor mouse-coordinate indicator-coordinate)
   (let* ((bar (g-value interactor :operates-on))
 	 (value (g-value bar :value))
@@ -277,9 +279,11 @@
 		  (s-value bar :value val-2)))))))
 
 
-;;; This function is used by the keyboard interactors in the scroll bars and
-;;; slider to change the :value with the arrow keys.
-;;;
+;; This function is used by the keyboard interactors in the scroll bars and
+;; slider to change the :value with the arrow keys.
+;; FMG It is also used by the scroll wheel support (the scroll wheel is treated
+;; as if it were clicking on the trill button).
+;;
 (defun MOTIF-KEY-TRILL-FN (interactor obj)
   (declare (ignore obj))
   (let* ((bar (g-value interactor :operates-on))
@@ -310,8 +314,8 @@
     (kr-send bar :selection-function bar (g-value bar :value))))
 
 
-;;; This object is a prototype for all of the Motif gadgets.  It defines all
-;;; the color slots for the Motif gadgets.
+;; This object is a prototype for all of the Motif gadgets.  It defines all
+;; the color slots for the Motif gadgets.
 (create-instance 'MOTIF-GADGET-PROTOTYPE opal:aggregadget
    (:foreground-color opal:MOTIF-GRAY)
    (:style-array (o-formula (let ((foreground-color (gvl :foreground-color)))
@@ -361,9 +365,8 @@
 		   MOTIF-THIN-STIPPLED-LINE-STYLE))))
 
 
-
-;;; This object is the "raised" or "depressed" box that is ubiquitous in Motif.
-;;;
+;; This object is the "raised" or "depressed" box that is ubiquitous in Motif.
+;;
 (create-instance 'MOTIF-BOX opal:aggregadget
    (:right (o-formula (+ (gvl :left) (gvl :width))))
    (:bottom (o-formula (+ (gvl :top) (gvl :height))))
@@ -402,7 +405,6 @@
 				 (if (gv (kr-path 1 :parent) :depressed-p)
 				     (gv p :background-fill)
 				     (gv p :foreground-fill)))))))))
-
 
 
 (create-instance 'MOTIF-RECT gg::MOTIF-GADGET-PROTOTYPE
@@ -453,10 +455,9 @@
 				     (gv p :foreground-fill)))))))))
 
 
-
-;;; This is the outline box associated with keyboard operations on the
-;;; gadgets.
-;;;
+;; This is the outline box associated with keyboard operations on the
+;; gadgets.
+;; 
 (create-instance 'MOTIF-SELECTION-BOX opal:rectangle
    (:left (o-formula (gvl :obj-over :left)))
    (:top (o-formula (gvl :obj-over :top)))
@@ -474,9 +475,9 @@
 					   :foreground-line-style))))
 				 
 
-;;; Given a window, this rectangle will expand to the window's dimensions and
-;;; will have a :filling-style corresponding to the :foreground-color.  On a
-;;; black-and-white screen, the :filling-style will be NIL.
+;; Given a window, this rectangle will expand to the window's dimensions and
+;; will have a :filling-style corresponding to the :foreground-color.  On a
+;; black-and-white screen, the :filling-style will be NIL.
 (create-instance 'MOTIF-BACKGROUND opal:rectangle
    :declare ((:parameters :foreground-color)
 	     (:type ((is-a-p opal:color) :foreground-color)))
@@ -499,8 +500,8 @@
 				 (:foreground-color fg)))))
 			NIL))))
 
-;;; This interactor is for the arrows on the scroll bars and slider.
-;;;
+;; This interactor is for the arrows on the scroll bars and slider.
+;;
 (create-instance 'MOTIF-TRILL inter:button-interactor
    (:active (o-formula (let ((p (gvl :operates-on :parent)))
 			 (and (gvl :operates-on :visible)
@@ -520,8 +521,8 @@
 					  :value)))))
 
 
-;;; This interactor is used when the mouse is clicked in the trough of the
-;;; scroll bars or slider
+;; This interactor is used when the mouse is clicked in the trough of the
+;; scroll bars or slider
 (create-instance 'MOTIF-JUMP inter:Button-Interactor
   (:window (o-formula (gv-local :self :operates-on :window)))
   (:active (o-formula (let ((p (gvl :operates-on)))
@@ -538,9 +539,9 @@
        (SLIDE-FINAL-FN interactor obj))))
 
 
-;;; This interactor is used when the mouse is clicked on a single button
-;;; (i.e., not part of a panel).
-;;;
+;; This interactor is used when the mouse is clicked on a single button
+;; (i.e., not part of a panel).
+;;
 (create-instance 'MOTIF-SINGLE-PRESS inter:Button-Interactor
    (:active (o-formula (and (gvl :window) (gvl :operates-on :active-p))))
    (:window (o-formula (gv-local :self :operates-on :window)))
@@ -550,13 +551,13 @@
     #'(lambda (interactor button)
 	(declare (ignore interactor))
 	(let ((selected (g-value button :selected)))
-	  ; Execute selection function
+	  ;; Execute selection function
 	  (kr-send button :selection-function button selected)))))
 
 
-;;; This interactor is used when the keyboard is used on a single button
-;;; (i.e., not part of a panel).
-;;;
+;; This interactor is used when the keyboard is used on a single button
+;; (i.e., not part of a panel).
+;;
 (create-instance 'MOTIF-SINGLE-KEY inter:Button-Interactor
    (:active (o-formula (let ((p (kr-path 0 :operates-on)))
 			 (and (gvl :window) (gv p :active-p)
@@ -581,7 +582,7 @@
 	  (kr-send button :selection-function button selected)))))
 
 
-;;    This function creates a new priority level and adds it to the front
+;; This function creates a new priority level and adds it to the front
 ;; of the interactorts priority level list.  Thus, this level has higher
 ;; priority than the default inter-levels, and it will allow the
 ;; MOTIF-TAB-INTER to get a #\tab command before any other interactor in
@@ -597,11 +598,11 @@
 (ADD-MOTIF-TAB-PRIORITY-LEVEL)
 
 
-;;; This interactor can be used to toggle the keyboard selection around a set
-;;; of motif gadgets.  When the :objects slot is set to a list of motif
-;;; gadgets, hitting the TAB key will rotate the keyboard selection through
-;;; the list.
-;;;
+;; This interactor can be used to toggle the keyboard selection around a set
+;; of motif gadgets.  When the :objects slot is set to a list of motif
+;; gadgets, hitting the TAB key will rotate the keyboard selection through
+;; the list.
+;;
 (create-instance 'MOTIF-TAB-INTER inter:button-interactor
    :declare ((:parameters :window :objects :rank :start-where
 			  :start-event :waiting-priority :running-priority

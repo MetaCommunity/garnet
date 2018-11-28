@@ -37,7 +37,7 @@ Change log:
 
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(gest-add-example
 	    gest-classifier-train
 	    gest-done-adding 
@@ -440,13 +440,11 @@ Change log:
 ;;                 (each examples is an array of points [x1 y1 x2 y2 ...]
 ;;
 (defun gest-classifier-train (classifier class-name examples)
-    (if (not (every 'null
-                    (mapcar #'(lambda (example)
-                                  (gest-add-example example 
-                                               class-name classifier)
-                            )
-                            examples)))
-       nil 
-;;        (gest-done-adding classifier)
-    )
-)
+  (unless
+      (every 'null
+	     (mapcar #'(lambda (example)
+			 (gest-add-example example class-name classifier))
+		     examples)))
+      nil
+      ;;        (gest-done-adding classifier)
+      )

@@ -25,6 +25,9 @@
 
 ;;-----------------------------------
 
+;; XXX This demo doesn't work quite right because of some issue with how it does color.
+
+
 (defparameter shad-off 15)
 (defparameter white-off 3)
 (defparameter white-off2 (* 2 white-off))
@@ -397,7 +400,8 @@
 (defparameter fnti NIL)
 
 (defun do-stop ()
-  (opal:destroy vp))
+  (when (schema-p vp)
+    (opal:destroy vp)))
 
 (defun do-go (&key dont-enter-main-event-loop double-buffered-p)
   (setq vp (kr:create-instance NIL inter:interactor-window

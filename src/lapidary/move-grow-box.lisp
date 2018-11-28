@@ -20,7 +20,7 @@
 (dolist (gadget '("x-buttons-loader"
 		  "text-buttons-loader"
 		  ))
-  (load (common-lisp-user::garnet-pathnames gadget common-lisp-user::Garnet-Gadgets-PathName)))
+  (load (merge-pathnames gadget common-lisp-user::Garnet-Gadgets-PathName)))
 ;;;
 ;;;     Functions needed from Gilt
 (common-lisp-user::garnet-load "gilt:gilt-functions-loader")
@@ -29,7 +29,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(BOX-PARAMS)))
 
 (setf common-lisp-user::*Garnet-Object-Just-Created* 

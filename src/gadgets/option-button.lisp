@@ -37,8 +37,9 @@
 (defparameter motif-ob NIL)
 (defparameter demo-ob NIL)
 
-(eval-when (eval load compile)
-  (export '(Option-Button #+garnet-test Option-Button-Go
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export '(Option-Button 
+	    #+garnet-test Option-Button-Go
 	    #+garnet-test Option-Button-Stop)))
 
 

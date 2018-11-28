@@ -465,7 +465,7 @@ Change log:
         (:max-dist-to-mean 100)
         (:classifier  
 	 (inter:gest-classifier-read 
-	  (common-lisp-user::garnet-pathnames "demo-unistrokes-edit.classifier"
+	  (merge-pathnames "demo-unistrokes-edit.classifier"
 			   common-lisp-user::Garnet-Gesture-Data-Pathname)))
         (:final-function #'handle-edit-gesture))
 
@@ -670,9 +670,7 @@ Change log:
     (multiple-value-setq 
 	(*unistroke-classifier* *unistroke-examples*)
 	(inter:gest-classifier-read
-	 (common-lisp-user::garnet-pathnames "demo-unistrokes.classifier"
-			  #+cmu "gesture-data:"
-			  #-cmu common-lisp-user::Garnet-Gesture-Data-Pathname)))
+	 (merge-pathnames "demo-unistrokes.classifier" common-lisp-user::Garnet-Gesture-Data-Pathname)))
     (s-value UNISTROKE-ICON-AGGL :items *unistroke-examples*)
 
     ;; create a gesture interactor to recognize the unistrokes

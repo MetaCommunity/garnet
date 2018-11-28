@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -76,8 +77,7 @@ Change log:
     ))
 
 (dolist (file gilt-files)
-  (load (garnet-pathnames file
-			 Garnet-Gilt-PathName)
+  (load (merge-pathnames file Garnet-Gilt-PathName)
 	:verbose T))
 
 

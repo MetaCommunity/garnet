@@ -25,17 +25,13 @@ Change log:
 
 ;; Make sure multifont stuff is loaded.
 (unless (get :garnet-modules :multifont)
-  (load (common-lisp-user::garnet-pathnames "multifont-loader"
-			 #+cmu "opal:"
-			 #+(not cmu) common-lisp-user::Garnet-Opal-PathName)))
+  (load (merge-pathnames "multifont-loader" Garnet-Opal-PathName)))
 
 ;;; Now load the multifont gadget
 ;;;
 (unless (get :garnet-modules :multifont-gadget)
   (format t "Loading Multifont-Gadget...~%")
-  (load (common-lisp-user::garnet-pathnames "multifont-gadget"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "multifont-gadget" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done Multifont-Gadget.~%"))
 

@@ -11,6 +11,8 @@
 ;;; Write Aggregadgets to a file.  
 ;;; 
 ;;; Roger B. Dannenberg, 1990
+;;;
+;;; $Id::                                                             $
 
 #|
 ======================================================================
@@ -186,7 +188,7 @@ aggrelist.
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(write-gadget e-formula *verbose-write-gadget*
 	    *required-names* *standard-names* *defined-names*)))
 
@@ -803,11 +805,11 @@ aggrelist.
   (let ((obj (stack-top *output-stack*))
 	(state (current-state)))
     (case state
-      ((nil) ;; just output the name and we're done
+      ((nil)				; just output the name and we're done
        (tab)
        (format t "~S" (g-value obj :known-as)))
       (:name
-       (format *error-output* "output-finish not expecting :name state~%"
+       (format *error-output* "output-finish not expecting :name ~A~%"
 	       state))
       (:class
        (write-char '#\) )

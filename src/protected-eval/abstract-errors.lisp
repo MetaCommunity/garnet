@@ -263,7 +263,7 @@ test fails, the user is prompted again."
 	(if test? (return-from prompter (values val :OK))
 	  (if (typep flag 'Condition)
 	      (format stream "~&Error: ~A~%" flag)))))
-    (format stream "~&Bad Input, try again~%" prompt)))
+    (format stream "~&Bad Input, try again~%")))
 
 
 
@@ -306,11 +306,12 @@ which error occured."
   `(handler-bind
        ((error 
 	 (lambda (condition)
-	   (protect-errors context condition))))
+	   (protect-errors ,context condition))))
      ,.forms))
 
 
-(defun protected-eval (form &rest args
+(defun protected-eval (form
+		       &rest args
 		       &key (default-value nil dv?)
 			    (context (format nil "Evaluating ~S" form))
 			    (allow-debug (eq *user-type* :programmer))
@@ -339,10 +340,11 @@ This abtract function allows the type of error handler to be hidden
 from the routine which sets it up.  In particular, both
 promting-protected-eval and protected-eval could be bound to
 this symbol."
+  (declare (ignore default-value dv? context allow-debug local-abort abort-val))
   (apply #'prompting-protected-eval args))
 
 (defun protected-read (&optional (stream *standard-input*)
-				 &rest args
+		       &rest args
 		       &key (context (format nil "Reading from ~S" stream))
 			    (read-package *package*)
 			    (read-bindings nil)
@@ -382,6 +384,8 @@ This abtract function allows the type of error handler to be hidden
 from the routine which sets it up.  In particular, both
 promting-protected-eval and protected-eval could be bound to
 this symbol."
+  (declare (ignore 
+	    context read-package read-bindings default-value allow-debug local-abort abort-val))
   (apply #'prompting-protected-read stream args))
 
 (defun protected-read-from-string
@@ -499,8 +503,7 @@ number.  <stream> is the stream (default *query-io*) and <option-list>
 is the list of options (default '(:yes no)).  <message> is displayed
 first on the stream as a prompt."
   (declare (type String message) (type Stream stream in-stream out-stream)
-	   (type List option-list)
-	   (:returns (type (Member option-list) option)))
+	   (type List option-list))
   (loop
     (format out-stream  "~&;;;? ~A~%" message)
     (format out-stream ";;;? Select an option by name or number.:~%;;;?(")
@@ -528,8 +531,7 @@ number.  <stream> is the stream (default *query-io*) and <option-list>
 is the list of options (default '(:yes no)).  <message> is displayed
 first on the stream as a prompt."
   (declare (type String message) (type Stream stream in-stream out-stream)
-	   (type List option-list)
-	   (:returns (type (Member option-list) option)))
+	   (type List option-list))
   (apply #'selector message :allow-other-keys t keys))
 
 

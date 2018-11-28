@@ -132,25 +132,26 @@
   (let ((update-info (g-local-value object :update-info)))
     (when (and update-info (update-info-aggregate-p update-info))
       (dovalues (child object :components :local t)
-	(mark-window-slots-as-changed child)))))
+		(mark-window-slots-as-changed child)))))
 
 (defun set-display-slots (object a-window dirty-bit &optional (top-level T))
   (let ((update-info (g-local-value object :update-info)))
-    (when update-info		;; dzg
+    (when update-info	; dzg
       ;; when removing fast-redraw object from aggregate, change update
       ;; slots values to make it seem as if it used to be invisible, so
       ;; that if you change its position it won't be redrawn in old position.
       (when (and (null a-window)
 		 (not (update-info-aggregate-p update-info)))
 	(let ((update-slots-values
-		 (g-local-value object :update-slots-values))
+	       (g-local-value object :update-slots-values))
 	      (old-window (update-info-window update-info)))
 	  (when (and update-slots-values
 		     (aref update-slots-values 1)
 		     old-window)
 	    (setf (aref update-slots-values 0) NIL)
-	    (remove-from-invalid-objects-list object
-		(g-local-value old-window :win-update-info)))))
+	    (remove-from-invalid-objects-list
+	     object
+	     (g-local-value old-window :win-update-info)))))
 
       (when (and (g-value object :fix-update-slots)
 		 a-window)
@@ -158,8 +159,8 @@
 			 (g-local-value a-window :win-update-info))))
       
       (with-demon-disabled  (g-value opal:GRAPHICAL-OBJECT :invalidate-demon)
-       (s-value object :window
-		(setf (update-info-window update-info) a-window)))
+	(s-value object :window
+		 (setf (update-info-window update-info) a-window)))
 
       (if dirty-bit
 	  (when (g-value object :visible)
@@ -168,7 +169,7 @@
 	  (setf (update-info-dirty-p update-info) NIL))
       (when (update-info-aggregate-p update-info)
 	(dovalues (child object :components :local t)
-	  (set-display-slots child a-window dirty-bit NIL)))
+		  (set-display-slots child a-window dirty-bit NIL)))
       (if top-level
 	  (mark-window-slots-as-changed object)
 	  (setf (update-info-invalid-p update-info) NIL)))))
@@ -186,67 +187,56 @@
 	 (clear-dirty-bits child child-update-info)))))
 
 
-; invalidate-object-bbox (object)
-;
-;   This function takes an Opal graphical object and merges the its
-;   visible bbox (if any) into the window's  bbox that is to be
-;   erased and redrawn on the next update.  This is for processing an
-;   object that has changed without invalidating an update-slot (which,
-;   in general, is a bad idea anyhow).  Note that if the object has changed
-;   its *position* (ie, it moved), and not invalidated an update-slot (which
-;   should be *impossible*), the object's new location will not be merged
-;   into the drawing clip region, and so the object may be redrawn only
-;   in part or not at all.  You can fix this by using "invalidate-bbox".
+;; invalidate-object-bbox (object)
+;;
+;;   This function takes an Opal graphical object and merges the its
+;;   visible bbox (if any) into the window's  bbox that is to be
+;;   erased and redrawn on the next update.  This is for processing an
+;;   object that has changed without invalidating an update-slot (which,
+;;   in general, is a bad idea anyhow).  Note that if the object has changed
+;;   its *position* (ie, it moved), and not invalidated an update-slot (which
+;;   should be *impossible*), the object's new location will not be merged
+;;   into the drawing clip region, and so the object may be redrawn only
+;;   in part or not at all.  You can fix this by using "invalidate-bbox".
 
-;   Please note that these functions are for a VERY PARTICULAR USE --
-;   in general, if you change an interesting slot with demons disabled,
-;   you should use kr:MARK-AS-CHANGED to get the normal update procedure
-;   to notice and process the change.  Using the method described here
-;   instead, even when the object gets updated, unless you have provided
-;   YOUR OWN DRAW PROCEDURES, it will be drawn as it was last time!
-;
-; invalidate-bbox (a-window x1 y1 x2 y2)
-; 
-;   This function does the same as the one above, but it does not take
-;   an object; rather, it takes a bbox defined by (x1,y1) and (x2,y2) as
-;   the TopLeft and BottomRight.  It also must take a window (the previous
-;   function doesn't have to since it can extract it from the object).
+;;   Please note that these functions are for a VERY PARTICULAR USE --
+;;   in general, if you change an interesting slot with demons disabled,
+;;   you should use kr:MARK-AS-CHANGED to get the normal update procedure
+;;   to notice and process the change.  Using the method described here
+;;   instead, even when the object gets updated, unless you have provided
+;;   YOUR OWN DRAW PROCEDURES, it will be drawn as it was last time!
+;;
+;; invalidate-bbox (a-window x1 y1 x2 y2)
+;; 
+;;   This function does the same as the one above, but it does not take
+;;   an object; rather, it takes a bbox defined by (x1,y1) and (x2,y2) as
+;;   the TopLeft and BottomRight.  It also must take a window (the previous
+;;   function doesn't have to since it can extract it from the object).
 
 
-; This is just a support function, not to be exported!
+;; This is just a support function, not to be exported!
 (defun invalidate-bbox-support (a-window the-bbox)
-   (if (and the-bbox (bbox-valid-p the-bbox) a-window)
-      (let* ((win-ui (get-local-value a-window :update-info))
-             (win-old-bbox (if win-ui 
-                              (update-info-old-bbox win-ui)
-                           )))
-         (when win-old-bbox
-            (merge-bbox win-old-bbox the-bbox)
-         )
-      )
-   )
-)
+  (when (and the-bbox (bbox-valid-p the-bbox) a-window)
+    (let* ((win-ui (get-local-value a-window :update-info))
+	   (win-old-bbox (when win-ui (update-info-old-bbox win-ui))))
+      (when win-old-bbox
+	(merge-bbox win-old-bbox the-bbox)))))
 
-; Please see comment above
+;; Please see comment above
 (defun invalidate-object-bbox (object)
-   (let ((obj-ui (get-local-value object :update-info)))
-      (if obj-ui
-         (invalidate-bbox-support (update-info-window obj-ui)
-               (update-info-old-bbox obj-ui))
-      )
-   )
-)
+  (let ((obj-ui (get-local-value object :update-info)))
+    (when obj-ui
+      (invalidate-bbox-support (update-info-window obj-ui)
+			       (update-info-old-bbox obj-ui)))))
 
-; Temporary storage for "invalidate-bbox" function below
+;; Temporary storage for "invalidate-bbox" function below
 (defvar *opal-temp-bbox* (opal::make-bbox :valid-p T))
 
-; Please see comment above
+;; Please see comment above
 (defun invalidate-bbox (a-window x1 y1 x2 y2)
-   (when a-window
-      (setf (bbox-x1 *opal-temp-bbox*) x1)
-      (setf (bbox-y1 *opal-temp-bbox*) y1)
-      (setf (bbox-x2 *opal-temp-bbox*) x2)
-      (setf (bbox-y2 *opal-temp-bbox*) y2)
-      (invalidate-bbox-support a-window *opal-temp-bbox*)
-   )
-)
+  (when a-window
+    (setf (bbox-x1 *opal-temp-bbox*) x1)
+    (setf (bbox-y1 *opal-temp-bbox*) y1)
+    (setf (bbox-x2 *opal-temp-bbox*) x2)
+    (setf (bbox-y2 *opal-temp-bbox*) y2)
+    (invalidate-bbox-support a-window *opal-temp-bbox*)))

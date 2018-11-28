@@ -21,7 +21,7 @@
 (dolist (gadget '("radio-buttons-loader"
 		  "text-buttons-loader"
 		  ))
-  (load (common-lisp-user::garnet-pathnames gadget
+  (load (merge-pathnames gadget
 			 common-lisp-user::Garnet-Gadgets-PathName)))
 ;;;
 ;;;     Functions needed from Gilt

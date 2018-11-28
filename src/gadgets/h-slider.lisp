@@ -1,88 +1,92 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  Horizontal slider
-;;;
-;;;  Features and operation of the horizontal slider:
-;;;     1)  Drag the indicator with the left mouse button
-;;;     2)  Click the left mouse button on the slider shaft to cause the
-;;;         indicator to jump to mouse location
-;;;     3)  Click the left mouse button in the trill boxes to move the
-;;;         indicator by :scr-incr and :page-incr increments
-;;;     4)  Text above the slider shaft changes to reflect new indicator
-;;;         position.  This text may be edited directly after pressing on it
-;;;         with the left mouse button.
-;;;     5)  The top level :value slot is the position of the indicator.
-;;;         This slot may be set directly and formulae may depend on it.
-;;;     6)  The function specified in :selection-function will be executed
-;;;         whenever the value in :value changes.
-;;;
-;;;  Customizable slots:
-;;;     1)  Left, top, width
-;;;     2)  Shaft-height
-;;;     3)  Scr-trill-p  --  Whether to have trills that incr by :scr-incr
-;;;     4)  Page-trill-p --  Whether to have trills that incr by :page-incr
-;;;     5)  Scr-Incr, Page-incr  --  Values to increment position by in single
-;;;                                    and double arrow boxes, respectively
-;;;     6)  Val-1, Val-2  --  Range of values the indicator spans.
-;;;                           Val-1 corresponds to the left of the slider.
-;;;     7)  Value -- The current value selected by the user.
-;;;     8)  Selection-funciton -- Function to be executed when :value changes
-;;;     9)  Tic-marks-p -- Whether to put tic marks on the shaft
-;;;    10)  Enumerate-p -- Whether to enumerate the tic marks
-;;;    11)  Num-marks  --  The number of tic marks (including top and bottom)
-;;;    12)  Value-feedback-p  --  Whether to report indicator position to the
-;;;                               left of the shaft
-;;;    13)  Value-feedback-font -- Font to report indicator position with
-;;;    14)  Enum-font --  Font to enumerate tic marks with
-;;;    15)  Format-string -- Formatting string of indicator value
-;;;    16)  Enum-format-string -- Formatting string of enumeration
-;;;
-;;;  NOTE:  This module requires schemata defined in GAD-scroll-parts,
-;;;         GAD-slider-parts, GAD-h-arrows, and GAD-h-boxes.
-;;;
-;;;  Horizontal slider demo:
-;;;     This module contains a function which creates a window and a slider
-;;;     in the window.  To run it, enter (GARNET-GADGETS:h-slider-go).
-;;;     To stop, enter (GARNET-GADGETS:h-slider-stop).
-;;;
-;;;  Designed by Brad Myers
-;;;  Written by Andrew Mickish
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;         The Garnet User Interface Development Environment.        ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
 
+;;; $Id$
+;;
+;;  Horizontal slider
+;;
+;;  Features and operation of the horizontal slider:
+;;     1)  Drag the indicator with the left mouse button
+;;     2)  Click the left mouse button on the slider shaft to cause the
+;;         indicator to jump to mouse location
+;;     3)  Click the left mouse button in the trill boxes to move the
+;;         indicator by :scr-incr and :page-incr increments
+;;     4)  Text above the slider shaft changes to reflect new indicator
+;;         position.  This text may be edited directly after pressing on it
+;;         with the left mouse button.
+;;     5)  The top level :value slot is the position of the indicator.
+;;         This slot may be set directly and formulae may depend on it.
+;;     6)  The function specified in :selection-function will be executed
+;;         whenever the value in :value changes.
+;;
+;;  Customizable slots:
+;;     1)  Left, top, width
+;;     2)  Shaft-height
+;;     3)  Scr-trill-p  --  Whether to have trills that incr by :scr-incr
+;;     4)  Page-trill-p --  Whether to have trills that incr by :page-incr
+;;     5)  Scr-Incr, Page-incr  --  Values to increment position by in single
+;;                                    and double arrow boxes, respectively
+;;     6)  Val-1, Val-2  --  Range of values the indicator spans.
+;;                           Val-1 corresponds to the left of the slider.
+;;     7)  Value -- The current value selected by the user.
+;;     8)  Selection-funciton -- Function to be executed when :value changes
+;;     9)  Tic-marks-p -- Whether to put tic marks on the shaft
+;;    10)  Enumerate-p -- Whether to enumerate the tic marks
+;;    11)  Num-marks  --  The number of tic marks (including top and bottom)
+;;    12)  Value-feedback-p  --  Whether to report indicator position to the
+;;                               left of the shaft
+;;    13)  Value-feedback-font -- Font to report indicator position with
+;;    14)  Enum-font --  Font to enumerate tic marks with
+;;    15)  Format-string -- Formatting string of indicator value
+;;    16)  Enum-format-string -- Formatting string of enumeration
+;;
+;;  NOTE:  This module requires schemata defined in GAD-scroll-parts,
+;;         GAD-slider-parts, GAD-h-arrows, and GAD-h-boxes.
+;;
+;;  Horizontal slider demo:
+;;     This module contains a function which creates a window and a slider
+;;     in the window.  To run it, enter (GARNET-GADGETS:h-slider-go).
+;;     To stop, enter (GARNET-GADGETS:h-slider-stop).
+;;
+;;  Designed by Brad Myers
+;;  Written by Andrew Mickish
+
+
 ;;; CHANGE LOG:
-;;; 12/01/93 Andrew Mickish - Referenced parents' :visible slots in formulas
-;;; 05/26/93 Andrew Mickish - Fixed constant declarations for new aggrelists
-;;; 12/14/92 Andrew Mickish - Added type and parameter declarations
-;;; 09/17/92 Andrew Mickish - Added :top, :width, and :height slots to
-;;;            H-SLIDER-INDICATOR to reduce invalidations of top-level :height
-;;; 04/30/92 Andrew Mickish - Called get-standard-font for fonts
-;;; 02/07/92 Andrew Mickish - Added :maybe-constant slots
-;;; 02/15/91 Andrew Mickish - Changed :string of TIC-MARKS's :item-prototype
-;;;            to avoid round-off error.
-;;; 11/30/90 Pavan Reddy - made appropriate modifications so :format-string
-;;;            and :enum-format-string are used to format numbers in order to
-;;;            use of floats.
-;;; 11/19/90 Pavan Reddy - altered formulas in H-TIC-MARKS and PROTO-H-TIC so
-;;;          :height and :items of H-TIC-MARKS are computed correctly.
-;;; 04/09/90 Robert Cook - remove extra ')' at end of creation of 'H-END-MARKS.
-;;; 01/18/90 Andrew Mickish - Changed :box of H-SLIDER-INDICATOR to '(0 0 0 0),
-;;;             Added :scroll-p to H-SLIDER
+;; 12/01/93 Andrew Mickish - Referenced parents' :visible slots in formulas
+;; 05/26/93 Andrew Mickish - Fixed constant declarations for new aggrelists
+;; 12/14/92 Andrew Mickish - Added type and parameter declarations
+;; 09/17/92 Andrew Mickish - Added :top, :width, and :height slots to
+;;            H-SLIDER-INDICATOR to reduce invalidations of top-level :height
+;; 04/30/92 Andrew Mickish - Called get-standard-font for fonts
+;; 02/07/92 Andrew Mickish - Added :maybe-constant slots
+;; 02/15/91 Andrew Mickish - Changed :string of TIC-MARKS's :item-prototype
+;;            to avoid round-off error.
+;; 11/30/90 Pavan Reddy - made appropriate modifications so :format-string
+;;            and :enum-format-string are used to format numbers in order to
+;;            use of floats.
+;; 11/19/90 Pavan Reddy - altered formulas in H-TIC-MARKS and PROTO-H-TIC so
+;;          :height and :items of H-TIC-MARKS are computed correctly.
+;; 04/09/90 Robert Cook - remove extra ')' at end of creation of 'H-END-MARKS.
+;; 01/18/90 Andrew Mickish - Changed :box of H-SLIDER-INDICATOR to '(0 0 0 0),
+;;             Added :scroll-p to H-SLIDER
 
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(H-Slider))
   #+garnet-test
   (export '(H-Slider-Go H-Slider-Stop
 	    H-Slider-Win H-Slider-Top-Agg H-Slider-Obj)))
 
+;;; Instances.
 (create-instance 'H-SLIDER-VALUE-FEEDBACK opal:aggregadget
    (:left (o-formula (gv (kr-path 0 :parent) :left)))
    (:top (o-formula (gv (kr-path 0 :parent) :value-feedback-top)))
@@ -194,7 +198,6 @@
    (:fast-redraw-p T)
    (:draw-function :xor))
 
-
 (create-instance 'H-SLIDER opal:aggregadget
    :declare ((:parameters :left :top :width :shaft-height :scr-incr :page-incr
 			  :val-1 :val-2 :num-marks :scr-trill-p :page-trill-p
@@ -223,15 +226,15 @@
    (:shaft-height 20)
    (:scr-incr 1)
    (:page-incr 5)
-   (:val-1 0)          ;; Range of values
-   (:val-2 100)        ;;   slider may assume
-   (:num-marks 11)       ;; Includes left and right end marks
-   (:tic-marks-p T)      ;; Whether to put tic marks on the shaft
-   (:enumerate-p T)      ;; Whether to add numbers to shaft or not
+   (:val-1 0)				; Range of values
+   (:val-2 100)				; slider may assume
+   (:num-marks 11)			; Includes left and right end marks
+   (:tic-marks-p T)			; Whether to put tic marks on the shaft
+   (:enumerate-p T)			; Whether to add numbers to shaft or not
    (:scr-trill-p T)
    (:page-trill-p T)
    (:scroll-p T)
-   (:value-feedback-p T) ;; Whether to report slider position beside shaft
+   (:value-feedback-p T)		; Whether to report slider position beside shaft
    (:value-feedback-font opal:default-font)
    (:enum-font (opal:get-standard-font NIL NIL :small))
    (:format-string "~a")
@@ -245,8 +248,8 @@
 
    ;; Generally non-customizable slots
    ;;
-   ; The width and height of the value feedback box is determined by the width
-   ; and height of the widest and tallest value(s) to be displayed.
+   ;; The width and height of the value feedback box is determined by the width
+   ;; and height of the widest and tallest value(s) to be displayed.
    (:widest-value-width
     (o-formula (max (opal:string-width (gvl :value-feedback-font)
 				       (format NIL (gvl :format-string)
@@ -270,9 +273,9 @@
 					  (+ 7 (gvl :highest-value-height))
 					  0)))
 
-   ;  This formula, along with the formula in :shaft-top, guarantees that the
-   ;  the value feedback box is centered vertically with the shaft, while the
-   ;  feedback box does not extend above the top of the shaft.
+   ;; This formula, along with the formula in :shaft-top, guarantees that the
+   ;; the value feedback box is centered vertically with the shaft, while the
+   ;; feedback box does not extend above the top of the shaft.
    (:value-feedback-top
     (o-formula (if (> (gvl :value-feedback-height)
 		      (gvl :shaft-height))
@@ -311,18 +314,18 @@
 				  (gvl :right-page-left))))
 
    
-   ;  If the value feedback box and/or the shaft is too short, then the arrow-
-   ;  head may extend above the :top without this complicated formula for
-   ;  :shaft-top.  The formula considers every possible relationship between
-   ;  these heights and guarantees that the indicator does not overshoot :top.
-   ;  The distance that the arrowhead extends above the shaft line is hard-
-   ;  coded as 12; the :length of the arrowhead is 10, and it floats 2 pixels
-   ;  above the shaft line.
+   ;; If the value feedback box and/or the shaft is too short, then the arrow-
+   ;; head may extend above the :top without this complicated formula for
+   ;; :shaft-top.  The formula considers every possible relationship between
+   ;; these heights and guarantees that the indicator does not overshoot :top.
+   ;; The distance that the arrowhead extends above the shaft line is hard-
+   ;; coded as 12; the :length of the arrowhead is 10, and it floats 2 pixels
+   ;; above the shaft line.
    (:shaft-top
     (o-formula (if (> (gvl :value-feedback-height)
 		      (gvl :shaft-height))
-		   ; Then put the value feedback box at the top and center
-		   ; the shaft accordingly.
+		   ;; Then put the value feedback box at the top and center
+		   ;; the shaft accordingly.
 		   (if (< (round (gvl :value-feedback-height) 2) 12)
 		       (+ (gvl :top)
 			  (- 12 (round (gvl :value-feedback-height)
@@ -330,8 +333,8 @@
 		       (- (+ (gvl :top)
 			     (round (gvl :value-feedback-height) 2))
 			  (round (gvl :shaft-height) 2)))
-		   ; Else, put the shaft at the top.  Make sure that the
-		   ; indicator does not extend above the top.
+		   ;; Else, put the shaft at the top.  Make sure that the
+		   ;; indicator does not extend above the top.
 		   (if (< (round (gvl :shaft-height) 2) 12)
 		       (+ (gvl :top)
 			  (- 12 (round (gvl :shaft-height) 2)))
@@ -375,21 +378,23 @@
       (:LEFT-PAGE-TRILL ,left-page-trill)
       (:RIGHT-PAGE-TRILL ,right-page-trill)))
 
-   
    (:interactors
       `((:SLIDE ,slide-inter                ; Indicator follows mouse
 		(:attach-point :w))         ; ***Arrowhead/Interactors hack
 	(:JUMP ,jump-inter                  ; Indicator jumps to mouse position
-	       (:attach-point :w)))))       ; ***Arrowhead/Interactors hack
+	       (:attach-point :w))
+	(:WHEEL-UP ,wheel-up-inter)
+	(:WHEEL-DOWN ,wheel-down-inter
+		     :extra-function ,#'val-2-WHEEL-fn))))
 
 
-;(s-value H-SLIDER :notice-items-changed #'opal:tic-marks-changed)
+;;;     (s-value H-SLIDER :notice-items-changed #'opal:tic-marks-changed)
 
 
-;;;
+
 ;;;  DEMO FUNCTION
-;;;
-
+;;
+;;
 #+garnet-test (defparameter h-slider-win NIL)
 #+garnet-test (defparameter h-slider-top-agg NIL)
 #+garnet-test (defparameter h-slider-obj NIL)

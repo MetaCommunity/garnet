@@ -1,64 +1,80 @@
 ;;;; CarGo
-;;;
-;;; CarGo is copyright (c) 1993 by Peter Dudey
-;;;
-;;; Thanks to:
-;;;  All those involved with Garnet, Lucid Common LISP, GNU Emacs, and the OSU department of computer science
-;;;  Jim Levenick, for all of his help in Go
-;;;  Bob French, for introducing me to LISP and GNU Emacs
-;;;  David Kosbie, for extensive help with Garnet
-;;;
-;;; To run CarGo, load this file into Lucid Common LISP, and type:
-;;;  (cargo:do-go)
-;;;
+;;
+;;  CarGo is copyright (c) 1993 by Peter Dudey
+;;
+;;  Thanks to:
+;;  All those involved with Garnet, Lucid Common LISP, GNU Emacs, 
+;;  and the OSU department of computer science
+;;
+;;  Jim Levenick, for all of his help in Go
+;;  Bob French, for introducing me to LISP and GNU Emacs
+;;  David Kosbie, for extensive help with Garnet
+;;
+;;  To run CarGo, load this file into Lucid Common LISP, and type:
+;;  (cargo:do-go)
 
 
-;; Package and initialization stuff
+
+;;; Package and initialization stuff
 
-(defpackage "CARGO")
+(defpackage "CARGO"
+  (:use :kr :common-lisp)
+  (:export do-go do-stop)		; Garnet standard is to export these two functions
+  )
+(in-package "CARGO")			; This is the CarGo package
 
-(in-package "CARGO")							    ; This is the CarGo package
-(export '(do-go do-stop))						    ; Garnet standard is to export these two functions
-(eval-when (compile load eval)
-	   (unless (find-package "KR")
-		   (error "You need to load Garnet first."))
-	   (defvar initialization					    ; So this will only be done once
-	     (progn
-	       (common-lisp-user::garnet-load "gadgets:menubar-loader")		    ; The menubar gadget
-	       (use-package 'kr))))					    ; Use Garnet's KR object package
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-package "KR")
+    (error "You need to load Garnet first."))
+  (defvar initialization		; So this will only be done once
+    (progn
+      (common-lisp-user::garnet-load "gadgets:menubar-loader") ; The menubar gadget
+      (use-package 'kr))))				       ; Use Garnet's KR object package
 
+
+;;; Constants
 
-;; Constants
+(defvar *board-lines* 5
+  "Number of lines on the board.")
+(defparameter *board-points* (* *board-lines* *board-lines*)
+  "Number of points on the board.")
+(defparameter *stone-width* 35
+  "Width of graphical stones, in pixels.")
+(defparameter *stone-offset* (round *stone-width* 2)
+  "Number of pixels from center to edge of a graphical stone.")
+(defparameter *handicap-point-width* (round *stone-width* 4)
+  "Width of handicap dots, in pixels.")
+(defparameter *handicap-point-offset* (round *stone-width* 8)
+  "Number of pixels from center to edge of a handicap point.")
+(defparameter *board-width* (* *board-lines* *stone-width*)
+  "Width of the board, in pixels.")
+(defparameter *window-width* (+ *board-width* *stone-width*)
+  "Width of window, in pixels.")
+(defvar *factorial-array* (make-array 181 :initial-element NIL)
+  "Factorials of 0 through 181.")
 
-(defvar *board-lines* 5                                                     "Number of lines on the board.")
-(defparameter *board-points* (* *board-lines* *board-lines*)                "Number of points on the board.")
-(defconstant *stone-width* 35                                               "Width of graphical stones, in pixels.")
-(defconstant *stone-offset* (round *stone-width* 2)                         "Number of pixels from center to edge of a graphical stone.")
-(defconstant *handicap-point-width* (round *stone-width* 4)                 "Width of handicap dots, in pixels.")
-(defconstant *handicap-point-offset* (round *stone-width* 8)                "Number of pixels from center to edge of a handicap point.")
-(defparameter *board-width* (* *board-lines* *stone-width*)                 "Width of the board, in pixels.")
-(defparameter *window-width* (+ *board-width* *stone-width*)                "Width of window, in pixels.")
-(defvar *factorial-array* (make-array 181 :initial-element NIL)             "Factorials of 0 through 181.")
+
+;;; Global variables (that aren't objects)
 
+(defparameter *row-aggregates* (make-array *board-lines*)
+  "Array of aggrelists containing graphical stones.")
+(defparameter *chains* NIL
+  "List of chains of adjacent stones.")
+(defparameter *objects* NIL
+  "Master list of instances, to be destroyed by do-stop.")
 
-;; Global variables (that aren't objects)
+
+;;; Objects that may be referred to before they are created
 
-(defparameter *row-aggregates* (make-array *board-lines*)                   "Array of aggrelists containing graphical stones.")
-(defparameter *chains* NIL                                                  "List of chains of adjacent stones.")
-(defparameter *objects* NIL                                                 "Master list of instances, to be destroyed by do-stop.")
+(proclaim '(special board-data		; Extensive data on points and chains
+		    go-window		; The window containing all of the graphics
+		    top-aggregate	; The aggregate for GO-WINDOW
+		    board-background	; The picture of the board
+		    stone-setter	; The button for playing stones
+		    life-checker))	; The button for checking life
 
-
-;; Objects that may be referred to before they are created
-
-(proclaim '(special board-data						    ; Extensive data on points and chains
-		    go-window						    ; The window containing all of the graphics
-		    top-aggregate					    ; The aggregate for GO-WINDOW
-		    board-background					    ; The picture of the board
-		    stone-setter					    ; The button for playing stones
-		    life-checker))					    ; The button for checking life
-
-
-;; Utility functions used in several places
+
+;;; Utility functions used in several places
 
 (defun pixel-to-row (pixel)
   "Returns the board row closest to a particular pixel position (in one dimension)."
@@ -69,7 +85,7 @@
 
 (defun message-box (message)
   "Creates a box with a message on it.  Clicking on the box destroys it."
-  (create-instance							    ; Create a window for the message
+  (create-instance			; Create a window for the message
    'message-window inter:interactor-window
    (:left 100)
    (:top 100)
@@ -79,16 +95,16 @@
     (max (opal:string-width opal:default-font message) 217))
    (:modal-p T)
    (:title "(Click in message to continue)"))
-  (s-value message-window :aggregate					    ; Create an aggregate for the window
+  (s-value message-window :aggregate	; Create an aggregate for the window
 	   (create-instance
 	    'message-aggregate opal:aggregate))
-  (create-instance							    ; Create the text
+  (create-instance			; Create the text
    'message-text opal:multi-text
    (:justification :center)
    (:string message))
-  (opal:add-component message-aggregate message-text)			    ; Install the text
-  (opal:update message-window)						    ; Update the window
-  (create-instance							    ; Create a button to destroy all this stuff
+  (opal:add-component message-aggregate message-text) ; Install the text
+  (opal:update message-window)			      ; Update the window
+  (create-instance			              ; Create a button to destroy all this stuff
    'message-button inter:button-interactor
    (:window message-window)
    (:start-where (list :in message-text))
@@ -98,82 +114,82 @@
 			(opal:destroy message-window)))))
 
 (defun score-mode ()
-  "Destroys STONE-SETTER and sets up new ones to allow players to remove dead chains.  As a side effect, LIFE-CHECKER is changed so
-that when the right button is clicked, the score is counted and reported."
+  "Destroys STONE-SETTER and sets up new ones to allow players to remove dead chains.  As a
+side effect, LIFE-CHECKER is changed so that when the right button is clicked, the score is
+counted and reported."
   (opal:destroy stone-setter)
-  (create-instance							    ; A similar "button", using the right button, checking life
-   'dead-chain-remover inter:button-interactor
-   (:continuous NIL)
-   (:start-where `(:in ,board-background))
-   (:start-event :leftdown)
-   (:window go-window)
-   (:final-function
-    #'(lambda (button object-over)
-	(declare (ignore button object-over))
-	(let* ((row (pixel-to-row (inter::event-y inter::*current-event*)))
-	       (column (pixel-to-row (inter::event-x inter::*current-event*)))
-	       (chain (g-value (aref (g-value board-data :points) row column) :chain)))
-	  (if chain							    ; If there's a stone there
-	      (let ()
-		(dolist (dead-stone (g-value chain :stones))		    ; For each stone in the captured group
-			(s-value dead-stone :color NIL)			    ;  set its :COLOR to NIL
-			(opal:destroy (g-value dead-stone :graphical-stone)) ;  destroy the graphical stone
-			(s-value dead-stone :graphical-stone NIL))	    ;  set the point's :GRAPHICAL-STONE slot to NIL
-		(opal:update go-window))
-	    (inter:beep))))))						    ;  otherwise beep
-    (s-value life-checker :final-function
-	     #'(lambda (button object-over)
-		 (declare (ignore button object-over))
-		 (kr-send board-data :count-score))))
+  (create-instance		    ; A similar "button", using the right button, checking life
+      'dead-chain-remover inter:button-interactor
+    (:continuous NIL)
+    (:start-where `(:in ,board-background))
+    (:start-event :leftdown)
+    (:window go-window)
+    (:final-function
+     #'(lambda (button object-over)
+	 (declare (ignore button object-over))
+	 (let* ((row (pixel-to-row (inter::event-y inter::*current-event*)))
+		(column (pixel-to-row (inter::event-x inter::*current-event*)))
+		(chain (g-value (aref (g-value board-data :points) row column) :chain)))
+	   (if chain			; If there's a stone there
+	       (progn
+		 (dolist (dead-stone (g-value chain :stones)) ; For each stone in the captured group
+		   (s-value dead-stone :color NIL)	      ;  set its :COLOR to NIL
+		   (opal:destroy (g-value dead-stone :graphical-stone)) ;  destroy the graphical stone
+		   (s-value dead-stone :graphical-stone NIL)) ;  set the point's :GRAPHICAL-STONE slot to NIL
+		 (opal:update go-window))
+	       (inter:beep))))))	;  otherwise beep
+  (s-value life-checker :final-function
+	   #'(lambda (button object-over)
+	       (declare (ignore button object-over))
+	       (kr-send board-data :count-score))))
 
+
+;;; Prototypes
 
-;; Prototypes
-
-(create-instance							    ; Line drawn on board
+(create-instance			; Line drawn on board
  'proto-line opal:line
  (:line-style opal:line-2))
 
-(create-instance							    ; Handicap point drawn on board
+(create-instance			; Handicap point drawn on board
  'proto-handicap-point opal:circle
  (:width *handicap-point-width*)
  (:height *handicap-point-width*)
  (:filling-style opal:black-fill))
 
-(create-instance							    ; Graphical stone object
+(create-instance			; Graphical stone object
  'proto-stone opal:circle
  (:width *stone-width*)
  (:height *stone-width*))
 
-(create-schema								    ; Data for board point
+(create-schema		      ; Data for board point
  'proto-point
- (:color NIL)								    ; :BLACK, :WHITE, or NIL
- (:graphical-stone NIL)							    ; The picture of the stone (if any)
- (:chain NIL)								    ; The chain of adjacent stones to which the point belongs, or NIL
- (:scored NIL)								    ; This will be set to :black, :white, or :dame in scoring
- (:tag NIL))								    ; Used by various functions to prevent redundant processing
+ (:color NIL)		      ; :BLACK, :WHITE, or NIL
+ (:graphical-stone NIL)	      ; The picture of the stone (if any)
+ (:chain NIL)		      ; The chain of adjacent stones to which the point belongs, or NIL
+ (:scored NIL)		      ; This will be set to :black, :white, or :dame in scoring
+ (:tag NIL))		      ; Used by various functions to prevent redundant processing
 
-(create-schema								    ; Chain of adjacent stones
+(create-schema				; Chain of adjacent stones
  'proto-chain
- (:liberties NIL)							    ; Adjacent empty points
- (:enemies NIL)								    ; Adjacent enemy chains
- (:tag NIL))								    ; Flag for routines such as life checking
+ (:liberties NIL)			; Adjacent empty points
+ (:enemies NIL)				; Adjacent enemy chains
+ (:tag NIL))				; Flag for routines such as life checking
 
 (create-schema
  'proto-move
- (:captured NIL))							    ; The chains that were captured by this move
+ (:captured NIL))			; The chains that were captured by this move
 
-(create-schema								    ; Data about the board
+(create-schema				; Data about the board
  'proto-board-data							    
- (:points (make-array (list *board-lines* *board-lines*)		    ; An array of points
+ (:points (make-array (list *board-lines* *board-lines*) ; An array of points
 		      :initial-element NIL))
- (:ko NIL)								    ; The point, if any, where ko prohibits play
- (:player :black)							    ; Whose move it is
- (:turn 1)								    ; The turn number
- (:passes 0)								    ; How many consecutivepasses there have been
- (:history NIL))							    ; Stack of moves which have been made (for undoing)
+ (:ko NIL)				; The point, if any, where ko prohibits play
+ (:player :black)			; Whose move it is
+ (:turn 1)				; The turn number
+ (:passes 0)				; How many consecutivepasses there have been
+ (:history NIL))			; Stack of moves which have been made (for undoing)
 
-
-
+
 ;;; Points
 
 ;; Functions used by methods
@@ -194,54 +210,68 @@ that when the right button is clicked, the score is counted and reported."
 
 (defun check-neighboring-chains (point my-chain)
   "Looks at points adjacent to the newly played stone at point POINT.
-Off-board points are ignored.
-Empty points are added to the list in the :LIBERTIES slot of MY-CHAIN.
-Enemy chains are added to the list in the :ENEMIES slot of MY-CHAIN, and MY-CHAIN is added to their :ENEMIES lists.
-Friendly chains are RETURNED in a list.
-The point POINT is removed from the liberty lists of all adjacent enemy chains."
+Off-board points are ignored.  Empty points are added to the list in the :LIBERTIES slot of
+MY-CHAIN.  Enemy chains are added to the list in the :ENEMIES slot of MY-CHAIN, and MY-CHAIN is
+added to their :ENEMIES lists.  Friendly chains are RETURNED in a list.  The point POINT is
+removed from the liberty lists of all adjacent enemy chains."
   (let ((friendly-chains NIL))
     (dolist (neighbor (g-value point :adjacent))
-	    (if neighbor
-		(let ((neighboring-chain (g-value neighbor :chain)))
-		  (cond
-		   ((not neighboring-chain)				    ; The point is empty
-		    (push neighbor (g-value my-chain :liberties)))
-		   ((eq (g-value neighbor :color) (g-value point :color))    ; The point is in a friendly chain
-		    (pushnew neighboring-chain friendly-chains))
-		   (t							    ; The point is in an enemy chain
-		    (pushnew neighboring-chain (g-value my-chain :enemies))
-		    (pushnew my-chain (g-value neighboring-chain :enemies))
-		    (s-value neighboring-chain :liberties
-			     (delete point (g-value neighboring-chain :liberties))))))))
+      (if neighbor
+	  (let ((neighboring-chain (g-value neighbor :chain)))
+	    (cond
+	      ((not neighboring-chain)	; The point is empty
+	       (push neighbor (g-value my-chain :liberties)))
+	      ((eq (g-value neighbor :color)
+		   (g-value point :color)) ; The point is in a friendly chain
+	       (pushnew neighboring-chain friendly-chains))
+	      (t			; The point is in an enemy chain
+	       (pushnew neighboring-chain (g-value my-chain :enemies))
+	       (pushnew my-chain (g-value neighboring-chain :enemies))
+	       (s-value neighboring-chain :liberties
+			(delete point (g-value neighboring-chain :liberties))))))))
     friendly-chains))
 
 (defun do-any-captures-around (point)
-  "Checks to see if any of the points adjacent to POINT are enemy points with no liberties.  If so, they are removed from the enemy lists
-of their enemies and from *CHAINS*.  All of the points in the captured chain are set to :COLOR NIL, and added to the liberty lists of chains
+  "Checks to see if any of the points adjacent to POINT are enemy points with no liberties.  
+If so, they are removed from the enemy lists of their enemies and from *CHAINS*.  All of
+the points in the captured chain are set to :COLOR NIL, and added to the liberty lists of chains
 to which they are adjacent.
 Returns a list of chains which were captured."
   (let ((captured-chains NIL))
     (dolist (neighbor (g-value point :adjacent))
-	    (if (and neighbor						    ; If the point exists, and is in a libertyless enemy chain
-		     (g-value neighbor :chain)
-		     (not (eq (g-value point :color) (g-value neighbor :color)))
-		     (not (g-value neighbor :chain :liberties)))
-		(let ((victim (g-value neighbor :chain)))
-		  (push victim captured-chains)
-		  (setq *chains* (delete victim *chains*))
-		  (dolist (enemy (g-value victim :enemies))		    ; For each enemy of VICTIM
-			  (s-value enemy :enemies			    ;  remove VICTIM from the enemy's enemies
-				   (delete victim (g-value enemy :enemies))))
-		  (dolist (dead-stone (g-value victim :stones))		    ; For each stone in the captured group
-			  (s-value dead-stone :color NIL)		    ;  set its :COLOR to NIL
-			  (opal:destroy (g-value dead-stone :graphical-stone)) ;  destroy the graphical stone
-			  (s-value dead-stone :graphical-stone NIL)	    ;  set the point's :GRAPHICAL-STONE slot to NIL
-			  (s-value dead-stone :chain NIL)		    ;  set the point's :CHAIN slot to NIL
-			  (dolist (enemy (g-value victim :enemies))	    ;  and for each enemy of the captured chain
-				  (if (intersection (g-value dead-stone :adjacent) ;   if this point is adjacent to it
-						    (g-value enemy :stones))
-				      (push dead-stone (g-value enemy :liberties)))))))) ;   add it to the enemy's liberty list
-    captured-chains))							    ; Return the list of captured chains
+      ;; If the point exists, and is in a libertyless enemy chain
+      (when (and neighbor
+		 (g-value neighbor :chain)
+		 (not (eq (g-value point :color) (g-value neighbor :color)))
+		 (not (g-value neighbor :chain :liberties)))
+	  (let ((victim (g-value neighbor :chain)))
+	    (push victim captured-chains)
+	    (setq *chains* (delete victim *chains*))
+	    ;; For each enemy of VICTIM
+	    ;; remove VICTIM from the enemy's enemies
+	    (dolist (enemy (g-value victim :enemies))
+	      (s-value enemy :enemies
+		       (delete victim (g-value enemy :enemies))))
+	    ;; For each stone in the captured group
+	    ;; set its :COLOR to NIL
+	    (dolist (dead-stone (g-value victim :stones)) 
+	      (s-value dead-stone :color NIL)
+	      ;; destroy the graphical stone
+	      ;; set the point's :GRAPHICAL-STONE slot to NIL
+	      (opal:destroy (g-value dead-stone :graphical-stone))
+	      (s-value dead-stone :graphical-stone NIL)
+
+	      ;; set the point's :CHAIN slot to NIL
+	      ;; and for each enemy of the captured chain
+	      ;; if this point is adjacent to it
+	      ;; add it to the enemy's liberty list		    
+	      (s-value dead-stone :chain NIL)
+	      (dolist (enemy (g-value victim :enemies))
+		(if (intersection (g-value dead-stone :adjacent)
+				  (g-value enemy :stones))
+		    (push dead-stone (g-value enemy :liberties))))))))
+    ;; Return the list of captured chains
+    captured-chains))
 
 (defun list-neighbor-scores (point)
   "Returns a list of the :scored slots of points adjacent to POINT."
@@ -251,69 +281,82 @@ Returns a list of chains which were captured."
 		(push (g-value neighbor :scored) result)))
     result))
 
-
-;; Methods
+
+;;; Methods
+;;
 
 (define-method :get-played-at proto-point (self row column player move)
-  "Sets the point's color and creates a chain and a graphical stone.  The appropriate changes are made to MOVE."
-  (s-value self :color player)						    ; Set the color of the point
-  (s-value self :graphical-stone					    ; Tell STONE-SETTER to create a stone, and note it
+  "Sets the point's color and creates a chain and a graphical stone.  
+The appropriate changes are made to MOVE."
+  (s-value self :color player)		; Set the color of the point
+  (s-value self :graphical-stone	; Tell STONE-SETTER to create a stone, and note it
 	   (kr-send stone-setter :play-at row column player))
-  (let ((new-chain (s-value self :chain (create-instance		    ; Create the new chain
+  (let ((new-chain (s-value self :chain (create-instance ; Create the new chain
 					 NIL proto-chain
 					 (:stones (list self))
 					 (:color player)))))
-    (push new-chain *chains*)						    ; Add it to the *CHAINS*
-    (push new-chain *objects*)						    ; Add it to *OBJECTS* so do-stop can destroy it
+    (push new-chain *chains*)		; Add it to the *CHAINS*
+    (push new-chain *objects*)		; Add it to *OBJECTS* so do-stop can destroy it
     (s-value move :chain new-chain)
-    (s-value move :merged						    ; Look at adjacent points
+    (s-value move :merged		; Look at adjacent points
 	     (check-neighboring-chains self new-chain))
     (s-value move :merged
-	     (cons (merge-with						    ; Merge with friendly neighboring chains
+	     ;; Merge with friendly neighboring chains
+	     ;; after checking the adjacent points
+	     (cons (merge-with
 		    new-chain
-		    (g-value move :merged))				    ;  after checking the adjacent points
+		    (g-value move :merged)) 
 		   (cons new-chain
 			 (g-value move :merged)))))
   (s-value move :captured
-	   (do-any-captures-around self)))				    ; Handle any captures, and give MOVE the list of captured chains
+	   ;; Handle any captures, and give MOVE the list of captured chains
+	   (do-any-captures-around self))) 
 
 (define-method :count-self proto-point (self)
-  "Looks at own color and neighboring points to score self as :blackish, :whitish, or :unknown (still undetermined), :black,
-:white, or :dame."
+  "Looks at own color and neighboring points to score self as :blackish, :whitish,
+or :unknown (still undetermined), :black, :white, or :dame."
   (case (g-value self :scored)
-   ((:black :white :dame)						    ; If already settled, don't do anything
+    ;; If already settled, don't do anything
+   ((:black :white :dame)		
     NIL)
-   ((:blackish)								    ; The point is :blackish
+   ((:blackish)				
     (s-value self :scored
 	     (cond
 	      ((intersection (list-neighbor-scores self) '(:dame :white :whitish))
 	       :dame)
 	      (T
 	       :blackish))))
-   ((:whitish)								    ; The point is :whitish
+   ((:whitish)
     (s-value self :scored
 	     (cond
 	      ((intersection (list-neighbor-scores self) '(:dame :black :blackish))
 	       :dame)
 	      (T
 	       :whitish))))
-   ((:unknown)								    ; The point is unoccupied, and hasn't looked at neighbors
+   ;; The point is unoccupied, and hasn't looked at neighbors
+   ((:unknown)
     (let ((result (list-neighbor-scores self)))
       (s-value self :scored
 	       (cond
-		((or (member :dame result)				    ; If there are :dame adjacent,
-		     (and (intersection result '(:white :whitish))	    ;  or point leaning to both colors,
+		 ;; If there are :dame adjacent,
+		 ;; or point leaning to both colors,
+		((or (member :dame result)
+		     (and (intersection result '(:white :whitish))
 			  (intersection result '(:black :blackish))))
-		 :dame)							    ;   this is :dame
-		((and (intersection result '(:white :whitish))		    ; If there white-leaning but no black-leaning adjacent,
+		 :dame)					       ;   this is :dame
+		;; If there white-leaning but no black-leaning adjacent,
+		((and (intersection result '(:white :whitish))
 		      (not (intersection result '(:black :blackish))))
 		 :whitish)						    ;  this is :whitish
-		((and (intersection result '(:black :blackish))		    ; If there black-leaning but no white-leaning adjacent,
+		;; If there black-leaning but no white-leaning adjacent,
+		((and (intersection result '(:black :blackish))
 		      (not (intersection result '(:white :whitish))))
 		 :blackish)						    ;  this is :blackish
-		(T							    ; If there are only NIL and :unknown adjacent
-		 :unknown)))))						    ;  this is still unknown
-   (T									    ; If this is the first guess, look at own color
+		;; If there are only NIL and :unknown adjacent		
+		(T
+		 :unknown)))))		;  this is still unknown
+   ;; If this is the first guess, look at own color
+   (T
     (if (g-value self :color)
 	(s-value self :scored (g-value self :color))
       (s-value self :scored :unknown)))))
@@ -323,139 +366,155 @@ Returns a list of chains which were captured."
   (destroy-schema self))
 
 
-
+
 ;;; Chains
-;; NOTE:  The :unconditionally-alive method, and its subordinate functions, are located below in a special section
+;; NOTE:  The :unconditionally-alive method, and its subordinate functions, 
+;; are located below in a special section
 
 ;; Functions used by methods
 
 (defun merge-with (self other-chains)
   "Merges SELF and OTHER-CHAINS into a new chain, which is returned."
   (when other-chains
-	(let ((new-chain (create-instance				    ; Create a new chain
-			  NIL proto-chain
-			  (:stones NIL)
-			  (:color (g-value self :color)))))
-	  (push new-chain *OBJECTS*)					    ; Add the new chain to *OBJECTS*
-	  (dolist (chain (cons self other-chains))			    ; For each chain
-		  (dolist (stone (g-value chain :stones))		    ;  for each stone
-			  (s-value stone :chain new-chain)		    ;   tell the stone it belongs to NEW-CHAIN
-			  (pushnew stone (g-value new-chain :stones)))	    ;   and vice-versa
-		  (dolist (liberty (g-value chain :liberties))		    ;  for each liberty
-			  (pushnew liberty (g-value new-chain :liberties))) ;   add it to NEW-CHAIN's liberties
-		  (dolist (enemy (g-value chain :enemies))		    ;  for each enemy chain
-			  (pushnew enemy (g-value new-chain :enemies))	    ;   add it to NEW-CHAIN's enemies
-			  (s-value enemy :enemies
-				   (delete chain (g-value enemy :enemies))) ;   delete CHAIN
-			  (s-value enemy :enemies			    ;   and add NEW-CHAIN to ENEMY's list of enemies
-				   (pushnew new-chain (g-value enemy :enemies))))
-		  (setq *chains* (delete chain *chains*)))		    ; Remove each old chain from *CHAINS*
-	  (s-value new-chain :liberties					    ; Since the old chains need to be recoverable for undos, the new
-		   (delete (car (g-value self :stones)) (g-value new-chain :liberties))) ; stone isn't removed from their liberty lists.
-									    ; This makes sure SELF's stone isn't a liberty for NEW-CHAIN
-	  (push new-chain *chains*)					    ; Add NEW-CHAIN to *CHAINS*
-	  new-chain)))
+    (let ((new-chain (create-instance	; Create a new chain
+			 NIL proto-chain
+		       (:stones NIL)
+		       (:color (g-value self :color)))))
+      (push new-chain *OBJECTS*)	; Add the new chain to *OBJECTS*
+      (dolist (chain (cons self other-chains))
+	(dolist (stone (g-value chain :stones))
+	  ;; tell the stone it belongs to NEW-CHAIN
+	  ;; and vice-versa
+	  (s-value stone :chain new-chain)
+	  (pushnew stone (g-value new-chain :stones)))
+	;; Add each liberty to NEW-CHAIN's liberties
+	(dolist (liberty (g-value chain :liberties))       
+	  (pushnew liberty (g-value new-chain :liberties)))
+	;; Add each enemy chain to NEW-CHAIN's enemies
+	(dolist (enemy (g-value chain :enemies))       
+	  (pushnew enemy (g-value new-chain :enemies)) 
+	  (s-value enemy :enemies
+		   (delete chain (g-value enemy :enemies))) ; delete CHAIN
+	  (s-value enemy :enemies	; and add NEW-CHAIN to ENEMY's list of enemies
+		   (pushnew new-chain (g-value enemy :enemies))))
+	(setq *chains* (delete chain *chains*))) ; Remove each old chain from *CHAINS*
+      ;; Since the old chains need to be recoverable for undos, the new
+      ;; stone isn't removed from their liberty lists.
+      (s-value new-chain :liberties 
+	       (delete (car (g-value self :stones)) (g-value new-chain :liberties))) 
+      ;; This makes sure SELF's stone isn't a liberty for NEW-CHAIN
+      (push new-chain *chains*)		; Add NEW-CHAIN to *CHAINS*
+      new-chain)))
 
 (defun uncapture (self)
-  "Return the undead chain (which I cleverly didn't destroy) to *CHAINS*, re-create its stones, tell them that they now belong to this chain,
-adding SELF to the enemy lists of its enemies, and removing from their lists of liberties all adjacent members of SELF."
+  "Return the undead chain (which I cleverly didn't destroy) to *CHAINS*, 
+re-create its stones, tell them that they now belong to this chain, adding
+SELF to the enemy lists of its enemies, and removing from their lists of
+liberties all adjacent members of SELF."
   (push self *chains*)
-  (dolist (stone (g-value self :stones))				    ; For each stone in SELF
-	  (s-value stone :graphical-stone				    ;  Create a graphical stone for it
-		   (kr-send stone-setter :play-at
-			    (g-value stone :row)
-			    (g-value stone :column)
-			    (g-value self :color)))
-	  (s-value stone :color (g-value self :color))			    ;  Set the point to the proper color
-	  (s-value stone :chain self))					    ;  Tell it SELF is its chain
-  (dolist (enemy (g-value self :enemies))				    ; For each adjacent enemy chain
-	  (push self (g-value enemy :enemies))				    ;  Add SELF to its list of enemies
-	  (dolist (stone (g-value self :stones))			    ;  For each stone in self
-		  (if (member stone (g-value enemy :liberties))		    ;   If it's a liberty of the enemy chain
-		      (s-value enemy :liberties				    ;    remove it from that chain's liberty list
-			       (delete stone (g-value enemy :liberties)))))))
+  (dolist (stone (g-value self :stones))  ; For each stone in SELF
+    (s-value stone :graphical-stone	  ;  Create a graphical stone for it
+	     (kr-send stone-setter :play-at
+		      (g-value stone :row)
+		      (g-value stone :column)
+		      (g-value self :color)))
+    (s-value stone :color (g-value self :color)) ;  Set the point to the proper color
+    (s-value stone :chain self))		 ;  Tell it SELF is its chain
+  (dolist (enemy (g-value self :enemies))	 ; For each adjacent enemy chain
+    (push self (g-value enemy :enemies))	 ;  Add SELF to its list of enemies
+    (dolist (stone (g-value self :stones))	 ;  For each stone in self
+      (if (member stone (g-value enemy :liberties)) ;   If it's a liberty of the enemy chain
+	  (s-value enemy :liberties	;    remove it from that chain's liberty list
+		   (delete stone (g-value enemy :liberties)))))))
 
 
 ;; Methods
 
 (defun unmerge (merge-list)
-  "Unmerges MERGE-LIST, the first element of which is the object that receives this message, and the rest of which are chains that were
-merged to create this object.  Each chain in the cdr, therefore, has to have its members told that they now belong to SELF (the car),and SELF
-must be added to the enemy lists of each of the enemies of any members of the cdr.  The splitee must also be removed from each of these
-lists, and from *CHAINS*, and be destroyed."
+  "Unmerges MERGE-LIST, the first element of which is the object that receives this message,
+and the rest of which are chains that were merged to create this object.  Each chain in the
+cdr, therefore, has to have its members told that they now belong to SELF (the car),and SELF
+must be added to the enemy lists of each of the enemies of any members of the cdr.  The splitee
+must also be removed from each of these lists, and from *CHAINS*, and be destroyed."
   (let ((self (car merge-list)))
-    (dolist (chain (cdr merge-list))					    ; For each chain that was merged into SELF
-	    (dolist (stone (g-value chain :stones))			    ;  update the chain of each stone
-		    (s-value stone :chain chain))
-	    (dolist (enemy (g-value chain :enemies))			    ;  update enemy lists
-		    (s-value enemy :enemies (delete self (g-value enemy :enemies)))
-		    (push chain (g-value enemy :enemies)))
-	    (push chain *chains*))					    ;  add the resurrected chains to *CHAINS*
-    (setf *chains* (delete self *chains*))				    ; Remove self from *CHAINS*
-    (setq *objects* (delete self *objects*))				    ; Ditto *OBJECTS*
+    (dolist (chain (cdr merge-list))		    ; For each chain that was merged into SELF
+      (dolist (stone (g-value chain :stones))	    ;  update the chain of each stone
+	(s-value stone :chain chain))
+      (dolist (enemy (g-value chain :enemies)) ;  update enemy lists
+	(s-value enemy :enemies (delete self (g-value enemy :enemies)))
+	(push chain (g-value enemy :enemies)))
+      (push chain *chains*))		     ;  add the resurrected chains to *CHAINS*
+    (setf *chains* (delete self *chains*))   ; Remove self from *CHAINS*
+    (setq *objects* (delete self *objects*)) ; Ditto *OBJECTS*
     (opal:destroy self)))
     
 (define-method :undo-destroy proto-chain (self)
-  "A destroy method called by proto-board's :UNDO method.  SELF will always consist of exactly one stone.  Each point adjacent to
-SELF needs to have SELF removed from its list of enemies, and have the point added to its list of liberties.  The point in SELF
-needs to have its color changed and its stone set to NIL, and SELF needs to be destroyed."
+  "A destroy method called by proto-board's :UNDO method.  SELF will always consist of exactly
+one stone.  Each point adjacent to SELF needs to have SELF removed from its list of enemies,
+and have the point added to its list of liberties.  The point in SELF needs to have its color
+changed and its stone set to NIL, and SELF needs to be destroyed."
   (let ((stone (car (g-value self :stones))))
-    (dolist (neighbor (g-value stone :adjacent))			    ; Deal with the neighboring chains
-	    (if (and neighbor (g-value neighbor :chain))
-		(let ((chain (g-value neighbor :chain)))
-		  (unless (eq (g-value chain :color) (g-value self :color))
-			  (s-value chain :enemies (delete self (g-value chain :enemies)))
-			  (pushnew stone (g-value chain :liberties))))))
-    (s-value stone :color NIL)						    ; Deal with the stones in SELF
+    (dolist (neighbor (g-value stone :adjacent)) ; Deal with the neighboring chains
+      (if (and neighbor (g-value neighbor :chain))
+	  (let ((chain (g-value neighbor :chain)))
+	    (unless (eq (g-value chain :color) (g-value self :color))
+	      (s-value chain :enemies (delete self (g-value chain :enemies)))
+	      (pushnew stone (g-value chain :liberties))))))
+    (s-value stone :color NIL)		; Deal with the stones in SELF
     (s-value stone :chain NIL)
-    (opal:destroy (g-value stone :graphical-stone))			    ; Destroy objects which are no longer needed
+    (opal:destroy (g-value stone :graphical-stone)) ; Destroy objects which are no longer needed
     (setf *chains* (delete self *chains*))
     (destroy-schema self)))
 
 (define-method :flash proto-chain (self)
   "Flashes each stone belong to a point in proto-chain -- a handy debugging feature."
-  (dolist (stone (mapcar #'(lambda (point) (g-value point :graphical-stone)) (g-value self :stones)))
-	  (garnet-debug:flash stone)))
+   (dolist (stone
+	     (mapcar 
+	      #'(lambda (point)
+		  (g-value point :graphical-stone))
+	      (g-value self :stones)))
+     (garnet-debug:flash stone)))
 
 (define-method :destroy proto-chain (self)
   "Destroys the object."
   (destroy-schema self))
 
 
-
+
 ;;; Board-data
 
 ;; Methods
  
 (define-method :play-at proto-board-data (row column player)
-  "Attempts to make a move for PLAYER (:black or :white) at ROW, COLUMN.  Returns the next player if successful, otherwise NIL."
+ "Attempts to make a move for PLAYER (:black or :white) at ROW, COLUMN.  Returns the next
+player if successful, otherwise NIL."
   (when (kr-send board-data :legal-move row column player)		 
-	(let ((this-move (create-instance
-			  NIL proto-move
-			  (:ko (g-value board-data :ko))))
-	      (this-point (aref (g-value board-data :points) row column)))
-	  (push this-move *objects*)					    ; Add the object for this move to the list of objects
-	  (kr-send (aref (g-value board-data :points) row column)	    ; Tell the point it's been played at
-		   :get-played-at
-		   (aref (g-value board-data :points) row column)
-		   row
-		   column
-		   player
-		   this-move)
-	  (push this-move (g-value board-data :history))
-	  (s-value board-data :ko					    ; Set the ko value
-		   (if (and (g-value this-move :captured)
-			    (= 1					    ; If
-			       (length (g-value this-move :captured))	    ;  one chain was captured
-			       (length (g-value (car (g-value this-move :captured)) :stones)) ;  containing one stone
-			       (length (g-value this-point :chain :stones)) ;  and the chain of THIS-POINT has one stone
-			       (length (g-value this-point :chain :liberties)))) ;  and one liberty
-		       (car (g-value this-point :chain :liberties))	    ;   make that liberty the ko point
-		     NIL)))						    ;  otherwise, set it to NIL
-	(incf (g-value board-data :turn))				    ; Increment the turn
-	(s-value board-data :passes 0)					    ; Zero the tally of consecutive passes
-	(s-value board-data :player					    ; Toggle :PLAYER
-		 (if (eq (g-value board-data :player) :black) :white :black))))
+    (let ((this-move (create-instance
+			 NIL proto-move
+		       (:ko (g-value board-data :ko))))
+	  (this-point (aref (g-value board-data :points) row column)))
+      (push this-move *objects*)	; Add the object for this move to the list of objects
+      (kr-send (aref (g-value board-data :points) row column) ; Tell the point it's been played at
+	       :get-played-at
+	       (aref (g-value board-data :points) row column)
+	       row
+	       column
+	       player
+	       this-move)
+      (push this-move (g-value board-data :history))
+      (s-value board-data :ko		; Set the ko value
+	       (if (and (g-value this-move :captured)
+			(= 1					      ; If
+			   (length (g-value this-move :captured))     ;  one chain was captured
+			   (length (g-value (car (g-value this-move :captured)) :stones)) ;  containing one stone
+			   (length (g-value this-point :chain :stones)) ;  and the chain of THIS-POINT has one stone
+			   (length (g-value this-point :chain :liberties)))) ;  and one liberty
+		   (car (g-value this-point :chain :liberties))	;   make that liberty the ko point
+		   NIL)))					;  otherwise, set it to NIL
+    (incf (g-value board-data :turn))				; Increment the turn
+    (s-value board-data :passes 0)	; Zero the tally of consecutive passes
+    (s-value board-data :player		; Toggle :PLAYER
+	     (if (eq (g-value board-data :player) :black) :white :black))))
 
 (define-method :pass proto-board-data ()
   "Makes a pass move, and ends the game if appropriate."
@@ -927,80 +986,83 @@ to just after the last move made, and T is returned.  Otherwise, NIL is returned
 
 (defun create-menubar ()
   "Creates the menubar for GO-WINDOW."
-  (create-instance							    ; Create a menubar
-   'go-menu garnet-gadgets:menubar
-   (:items
-    `(("Game " NIL
-       (("About CarGo" ,#'(lambda (g m s)
-			    (declare (ignore g m s))
-			    (message-box
-			     (format NIL "CarGo is copyright (c) 1993 by Peter Dudey~2%~
-                                          I'm distributing this mainly as a demonstration for those interested~%~
-                                          writing Go programs and using Garnet.  There are better free Go~%~
-                                          programs to be had;  I recommend Igo, a crippled version of David~%~
-                                          Fotland's \"Many Faces of Go\".  See rec.games.go for info on such~%~
-                                          programs.~2%~
-                                          Permission is granted to distribute this program without changes.~%~
-                                          Altered versions may be distributed, so long as:~%~
-                                          -They are be explained in a \"Changes\" submenu of \"Game\".~%~
-                                          -The name is changed, e.g., to \"ConsGo, incorporating CarGo\".~%~
-                                          -CarGo is mentioned in any \"About\" screens/windows.~2%~
-                                          CdrGo, a program which will play against the user, and hopefully~%~
-                                          learn, should be available by sometime in 1995, unless I switch to~%~
-                                          another language...  (It's my Master's project).  I reserve exclusive~%~
-                                          rights to the names CarGo and CdrGo.~2%~
-                                          Have fun!~2%~
-                                          I can be reached at dudeyp@research.cs.orst.edu."))))
-	("Mouse Buttons" ,#'(lambda (g m s)
+  (create-instance			; Create a menubar
+      'go-menu garnet-gadgets:menubar
+    (:items
+     `(("Game " NIL
+		(("About CarGo"
+		  ,#'(lambda (g m s)
+		       (declare (ignore g m s))
+		       (message-box
+			(format NIL "CarGo is copyright (c) 1993 by Peter Dudey~2%~
+I'm distributing this mainly as a demonstration for those interested~%~
+writing Go programs and using Garnet.  There are better free Go~%~
+programs to be had;  I recommend Igo, a crippled version of David~%~
+Fotland's \"Many Faces of Go\".  See rec.games.go for info on such~%~
+programs.~2%~
+Permission is granted to distribute this program without changes.~%~
+Altered versions may be distributed, so long as:~%~
+-They are be explained in a \"Changes\" submenu of \"Game\".~%~
+-The name is changed, e.g., to \"ConsGo, incorporating CarGo\".~%~
+-CarGo is mentioned in any \"About\" screens/windows.~2%~
+CdrGo, a program which will play against the user, and hopefully~%~
+learn, should be available by sometime in 1995, unless I switch to~%~
+another language...  (It's my Master's project).  I reserve exclusive~%~
+rights to the names CarGo and CdrGo.~2%~
+Have fun!~2%~
+I can be reached at dudeyp@research.cs.orst.edu."))))
+		 ("Mouse Buttons"
+		  ,#'(lambda (g m s)
+		       (declare (ignore g m s))
+		       (message-box
+			(format NIL "Clicking on a point with the LEFT button plays there if it's legal,~%~
+or beeps if it isn't.~2%~
+Clicking on a stone with the RIGHT button tells if the stone in question~%~
+is UNCONDITIONALLY alive, i.e., can never be captured."))))
+		 ("What is Go?"
+		  ,#'(lambda (g m s)
+		       (declare (ignore g m s))
+		       (message-box
+			(format NIL "Go is an ancient oriental boardgame -- by some accounts, the oldest~%~
+boardgame still played.~2%~
+The rules are fairly simple, but better explained in person than in~%~
+text.  Computer scientists tend to play Go, so you can probably find~%~
+a player in your local CS department.  (Show them the Game/Mouse menu).~2%~
+CarGo uses Chinese counting (score = stones + territory), and three passes~%~
+end the game.~2%~
+The game is also discussed on the newsgroup rec.games.go."))))
+		 ("New Game" ,#'(lambda (g m s)
+				  (declare (ignore g m s))
+				  (do-go)))
+		 ("Quit" ,#'(lambda (g m s)
 			      (declare (ignore g m s))
-			      (message-box
-			       (format NIL "Clicking on a point with the LEFT button plays there if it's legal,~%~
-                                            or beeps if it isn't.~2%~
-                                            Clicking on a stone with the RIGHT button tells if the stone in question~%~
-                                            is UNCONDITIONALLY alive, i.e., can never be captured."))))
-	("What is Go?" ,#'(lambda (g m s)
-			    (declare (ignore g m s))
-			    (message-box
-			     (format NIL "Go is an ancient oriental boardgame -- by some accounts, the oldest~%~
-                                          boardgame still played.~2%~
-                                          The rules are fairly simple, but better explained in person than in~%~
-                                          text.  Computer scientists tend to play Go, so you can probably find~%~
-                                          a player in your local CS department.  (Show them the Game/Mouse menu).~2%~
-                                          CarGo uses Chinese counting (score = stones + territory), and three passes~%~
-                                          end the game.~2%~
-                                          The game is also discussed on the newsgroup rec.games.go."))))
-	("New Game" ,#'(lambda (g m s)
-		    (declare (ignore g m s))
-		    (do-go)))
-	("Quit" ,#'(lambda (g m s)
-		     (declare (ignore g m s))
-		     (do-stop)))))
-      ("Board Size " ,#'(lambda (g m s)
-			  (declare (ignore g m))
-			  (when (cond
-				 ((and (equal s "5x5") (not (= *board-lines* 5)))
-				  (setq *board-lines* 5))
-				 ((and (equal s "9x9") (not (= *board-lines* 9)))
-				  (setq *board-lines* 9))
-				 ((and (equal s "13x13") (not (= *board-lines* 13)))
-				  (setq *board-lines* 13))
-				 ((and (equal s "19x19") (not (= *board-lines* 19)))
-				  (setq *board-lines* 19))
-				 (T NIL))
-				(do-stop)
-				(load "cargo")				    ; Several objects need to be reconstructed, so it's
-				(do-go)))				    ;  easiest to just reload and restart
-       (("5x5" NIL)
-	("9x9" NIL)
-	("13x13" NIL)
-	("19x19" NIL)))
-      ("Move " NIL
-       (("Pass       [p]" ,#'(lambda (g m s)
-		     (declare (ignore g m s))
-		     (kr-send board-data :pass)))
-	("Undo Move  [u]" ,#'(lambda (g m s)
-			  (declare (ignore g m s))
-			  (kr-send board-data :undo))))))))
+			      (do-stop)))))
+       ("Board Size " ,#'(lambda (g m s)
+			   (declare (ignore g m))
+			   (when (cond
+				   ((and (equal s "5x5") (not (= *board-lines* 5)))
+				    (setq *board-lines* 5))
+				   ((and (equal s "9x9") (not (= *board-lines* 9)))
+				    (setq *board-lines* 9))
+				   ((and (equal s "13x13") (not (= *board-lines* 13)))
+				    (setq *board-lines* 13))
+				   ((and (equal s "19x19") (not (= *board-lines* 19)))
+				    (setq *board-lines* 19))
+				   (T NIL))
+			     (do-stop)
+			     (load "cargo") ; Several objects need to be reconstructed, so it's
+			     (do-go)))	    ;  easiest to just reload and restart
+		      (("5x5" NIL)
+		       ("9x9" NIL)
+		       ("13x13" NIL)
+		       ("19x19" NIL)))
+       ("Move " NIL
+		(("Pass       [p]" ,#'(lambda (g m s)
+					(declare (ignore g m s))
+					(kr-send board-data :pass)))
+		 ("Undo Move  [u]" ,#'(lambda (g m s)
+					(declare (ignore g m s))
+					(kr-send board-data :undo))))))))
   (opal:add-component top-aggregate go-menu)
   (opal:notice-items-changed go-menu)
   (opal:update go-window))
@@ -1010,34 +1072,34 @@ to just after the last move made, and T is returned.  Otherwise, NIL is returned
 
 (defun do-go ()
   "The main function for CarGo.  It creates all of the initial objects, which should then handle themselves."
-  (do-stop)								    ; Destroy everything in *OBJECTS*
-  (create-board-picture)						    ; Create grid, etc.
-  (create-aggregates)							    ; Create TOP-AGGREGATE and *ROW-AGGREGATES*
+  (do-stop)				; Destroy everything in *OBJECTS*
+  (create-board-picture)		; Create grid, etc.
+  (create-aggregates)			; Create TOP-AGGREGATE and *ROW-AGGREGATES*
   (create-keyboard-accelerators)
-  (push (create-instance 'board-data proto-board-data) *objects*)	    ; Create BOARD-DATA and add it to *OBJECTS*
-  (create-buttons)							    ; Create full-board "buttons" that deal with mouse clicks
-  (create-instance							    ; Create a window
-   'go-window inter:interactor-window
-   (:width *window-width*)
-   (:height *window-width*)
-   (:title "CarGo")
-   (:aggregate top-aggregate))
-  (s-value stone-setter :window go-window)				    ; Tell the STONE-SETTER button what window it's in
-  (s-value life-checker :window go-window)				    ; Tell the LIFE-CHECKER button what window it's in
+  (push (create-instance 'board-data proto-board-data) *objects*) ; Create BOARD-DATA and add it to *OBJECTS*
+  (create-buttons)		      ; Create full-board "buttons" that deal with mouse clicks
+  (create-instance		      ; Create a window
+      'go-window inter:interactor-window
+    (:width *window-width*)
+    (:height *window-width*)
+    (:title "CarGo")
+    (:aggregate top-aggregate))
+  (s-value stone-setter :window go-window) ; Tell the STONE-SETTER button what window it's in
+  (s-value life-checker :window go-window) ; Tell the LIFE-CHECKER button what window it's in
   (s-value pass-key :window go-window)
   (s-value undo-key :window go-window)
-  (opal:update go-window)						    ; Draw the window
-  (create-menubar)							    ; Create the menubar
-  (push go-window *objects*)						    ; Add the window to the list of things to be destroyed by do-stop
-  NIL)									    ; Returns NIL
+  (opal:update go-window)     ; Draw the window
+  (create-menubar)	      ; Create the menubar
+  (push go-window *objects*)  ; Add the window to the list of things to be destroyed by do-stop
+  NIL)			      ; Returns NIL
 
 (defun do-stop ()
   ;;
   ;; Destroy everything listed in *OBJECTS*.
   ;;
   (dolist (object *objects*)
-	  (if (schema-p object)
-	      (opal:destroy object)))
+    (if (schema-p object)
+	(opal:destroy object)))
   (setq *objects* NIL)
   (setq *chains* NIL))
 

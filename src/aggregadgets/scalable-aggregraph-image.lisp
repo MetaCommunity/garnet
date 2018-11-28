@@ -14,6 +14,9 @@
 ;;;
 ;;; Written by A. Bryan Loyall
 ;;; Winter 1990-1991
+;;;
+;;; $Id::                                                             $
+
 
 #|
 ======================================================================
@@ -30,7 +33,7 @@ Change log:
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(SCALABLE-AGGREGRAPH-IMAGE SCALABLE-AGGREGRAPH-IMAGE-NODE-PROTOTYPE
 	    SCALABLE-AGGREGRAPH-IMAGE-LINK-PROTOTYPE)))
 

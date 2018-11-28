@@ -101,7 +101,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(MENUBAR BAR-ITEM SUBMENU SUBMENU-ITEM MAKE-SUBMENU-WIN
 			     
 	    ; Creation Functions

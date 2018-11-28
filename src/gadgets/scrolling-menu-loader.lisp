@@ -31,9 +31,7 @@ Change log:
   (format t "Loading Scrolling-Menu...~%")
   (dolist (file '("v-scroll-loader"
 		  "scrolling-menu"))
-    (load (common-lisp-user::garnet-pathnames file
-			   #+cmu "gadgets:"
-			   #+(not cmu) Garnet-Gadgets-PathName)
+    (load (merge-pathnames file Garnet-Gadgets-PathName)
 	  :verbose T))
   (format t "...Done Scrolling-Menu.~%"))
 

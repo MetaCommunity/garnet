@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -26,9 +27,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :Filter-Functions)
   (format t "Loading Filter functions...~%")
-  (load (common-lisp-user::garnet-pathnames "filter-functions"
-			 #+cmu "gilt:"
-			 #+(not cmu) Garnet-Gilt-PathName)
+  (load (merge-pathnames "filter-functions" Garnet-Gilt-PathName)
 	:verbose T)
   (format t "...Done Filter Functions.~%"))
 

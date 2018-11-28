@@ -1,34 +1,29 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id$
 
-;;; This file contains the code to handle animators
+
 ;;;
-;;; Designed and implemented by Brad A. Myers
+;;  This file contains the code to handle animators
+;; 
+;;  Designed and implemented by Brad A. Myers
 
-#|
-============================================================
-Change log:
-        6/3/92 Brad Myers - started
-============================================================
-|#
+;;; Change log:
+;;    6/3/92 Brad Myers - started
 
+
 (in-package "INTERACTORS")
 
-;;;============================================================
-
-
-
-;;;============================================================
+
 ;;; Animator-Interactor
-;;;============================================================
+;;
 
 (defparameter all-animator-processes NIL)
 (defparameter all-animator-inters NIL)
@@ -48,20 +43,19 @@ Change log:
 (defun Abort-Animator (anim)
   (stop-animator anim))
 
-;;;============================================================
 ;;; Default Procedures to go into the slots
-;;;============================================================
+;;
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (proclaim '(special Animator-Interactor)))
 
 (defun Animator-Interactor-Initialize (new-Animator-schema)
   (if-debug new-Animator-schema (format T "Animator initialize ~s~%"
-					 new-Animator-schema))
+					new-Animator-schema))
   (Check-Interactor-Type new-Animator-schema animator-interactor)
   (Check-Required-Slots new-Animator-schema)
   (Set-Up-Defaults new-Animator-schema)
-  ) ;end initialize procedure
+  )
 
 
 (defun Animator-Do-Abort (an-interactor become-inactive event)
@@ -91,8 +85,8 @@ Change log:
   #-garnet-debug (declare (ignore an-interactor new-obj-over event))
   (if-debug an-interactor (format T "Animator back-inside~%")))
 
-;;; doesn't do anything
 (defun Animator-do-running (an-interactor new-obj-over event)
+  "doesn't do anything"
   #+garnet-debug (declare (ignore new-obj-over event))
   #-garnet-debug (declare (ignore an-interactor new-obj-over event))
   (if-debug an-interactor (format T "Animator running~%")))
@@ -101,47 +95,44 @@ Change log:
   (if-debug an-interactor (format T "Animator explicit stop~%"))
   (Stop-Animator an-interactor))
 
-;;;============================================================
-;;;============================================================
 
+;;; Animator interactor
+;;
 (Create-Schema 'animator-interactor
-		     (:is-a inter:interactor)
-		     (:name :First-Animator-interactor)
-		     (:start-event NIL) ; doesn't start
-		     (:start-where NIL) 
-		     (:start-action NIL)
-		     (:running-action NIL)
-		     (:stop-action NIL)
-		     (:abort-action NIL)
-		     (:outside-action NIL)
-		     (:back-inside-action NIL)
+	       (:is-a inter:interactor)
+	       (:name :First-Animator-interactor)
+	       (:start-event NIL)	; doesn't start
+	       (:start-where NIL) 
+	       (:start-action NIL)
+	       (:running-action NIL)
+	       (:stop-action NIL)
+	       (:abort-action NIL)
+	       (:outside-action NIL)
+	       (:back-inside-action NIL)
 
-		     (:timer-handler 'NIL)  ; fill this in
-		     (:timer-repeat-wait 0.2) ; seconds
+	       (:timer-handler 'NIL)	; fill this in
+	       (:timer-repeat-wait 0.2)	; seconds
 
-		     (:Go 'General-Go) 
-		     (:Do-Start 'Animator-Do-Start)
-		     (:Do-Running 'Animator-Do-Running)
-		     (:Do-Explicit-Stop 'Animator-Explicit-Stop)
-		     (:Do-Stop 'Animator-Do-Stop)
-		     (:Do-Abort 'Animator-Do-Abort)
-		     (:Do-Outside 'Animator-Do-Outside)
-		     (:Do-Back-Inside 'Animator-Do-Back-Inside)
-		     (:Do-Outside-Stop 'Animator-Do-Outside-Stop)
-		     (:initialize #'Animator-Interactor-Initialize))
+	       (:Go 'General-Go) 
+	       (:Do-Start 'Animator-Do-Start)
+	       (:Do-Running 'Animator-Do-Running)
+	       (:Do-Explicit-Stop 'Animator-Explicit-Stop)
+	       (:Do-Stop 'Animator-Do-Stop)
+	       (:Do-Abort 'Animator-Do-Abort)
+	       (:Do-Outside 'Animator-Do-Outside)
+	       (:Do-Back-Inside 'Animator-Do-Back-Inside)
+	       (:Do-Outside-Stop 'Animator-Do-Outside-Stop)
+	       (:initialize #'Animator-Interactor-Initialize))
 
-
-;;; Need special destroy to kill process
+;; Need special destroy to kill process
 (define-method :destroy-me animator-interactor (an-interactor
-						       &optional (erase T))
+						&optional (erase T))
   (if-debug an-interactor
 	    (format T "Animator special destroy ~s erase=~s~%" an-interactor
 		    erase))
   (Kill-Timer-Process an-interactor)
   (call-prototype-method an-interactor erase))
 
-
-;;;============================================================
 ;;;============================================================
 
 (defun Anim-Bounce (anim)

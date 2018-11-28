@@ -11,7 +11,7 @@
 ;;;  Motif Trill Device
 ;;;
 ;;;  Basically, the motif-trill-device is just a motif-h-scroll-bar
-;;;  with some feedback-text sitting in it's center, as well as an
+;;;  with some feedback-text sitting in its center, as well as an
 ;;;  interactor for that text.  Unlike the GARNET trill-device, this
 ;;;  one has no page-trill.
 ;;;
@@ -52,7 +52,7 @@
 ;;;  01/21/93 Rajan Parthasarathy - Created
 
 (in-package "GARNET-GADGETS")
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Motif-Trill-Device))
   #+garnet-test
   (export '(Motif-Trill-Win Motif-Trill-Agg Motif-Trill-Obj
@@ -61,7 +61,6 @@
 (defun motif-trill-stop-action (inter obj stop-event)
   (declare (ignore inter stop-event))
   (s-value obj :cursor-index NIL)
-
 
   ;; mhsb stands for motif-h-scroll-bar 
   

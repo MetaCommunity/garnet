@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -56,10 +57,9 @@ Change log:
 
 ;; Only loads this file when not compiling all of Garnet.
 (unless (get :garnet-modules :multifont)
-  (load (garnet-pathnames "multifont-loader"
+  (load (merge-pathnames "multifont-loader"
 			 #+cmu "opal:"
 			 #+(not cmu) Garnet-Opal-PathName)))
-
 
 ;; ---- Load gadgets files
 

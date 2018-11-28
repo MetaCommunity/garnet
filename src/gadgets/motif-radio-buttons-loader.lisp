@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $	
+
 ;;;  MOTIF-RADIO-BUTTONS-LOADER: Loads the gadgets module "motif-radio-buttons"
 ;;;   and "parts" modules if required.
 
@@ -30,9 +32,7 @@ Change log:
   (dolist (pair '((:motif-parts "motif-parts")
 		  (:motif-radio-buttons "motif-radio-buttons")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Motif-Radio-Buttons.~%"))
 

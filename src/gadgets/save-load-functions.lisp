@@ -87,7 +87,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(DISPLAY-SAVE-GADGET DESTROY-SAVE-GADGET HIDE-SAVE-GADGET
 	    DISPLAY-LOAD-GADGET DESTROY-LOAD-GADGET HIDE-LOAD-GADGET
 	    display-save-gadget-and-wait display-load-gadget-and-wait
@@ -128,7 +128,7 @@
 
 (defun Check-Save-Filename (save-gad filename)
   (let* ((Prev-Dir (g-value save-gad :prev-dir))
-	 (full-fn (common-lisp-user::garnet-pathnames Prev-Dir filename))
+	 (full-fn (merge-pathnames Prev-Dir filename))
 	 (qg (g-value save-gad :query-window))
 	 (dummy NIL))
     (if (AND ;;Already exists
@@ -248,17 +248,15 @@
   (let* ((save-gad (g-value gadget :parent))
 	 (save-win (g-value save-gad :window))
 	 (prev-dir (g-value save-gad :prev-dir))
-	 (val #+apple value
-	      #-apple (real-path value)))
+	 (val (real-path value)))
     (if (gu:probe-directory (directory-namestring val))
      	(let ((dir-name NIL))
 	  (if (opal:directory-p val)
-	      #+apple (setf dir-name val)
-	      #-apple (progn
-			(setf dir-name (string-right-trim "/" val))
-			(setf dir-name (concatenate 'string
-						    dir-name "/"))
-		      )
+	      (progn
+		(setf dir-name (string-right-trim "/" val))
+		(setf dir-name (concatenate 'string
+					    dir-name "/"))
+		)
 	      (progn
 		(setf dir-name (directory-namestring val))
 		(s-value (g-value save-gad :file-input) :value
@@ -339,28 +337,20 @@
 #-SBCL
 (defun put-filenames-in-menu (save-gad dir-name)
   (let ((file-list NIL)
-	#+clisp
-        (dir (append (directory (concatenate 'string dir-name "*"))
-                     (directory (concatenate 'string dir-name "*/"))))
-	#-clisp
-	(dir (directory #+apple (concatenate 'string dir-name "*") 
-                        #-apple dir-name
+	(dir (directory dir-name
 			;; cmucl has a few keyword options that
 			;; default to values we might not like...
 			#+cmu :check-for-subdirs #+cmu NIL
 			#+cmu :truenamep #+cmu NIL
 			#+cmu :follow-links #+cmu NIL
-                        #-(or cmu sbcl clisp) :directories #-(or cmu sbcl clisp) t))
+                        #-cmu :directories #-cmu t))
 	(save-win (g-value save-gad :window)))
     (dolist (name dir)
-	    (setf file-list (cons (string-left-trim #+apple '(#\:)
-                                                    #-apple '(#\/)
+	    (setf file-list (cons (string-left-trim '(#\/)
                                       (enough-namestring name (truename dir-name)))
                                   file-list)))
     (setf file-list (sort file-list #'(lambda (x y) (string< x y))))
-    (push #+apple ":"
-          #-apple ".." 
-          file-list)
+    (push ".." file-list)
     (s-value (g-value save-gad :file-menu) :items file-list)
     (s-value (g-value save-gad :file-menu) :selected-ranks NIL)
     (s-value (g-value save-gad :message) :string "")
@@ -415,7 +405,7 @@
 (defun Do-Load-File (load-gad filename)
   (hide-load-gadget load-gad)
   (kr-send load-gad :selection-function load-gad
-	   (common-lisp-user::garnet-pathnames (g-value load-gad :prev-dir) filename))
+	   (merge-pathnames (g-value load-gad :prev-dir) filename))
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -484,7 +474,7 @@
 
 				       window)))))
 
-    (s-value gad :prev-dir #-apple "../" #+apple "::")
+    (s-value gad :prev-dir "../")
     ;; Each save-gadget must have its own customized item-to-string-function.
     ;; We are only allowed to pass one parameter to the i-to-s fn, so how do
     ;; we accomodate the different max-item-width values in different gadgets?

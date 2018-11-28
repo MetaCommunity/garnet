@@ -35,7 +35,7 @@
 
 ;;;  Load Demos Controller ...
 
-(load (common-lisp-user::garnet-pathnames "demos-controller" Garnet-Demos-PathName)
+(load (merge-pathnames "demos-controller" Garnet-Demos-PathName)
 	:verbose T)
 
 (setf (get :garnet-modules :demos) t)

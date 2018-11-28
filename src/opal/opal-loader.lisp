@@ -8,9 +8,9 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Changes:
+;;; $Id::                                                             $
 
-;;; 27/11/18 spchamp Moved mac.lisp into gem
+;;; 27/11/18 spchamp Moved mac.lisp into gem (pre-rebase onto 3.3-devel)
 ;;; 10/2/03 RGA --- Changed from switching on #+apple to #+(and apple (not clx))
 ;;; 11/8/93 AMICKISH Added x.lisp and called gem:init-device
 ;;;  3/5/93 AMICKISH Added utils.lisp
@@ -72,11 +72,11 @@
     "pixmaps"
     "open-and-close"
     ;; #-(and apple (not clx)) "x" ;; src moved into gem
-    ;; #+(and apple (not clx)) "mac" ;; src moved into gem [spchamp]
+    ;; #+(and apple (not clx)) "mac" ;; src moved into gem
     ))
 
 (dolist (file Garnet-Opal-Files)
-  (load (garnet-pathnames file Garnet-Opal-PathName)
+  (load (merge-pathnames file Garnet-Opal-PathName)
 	:verbose T))
 
 (setf (get :garnet-modules :opal) t)

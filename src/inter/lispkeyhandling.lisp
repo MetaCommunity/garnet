@@ -12,32 +12,34 @@
 ;;;  Matthew Goldberg
 ;;;  Feb 18, 1993
 ;;;
-#|
-============================================================
-Change log:
-     9/20/93 Fernando D. Mato Mira - Variable name: position ---> text-position
-     8/05/93 Andrew Mickish - Added indent of kr:define-method
-     7/13/93 Matt Goldberg - Rewrote many functions, using opal:marks.
-     6/01/93 Matt Goldberg - Set interactor's :match-obj with the
-                set-parenthesis message and added function LISPIFY
-     5/26/93 Matt Goldberg - started
-============================================================
-|#
 
+;;; $Id$
+;;;
+;;;
+;;; ============================================================
+;;; Change log:
+;;;     9/20/93 Fernando D. Mato Mira - Variable name: position ---> text-position
+;;;     8/05/93 Andrew Mickish - Added indent of kr:define-method
+;;;     7/13/93 Matt Goldberg - Rewrote many functions, using opal:marks.
+;;;     6/01/93 Matt Goldberg - Set interactor's :match-obj with the
+;;;                set-parenthesis message and added function LISPIFY
+;;;     5/26/93 Matt Goldberg - started
+;;; ============================================================
 
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
-  (export '(indent TURN-OFF-MATCH LISPIFY ADD-LISP-CHAR DELETE-LISP-REGION)))
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export '(indent turn-off-match lispify add-lisp-char delete-lisp-region)))
 
-;; TABS
+
+;;;; TABS
 
-; function WORD-TAB
-;  input: TEXT-OBJ a text-object
-;         FUNC-LINE, FUNC-CHAR the position of the beginning of the function
-;          that the current word is an argument of.
-;         ARG-NUM which argument is it (first, second, third)?
-;  returns: the number of characters to the word to tab to
+;;;; function WORD-TAB
+;;;  input: TEXT-OBJ a text-object
+;;;         FUNC-LINE, FUNC-CHAR the position of the beginning of the function
+;;;          that the current word is an argument of.
+;;;         ARG-NUM which argument is it (first, second, third)?
+;;;  returns: the number of characters to the word to tab to
 
 (defun word-tab (text-obj func-line func-char arg-num)
   (let* ((start (multiple-value-list
@@ -78,12 +80,12 @@ Change log:
 		   (opal:go-to-next-word text-obj))))
 	   )))))
 
-; function GET-WORD
-;  input: A line, and a number (the character-position on the line)
-;         TRIM: if specified T, will not include the first character of the
-;               word... useful for "(defun" -> "defun"
-;  returns: the word that the cursor is currently on or before on same line
-;    ->         (in :strings format) 
+;;;; function GET-WORD
+;;;  input: A line, and a number (the character-position on the line)
+;;;         TRIM: if specified T, will not include the first character of the
+;;;               word... useful for "(defun" -> "defun"
+;;;  returns: the word that the cursor is currently on or before on same line
+;;;    ->         (in :strings format) 
 
 (defun get-word (line char-pos &key (trim nil))
   (multiple-value-bind (frag frag-pos)
@@ -129,8 +131,8 @@ Change log:
 						 string))))
       (remove #\space word))))
 
-;; function CHAR-CODE-P
-;;   returns 't' if the current word is a character-code, 'nil' if not.
+;;;; function CHAR-CODE-P
+;;;   returns 't' if the current word is a character-code, 'nil' if not.
 
 (defun char-code-p (frag frag-pos)
   (if (and (null (opal::frag-prev frag)) (< frag-pos 2))
@@ -147,7 +149,7 @@ Change log:
 			       (return-from char-code-p nil))
 			   my-frag))))
 	(let ((prev-char
-	       (do* ((my-frag frag (opal::frag-prev frag))
+	       (do* (#-(and) (my-frag frag (opal::frag-prev frag))
 		     (pos frag-pos (opal::frag-length frag)))
 		    ((> pos 0) (schar (opal::frag-string frag) (1- pos)))))
 	      char)
@@ -194,16 +196,16 @@ Change log:
 (defmacro lisp-mark-p (name)
   `(member ,name *lisp-names*))
 
-;; function LAST-PAREN
-;;   input: text-obj, the text object
-;;          IN-QUOTE-P: If specified T, the count will begin as if starting
-;;                      within a quotation, otherwise not.
-;;   This function will return the frag of the last unmatched open
-;;   parentheses before the initial cursor position, or nil if
-;;   there are none.
-;;   Returns: 2 values, the frag, and
-;;            the number of arguments to the function, or -1 if there
-;;            is none.
+;;;; function LAST-PAREN
+;;;   input: text-obj, the text object
+;;;          IN-QUOTE-P: If specified T, the count will begin as if starting
+;;;                      within a quotation, otherwise not.
+;;;   This function will return the frag of the last unmatched open
+;;;   parentheses before the initial cursor position, or nil if
+;;;   there are none.
+;;;   Returns: 2 values, the frag, and
+;;;            the number of arguments to the function, or -1 if there
+;;;            is none.
 
 (defun last-paren (line frag &key (in-quote-p nil))
   (let ((arguments 0)
@@ -257,10 +259,10 @@ Change log:
 	       (setq mark open-comment)
 	       (return-from last-paren (values nil -1)))))))))
 
-;; Function Count-Chars-Before-Frag
-;;  input: A Fragment
-;;  returns: the number of chars from the beginning of the line to the
-;;           end of that fragment
+;;;; Function Count-Chars-Before-Frag
+;;;  input: A Fragment
+;;;  returns: the number of chars from the beginning of the line to the
+;;;           end of that fragment
 
 (defun count-chars-before-frag (frag)
   (let ((chars 0))
@@ -268,9 +270,9 @@ Change log:
 	((null my-frag) chars)
       (incf chars (opal::frag-length my-frag)))))
 
-;; Function Get-Line-Number
-;;  input: A Line
-;;  returns: the number of that line, that is, 0 for first, 1 for second, etc.
+;;;; Function Get-Line-Number
+;;;  input: A Line
+;;;  returns: the number of that line, that is, 0 for first, 1 for second, etc.
 
 (defun get-line-number (line)
   (let ((num 0))
@@ -278,14 +280,14 @@ Change log:
 	((null my-line) num)
       (incf num))))
 
-;; Function FUNCTION-FIND
-;;  input: TEXT-OBJ, a text-object
-;;         START-LINE, the line to begin searching backwards from
-;;  returns:  the closest unclosed function name, i.e. (dotimes ...
-;;    in a list, first element: function-name (:strings format)
-;;              second element: number of arguments of that function
-;;               third element: line-position (number)
-;;              fourth element: character-position (number)
+;;;; Function FUNCTION-FIND
+;;;  input: TEXT-OBJ, a text-object
+;;;         START-LINE, the line to begin searching backwards from
+;;;  returns:  the closest unclosed function name, i.e. (dotimes ...
+;;;    in a list, first element: function-name (:strings format)
+;;;              second element: number of arguments of that function
+;;;               third element: line-position (number)
+;;;              fourth element: character-position (number)
 
 (defun function-find (text-obj start-line)
   (cond
@@ -315,18 +317,18 @@ Change log:
     )
   )
 
-;;; ---------------------------------
+
 ;;;
 ;;;   The indentation table: how far to indent for each lisp function
 ;;;
 
 (defvar *tab-table* (make-hash-table :test #'equal :size 3))
 
-;; function GET-TAB-AMOUNT
-;;   input: name (the name of the function) a string
-;;          arg   then number of the argument to tab
-;;   output: the number of spaces to indent, or -1 if it should do a
-;;            "WORD-TAB"
+;;;; function GET-TAB-AMOUNT
+;;;   input: name (the name of the function) a string
+;;;          arg   then number of the argument to tab
+;;;   output: the number of spaces to indent, or -1 if it should do a
+;;;            "WORD-TAB"
 
 (defun get-tab-amount (name arg)
   (let ((amount-list (gethash name *tab-table*)))
@@ -338,19 +340,19 @@ Change log:
       ((> (1- arg) (first amount-list)) -1)
       (t (second amount-list)))))
 
-;; function INDENT
-;;  input: NAME, the name of the function
-;;         SPECIAL-ARGS one or two numbers.
-;;  output: will put the function into the *tab-table* hash table, giving
-;;           the function with name NAME special tab-properties.
-;;           The first number of SPECIAL-ARGS signifies how many arguments
-;;            have the special property.
-;;           The second number signifies how many spaces from the
-;;            function name these special args should be placed.
-;;           The number -1 means that this arg should act as a WORD-TAB.
-;;           The argument after the last special argument will be placed
-;;            one space in from the function-name.
-;;           All other args will act as WORD-TABS.
+;;;; function INDENT
+;;;  input: NAME, the name of the function
+;;;         SPECIAL-ARGS one or two numbers.
+;;;  output: will put the function into the *tab-table* hash table, giving
+;;;           the function with name NAME special tab-properties.
+;;;           The first number of SPECIAL-ARGS signifies how many arguments
+;;;            have the special property.
+;;;           The second number signifies how many spaces from the
+;;;            function name these special args should be placed.
+;;;           The number -1 means that this arg should act as a WORD-TAB.
+;;;           The argument after the last special argument will be placed
+;;;            one space in from the function-name.
+;;;           All other args will act as WORD-TABS.
 
 (defun indent (name &rest special-args)
   (setf (gethash name *tab-table*) (if special-args special-args '(0)))
@@ -389,14 +391,11 @@ Change log:
 (indent "with-accessors" 1 4)
 (indent "define-method" 3 4)
 
-;;;
-;;; -----------------------------
-
-
-;; function TAB
-;;  input: TEXT-OBJ, the text-object
-;;  output: will put the correct (LISP-wise) number of spaces between
-;;           the first word on the line and the beginning of the line.
+
+;;;; function TAB
+;;;  input: TEXT-OBJ, the text-object
+;;;  output: will put the correct (LISP-wise) number of spaces between
+;;;           the first word on the line and the beginning of the line.
 
 (defun tab (interact text-obj event)
   (declare (ignore interact event))
@@ -440,13 +439,12 @@ Change log:
 				  0)
 			      tab-amount)))))
 
+
+;;;; MATCHING PARENTHESIS
 
-
-;; MATCHING PARENTHESIS
-
-;; function LINE-STRING
-;;  input: a line
-;;  output: a string containing all the text on that line
+;;;; function LINE-STRING
+;;;  input: a line
+;;;  output: a string containing all the text on that line
 
 (defun line-string (line)
   (opal::copy-text line (g-value line :first-frag) 0 line
@@ -455,11 +453,11 @@ Change log:
 			       (opal::calculate-cursor-pos
 				line (g-value line :length))))))
 
-;; function MATCH-PARENS
-;;  input: text-obj, the text-object, with the cursor next to the close-paren
-;;          that should be matched.
-;;  output: Will bold-face the corresponding open paren, and set the
-;;          message-window to read the function name, if such a window exists.
+;;;; function MATCH-PARENS
+;;;  input: text-obj, the text-object, with the cursor next to the close-paren
+;;;          that should be matched.
+;;;  output: Will bold-face the corresponding open paren, and set the
+;;;          message-window to read the function name, if such a window exists.
 
 (defun match-parens (interact text-obj)
   (let* ((start (multiple-value-list
@@ -536,9 +534,9 @@ Change log:
 	  (if (g-value interact :match-obj)
 	      (opal:set-text (g-value interact :match-obj) "")))))))
 
-;; function CHECK-PARENS
-;;  If there is currently a parenthesis highlighted, will turn it off.
-;;  Also, if the cursor is next to a close paren, will call MATCH-PARENS
+;;;; function CHECK-PARENS
+;;;  If there is currently a parenthesis highlighted, will turn it off.
+;;;  Also, if the cursor is next to a close paren, will call MATCH-PARENS
 (defun check-parens (interact text-obj)
   (TURN-OFF-MATCH interact text-obj)
   (let ((curr-font (g-value text-obj :current-font))
@@ -556,12 +554,13 @@ Change log:
 	(s-value text-obj :current-font
 		 (opal:get-standard-font :fixed :roman :medium)))))
 
-;; COMMENTS
+
+;;;; COMMENTS
 
-;; function ITALICIZE
-;;  Input: text-obj, the text-object
-;;         FROM-LOCATION, a list of the form (line-no. char-no.)
-;;  Will make italics all text from "from-location" to end of line.
+;;;; function ITALICIZE
+;;;  Input: text-obj, the text-object
+;;;         FROM-LOCATION, a list of the form (line-no. char-no.)
+;;;  Will make italics all text from "from-location" to end of line.
 
 (defun italicize (text-obj from-location)
   (let* ((start (multiple-value-list
@@ -595,9 +594,9 @@ Change log:
 	  (setq removed-mark t))))
     (opal:set-cursor-to-line-char-position text-obj start-line start-char)))
 
-;; function DEFAULT-UP-TO-NEXT-SEMI
-;;  Will make default-font all text from current location until the first
-;;   semi-colon or end of line.
+;;;; function DEFAULT-UP-TO-NEXT-SEMI
+;;;  Will make default-font all text from current location until the first
+;;;   semi-colon or end of line.
 
 (defun default-up-to-next-semi (text-obj)
   (let* ((start (multiple-value-list
@@ -634,10 +633,11 @@ Change log:
 	       (opal:insert-mark text-obj t :name :close)))))
       (opal:go-to-next-char text-obj))))
 
-;; SKIPS through LISP EXPRESSIONS (Control-Meta-F etc.)
+
+;;;; SKIPS through LISP EXPRESSIONS (Control-Meta-F etc.)
 
-;; function FIND-CLOSE-PAREN
-;;  Will search forward for the first unmatched close paren.
+;;;; function FIND-CLOSE-PAREN
+;;;  Will search forward for the first unmatched close paren.
 
 (defun find-close-paren (text-obj line frag)
   (let ((opens 0)
@@ -688,11 +688,11 @@ Change log:
 	       (setq mark close-comment)
 	       (return-from find-close-paren nil))))))))
 
-;; function SKIP
-;;  Will move cursor, depending on current location.
-;;   If currently before an open paren, will move to corresponding close-paren.
-;;   If currently before a comment/quote, will move to end.
-;;   Else move to end of word.
+;;;; function SKIP
+;;;  Will move cursor, depending on current location.
+;;;   If currently before an open paren, will move to corresponding close-paren.
+;;;   If currently before a comment/quote, will move to end.
+;;;   Else move to end of word.
 
 (defun skip (text-obj)
   (opal:toggle-selection text-obj nil)
@@ -742,11 +742,11 @@ Change log:
 			(opal:get-standard-font :fixed :italic :medium))))
          (opal:go-to-next-word text-obj))))))
 
-;; function SKIP-BACK
-;;  Will move cursor, depending on current location.
-;;   If currently after a close paren, will move to corresponding open-paren.
-;;   If currently after a comment/quote, will move to beginning
-;;   Else move to beginning of word.
+;;;; function SKIP-BACK
+;;;  Will move cursor, depending on current location.
+;;;   If currently after a close paren, will move to corresponding open-paren.
+;;;   If currently after a comment/quote, will move to beginning
+;;;   Else move to beginning of word.
 
 (defun skip-back (text-obj)
   (opal:toggle-selection text-obj nil)
@@ -802,10 +802,10 @@ Change log:
 			(opal:get-standard-font :fixed :italic :medium))))
          (opal:go-to-prev-word text-obj))))))
     
-;;  LISPIFY
-;;  Changes a string into LISP format
-;;  Input: a string
-;;  Output: text, in "strings" format
+;;;;  LISPIFY
+;;;  Changes a string into LISP format
+;;;  Input: a string
+;;;  Output: text, in "strings" format
 
 (defun LISPIFY (text)
   (cond
@@ -910,7 +910,7 @@ Change log:
 	     (push (list (subseq string char-pos string-length)
 			 (opal:get-standard-font :fixed :italic :medium))
 		   new-line)
-	     (setq char-pos string-length
+	     (setq char-pos string-length ; XXX S.B. just (return)?
 		   frag-string ""))
 	    ((and (eq char #\|) (eq prev-char #\#))
 	     (push (concatenate 'string frag-string (string char)) new-line)
@@ -930,7 +930,8 @@ Change log:
 	      lispified-text)))))
 
 
-;;; EDITING FUNCTIONS
+
+;;;; EDITING FUNCTIONS
 
 (defun ADD-LISP-CHAR (text-obj char &optional new-font new-fcolor new-bcolor)
   (let* ((prev-char (opal:fetch-prev-char text-obj))
@@ -1032,7 +1033,8 @@ Change log:
 	(opal::calculate-size-of-line text-obj line)))))
     region))
 
-;;  KEY-BINDING-FUNCTIONS
+
+;;;;  KEY-BINDING-FUNCTIONS
 
 (defun semi-func (interact text-obj event)
   (declare (ignore interact event))

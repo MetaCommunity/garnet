@@ -109,12 +109,11 @@
 	  (:lock (setf shiftp t)))))
     (let* ((keysym (gem:translate-code window scan-code shiftp))
 	   (temp-char (gethash keysym inter::*keysym-translations*)))
-      (setq inter::*katie-base-char* temp-char)
       (if (null temp-char)
-	     (if (<= 65505 keysym 65518) ;modifier keys.
-		 nil
-		 (unless inter::*ignore-undefined-keys*
-		   (error "Undefined keysym ~S, describe Inter:DEFINE-KEYSYM."
-			  keysym)))
-	     (inter::base-char-to-character temp-char bits)))))
+	  (if (<= 65505 keysym 65518)	;modifier keys.
+	      nil
+	      (unless inter::*ignore-undefined-keys*
+		(error "Undefined keysym ~S, describe Inter:DEFINE-KEYSYM."
+		       keysym)))
+	  (inter::base-char-to-character temp-char bits)))))
 

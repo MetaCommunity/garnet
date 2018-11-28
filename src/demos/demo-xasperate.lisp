@@ -29,122 +29,122 @@
 
 (defun do-go (&key dont-enter-main-event-loop double-buffered-p)
   (create-instance '*win* inter:interactor-window
-        (:left 300)(:top 100)
-	(:height 300)
-	(:width  300)
-        (:title "GARNET Xasperate")
-        (:aggregate (create-instance '*agg* opal:aggregate)))
+    (:left 300)(:top 100)
+    (:height 300)
+    (:width  300)
+    (:title "GARNET Xasperate")
+    (:aggregate (create-instance '*agg* opal:aggregate)))
   (opal:add-component *agg*
-	(create-instance '*big-text* opal:text
-	   (:string "XASPERATE")
-	   (:font (create-instance '*big-font* opal:font
-			(:size :very-large)))
-	   (:top (o-formula (half (- (gv *win* :height)
-	                             (gvl :height)))))
-	   (:left (o-formula (half (- (gv *win* :width)
-	                              (gvl :width)))))))
+		      (create-instance '*big-text* opal:text
+			(:string "XASPERATE")
+			(:font (create-instance '*big-font* opal:font
+				 (:size :very-large)))
+			(:top (o-formula (half (- (gv *win* :height)
+						  (gvl :height)))))
+			(:left (o-formula (half (- (gv *win* :width)
+						   (gvl :width)))))))
   (opal:update *win*)
   (inter:beep)
-;;(stall for some amount of time..)
+  ;;(stall for some amount of time..)
   (s-value *big-text* :visible NIL)
   (create-instance '*score-win* opal::window
-	(:top *margin*)
-	(:left *margin*)
-	(:width  (o-formula (max (- (gv *win* :width) 30) 1)))
-	(:height 23)
-	(:parent *win*)
-	(:aggregate (create-instance '*score-agg* opal:aggregate)))
+    (:top *margin*)
+    (:left *margin*)
+    (:width  (o-formula (max (- (gv *win* :width) 30) 1)))
+    (:height 23)
+    (:parent *win*)
+    (:aggregate (create-instance '*score-agg* opal:aggregate)))
   (opal:update *score-win*)
   (opal:add-component *score-agg*
-	(create-instance '*score-text* opal:text
-	   (:string (o-formula (princ-to-string (gvl :score))))
-	   (:score (setq *score* 0))
-	   (:top 3)
-	   (:left (o-formula (- (gv *score-win* :width) (gvl :width) 25)))))
+		      (create-instance '*score-text* opal:text
+			(:string (o-formula (princ-to-string (gvl :score))))
+			(:score (setq *score* 0))
+			(:top 3)
+			(:left (o-formula (- (gv *score-win* :width) (gvl :width) 25)))))
   (create-instance '*play-win* inter:interactor-window
-        (:double-buffered-p double-buffered-p)
-	(:top (o-formula (+ (* 2 (gv *score-win* :top))
-			    (- (gv *score-win* :height)
-			       (gv *score-win* :top-border-width)
-			       (gv *score-win* :bottom-border-width))
-			    5)))
-	(:left *margin*)
-	(:width  (o-formula (- (gv *score-win* :width)
-			       (gv *score-win* :left-border-width)
-			       (gv *score-win* :right-border-width))))
-	(:height (o-formula (max (- (gv *win* :height) (gvl :top) *margin*) 
-				 1)))
-	(:x-portion (o-formula (max (round (* (- (gvl :width) (* 3 *space*))
-					      0.25))
-				    2)))
-	(:y-portion (o-formula (max (round (* (- (gvl :height) (* 4 *space*))
-					      0.20))
-				    2)))
-	(:parent *win*)
-	(:aggregate (create-instance '*play-agg* opal:aggregate)))
+    (:double-buffered-p double-buffered-p)
+    (:top (o-formula (+ (* 2 (gv *score-win* :top))
+			(- (gv *score-win* :height)
+			   (gv *score-win* :top-border-width)
+			   (gv *score-win* :bottom-border-width))
+			5)))
+    (:left *margin*)
+    (:width  (o-formula (- (gv *score-win* :width)
+			   (gv *score-win* :left-border-width)
+			   (gv *score-win* :right-border-width))))
+    (:height (o-formula (max (- (gv *win* :height) (gvl :top) *margin*) 
+			     1)))
+    (:x-portion (o-formula (max (round (* (- (gvl :width) (* 3 *space*))
+					  0.25))
+				2)))
+    (:y-portion (o-formula (max (round (* (- (gvl :height) (* 4 *space*))
+					  0.20))
+				2)))
+    (:parent *win*)
+    (:aggregate (create-instance '*play-agg* opal:aggregate)))
 
   (create-instance '*proto-object* opal:rectangle
-	(:x-pos 0)   ;; from 0 to 3  LEFT
-	(:y-pos 0)   ;; from 0 to 4  TOP
-	(:x-size 1)  ;; from 1 to 2
-	(:y-size 1)  ;; from 1 to 2
-	(:filling-style opal:light-gray-fill)
+    (:x-pos 0)	    ;; from 0 to 3  LEFT
+    (:y-pos 0)	    ;; from 0 to 4  TOP
+    (:x-size 1)	    ;; from 1 to 2
+    (:y-size 1)	    ;; from 1 to 2
+    (:filling-style opal:light-gray-fill)
 
-	(:left (o-formula (* (gvl :x-pos) (+ (gv *play-win* :x-portion)
-					     *space*))))
-	(:top  (o-formula (* (gvl :y-pos) (+ (gv *play-win* :y-portion)
-					     *space*))))
-	(:width (o-formula
-	  (let ((xsize (gvl :x-size)))
-		(+ (* xsize (gv *play-win* :x-portion))
-		   (* (1- xsize) *space*)))))
-	(:height (o-formula
-	  (let ((ysize (gvl :y-size)))
+    (:left (o-formula (* (gvl :x-pos) (+ (gv *play-win* :x-portion)
+					 *space*))))
+    (:top  (o-formula (* (gvl :y-pos) (+ (gv *play-win* :y-portion)
+					 *space*))))
+    (:width (o-formula
+	     (let ((xsize (gvl :x-size)))
+	       (+ (* xsize (gv *play-win* :x-portion))
+		  (* (1- xsize) *space*)))))
+    (:height (o-formula
+	      (let ((ysize (gvl :y-size)))
 		(+ (* ysize (gv *play-win* :y-portion))
 		   (* (1- ysize) *space*))))))
 
-;; The 4 little guys
+  ;; The 4 little guys
   (dolist (i '(1 2))
-   (dolist (j '(3 4))
-    (opal:add-component *play-agg*
-	(create-instance nil *proto-object*
-		(:x-pos i)
-		(:y-pos j)))))
+    (dolist (j '(3 4))
+      (opal:add-component *play-agg*
+			  (create-instance nil *proto-object*
+			    (:x-pos i)
+			    (:y-pos j)))))
 
-;; The 4 tall guys
+  ;; The 4 tall guys
   (dolist (i '(0 3))
-   (dolist (j '(0 2))
-    (opal:add-component *play-agg*
-	(create-instance nil *proto-object*
-		(:x-pos i)
-		(:y-pos j)
-		(:y-size 2)
-		(:filling-style opal:gray-fill)))))
+    (dolist (j '(0 2))
+      (opal:add-component *play-agg*
+			  (create-instance nil *proto-object*
+			    (:x-pos i)
+			    (:y-pos j)
+			    (:y-size 2)
+			    (:filling-style opal:gray-fill)))))
 
-;; The 1 wide guy
+  ;; The 1 wide guy
   (opal:add-component *play-agg*
-    (create-instance nil *proto-object*
-	(:x-pos 1)
-	(:y-pos 2)
-	(:x-size 2)
-	(:filling-style opal:gray-fill)))
+		      (create-instance nil *proto-object*
+			(:x-pos 1)
+			(:y-pos 2)
+			(:x-size 2)
+			(:filling-style opal:gray-fill)))
 
-;; The 1 big guy
+  ;; The 1 big guy
   (opal:add-component *play-agg*
-    (create-instance nil *proto-object*
-	(:x-pos 1)
-	(:y-pos 0)
-	(:x-size 2)
-	(:y-size 2)
-	(:filling-style opal:dark-gray-fill)))
+		      (create-instance nil *proto-object*
+			(:x-pos 1)
+			(:y-pos 0)
+			(:x-size 2)
+			(:y-size 2)
+			(:filling-style opal:dark-gray-fill)))
 
-;; The 'blank' guys...
+  ;; The 'blank' guys...
   (setq *hole1* (create-instance nil *proto-object*
-			(:x-pos 0)
-			(:y-pos 4)))
+		  (:x-pos 0)
+		  (:y-pos 4)))
   (setq *hole2* (create-instance nil *proto-object*
-			(:x-pos 3)
-			(:y-pos 4)))
+		  (:x-pos 3)
+		  (:y-pos 4)))
   (opal:update *win*)
 
   (create-instance '*inter* inter:two-point-interactor
@@ -154,23 +154,23 @@
     (:abort-if-too-small nil)
     (:running-action nil)
     (:final-function
-  #'(lambda (an-interactor final-point-list)
-     (declare (ignore an-interactor))
-     (let* ((first-x (first final-point-list))
-	    (first-y (second final-point-list))
-	    (last-x  (third final-point-list))
-            (last-y  (fourth final-point-list))
-	    (from-obj (opal:point-to-component *play-agg* first-x first-y)))
-	(when from-obj
-	  (cond
-	   ((opal:point-in-gob *hole1* last-x last-y)
-	    (do-move from-obj *hole1*))
-	   ((opal:point-in-gob *hole2* last-x last-y)
-	    (do-move from-obj *hole2*))
-	   ((eq (opal:point-to-component *play-agg* last-x last-y) from-obj)
-	     (if (adjacent? from-obj *hole1*)
-		(do-move from-obj *hole1*)
-		(do-move from-obj *hole2*)))))))))
+     #'(lambda (an-interactor final-point-list)
+	 (declare (ignore an-interactor))
+	 (let* ((first-x (first final-point-list))
+		(first-y (second final-point-list))
+		(last-x  (third final-point-list))
+		(last-y  (fourth final-point-list))
+		(from-obj (opal:point-to-component *play-agg* first-x first-y)))
+	   (when from-obj
+	     (cond
+	       ((opal:point-in-gob *hole1* last-x last-y)
+		(do-move from-obj *hole1*))
+	       ((opal:point-in-gob *hole2* last-x last-y)
+		(do-move from-obj *hole2*))
+	       ((eq (opal:point-to-component *play-agg* last-x last-y) from-obj)
+		(if (adjacent? from-obj *hole1*)
+		    (do-move from-obj *hole1*)
+		    (do-move from-obj *hole2*)))))))))
   (format t "~%~%")
   (format t "Demo Xasperate!!!!!~%~%")
   (format t "Move objects with the left mouse button by either clicking on the object,~%")
@@ -186,7 +186,7 @@
 
   (unless dont-enter-main-event-loop #-cmu (inter:main-event-loop))
 
-)
+  )
 
 (defun adjacent? (obj1 obj2)
   (let ((xpos1 (g-value obj1 :x-pos))  (xsize1 (g-value obj1 :x-size))

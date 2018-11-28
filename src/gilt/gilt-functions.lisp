@@ -39,7 +39,7 @@ Change log:
 
 (in-package "GILT")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(SHOW-IN-WINDOW SHOW-IN-WINDOW-AND-WAIT
 	    DESTROY-GADGET-WINDOW GADGET-VALUES SET-INITIAL-VALUE
 	    OKCANCEL-FUNCTION VALUE-OF

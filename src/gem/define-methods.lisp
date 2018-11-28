@@ -204,44 +204,16 @@
 
 
 ;;; This ends up being a macro, not a function; therefore, it is handled
-;;; specially.
-;;;
-;;; Below, the Mac version is just a PROGN, but might be converted later
-;;; to ccl:WITHOUT-INTERRUPTS.  This is supposed to make the code inside
-;;; the macro harder to debug (how much harder...?).
-
+;; specially.
+;;
 (defmacro batch-changes (drawable &body body)
-  #-apple
   `(xlib:with-state ,drawable
-     ,@body)
-  #+apple
-  (declare (ignore drawable))
-  #+apple
-  `(progn ,@body))
+     ,@body))
 
 ;; This macro is called in the update method, so it has to be defined before
 ;; update-window.lisp.  Also, this macro requires that the Gworld module has
 ;; already been loaded.
 ;;
 (defmacro MAC-with-focused-view-or-gworld ((drawable buffer) &body body)
-
-  #-apple
   (declare (ignore drawable buffer))
-  #-apple
-  `(progn ,@body)
-
-  #+apple
-  `(let ((the-drawable ,drawable)
-         (the-buffer ,buffer))
-     (if the-buffer
-         (let ((view-size-point (ccl:view-size the-drawable)))
-           (ccl::with-focused-gworld (the-buffer)
-             ;; With-Focused-Gworld does not automatically reset the clip-mask.
-             ;; Use ccl::*spare-rect-1* defined in gworld/Utility/code/utility
-             ;; since the GEM structures are not defined yet.
-             (traps::_SetRect ccl::*spare-rect-1* 0 0 
-                              (ccl:point-h view-size-point)
-                              (ccl:point-v view-size-point))
-             (traps::_ClipRect ccl::*spare-rect-1*)
-             ,@body))
-         (ccl:with-focused-view the-drawable ,@body))))
+  `(progn ,@body))

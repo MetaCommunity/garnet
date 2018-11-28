@@ -1,23 +1,23 @@
-;;; -*- mode: fi:common-lisp; package: rga-utils -*-
+;;; -*- Mode: COMMON-LISP; Package: GARNET-GADGETS -*-               ;;
+;;-------------------------------------------------------------------;;
+;;            Copyright 1993 Russell G. Almond                       ;;
+;;-------------------------------------------------------------------;;
+;; This code is in the Public Domain.  Anyone who can get some use   ;;
+;; from it is welcome.                                               ;;
+;; This code comes with no warranty.                                 ;;
+;;-------------------------------------------------------------------;;
 
-;;; Copyright 1992 Russell G. Almond
+;;; $Id$
 
-;;; This code is in the Public Domain.  Anyone who can get some use
-;;; from it is welcome.
-;;; This code come with no warentee.
+(in-package "GARNET-GADGETS")
 
-(in-package :rga)
-
-(common-lisp-user::garnet-load "contrib:protected-eval-loader")
-
-;;;
-;;;----------------------------------------------------------------------
-;;; Abstract error handler functions
-;;;----------------------------------------------------------------------
-;;;
-;;; These functions provide an abstraction of the error handling
-;;; facilities which can be bound as appropriate.
-
+
+;;; Garnet error handler functions
+;;
+;;
+;;  These functions provide a concrete instantiation of some of 
+;;  the abstract error handling facilities in abstract-errors.lisp. 
+;;  This file must be loaded after abstract-errors.lisp.
 
 (defun protect-errors (context condition &key
 					 (allow-debugger
@@ -48,8 +48,10 @@ strategies.  If rga:*user-type* is :programmer, then allows debugging.
 
 <context> should be a string describing user meaningful context in
 which error occured."
-  `(handler-bind ((error ,#'(lambda (condition)
-			      (protect-errors context condition))))
+  `(handler-bind
+       ((error 
+	 (lambda (condition)
+	   (protect-errors ,context condition))))
      ,.forms))
 
 
@@ -129,17 +131,17 @@ promting-protected-eval and protected-eval could be bound to
 this symbol."
   (apply #'gg:garnet-protected-read stream :allow-debug allow-debug args))
 
-(defun protected-read-from-string
-    (string &rest args
-     &key (start 0)
-	  (context (format nil "Parsing ~S" string))
-	  (end (length string))
-	  (read-package *package*)
-	  (read-bindings nil)
-	  (default-value nil)
-	  (allow-debug nil)
-	  (local-abort nil)
-	  (abort-val nil))
+(defun protected-read-from-string (string
+				   &rest args
+				   &key (start 0)
+				        (context (format nil "Parsing ~S" string))
+				        (end (length string))
+				        (read-package *package*)
+				        (read-bindings nil)
+				        (default-value nil)
+				        (allow-debug nil)
+				        (local-abort nil)
+				        (abort-val nil))
   "This works rather like protected-eval except it tries to
 read from the <stream>.
 
@@ -169,11 +171,8 @@ Note that the default value is different from protected-eval.
 If <local-abort> is true (default nil), then a local restart is
 established for abort which returns (values <abort-val> :abort)
 where <abort-val> is another parameter. (Same as
-protected-eval).
-
-"
-  (apply #'gg:garnet-protected-read-from-string :allow-debug
-	 allow-debug string args))
+protected-eval)."
+  (apply #'gg:garnet-protected-read-from-string string :allow-debug allow-debug args))
 
 
 (defun call-prompter (prompt 
@@ -198,7 +197,7 @@ The value supplied by the user is passed to <satisfy-test>.  If that
 test fails, the user is prompted again.
 
 This is mostly a dummy function for hiding the prompter type from the
-implementatoin mechanism."
+implementation mechanism."
   (apply #'gg:do-prompt prompt :allow-other-keys t args))
 
 (kr:s-value (kr:g-value gg:Error-prompter-gadget :window)
@@ -213,9 +212,7 @@ implementatoin mechanism."
 (kr:s-value (kr:g-value gg:protected-eval-error-gadget :window)
     :icon-title (format nil "~A:Error" *application-short-name*))
 
-
-
-(kr:create-instance 'message-display gg:error-gadget
+(kr:create-instance 'message-display gg:Motif-Error-Gadget
   (:modal-p nil)
   (:window-top (floor opal:*screen-height* 2))
   (:window-left (floor opal:*screen-width* 2)))
@@ -244,7 +241,7 @@ is meant to be called through call-displayer."
       (gg:display-error message-display message)))
 
 
-(kr:create-instance 'selector-display gg:query-gadget
+(kr:create-instance 'selector-display gg:motif-query-gadget  #-(and)gg:query-gadget
   (:modal-p nil)
   (:window-top (floor opal:*screen-height* 2))
   (:window-left (floor opal:*screen-width* 2)))
@@ -270,8 +267,7 @@ number.  <stream> is the stream (default *query-io*) and <option-list>
 is the list of options (default '(:yes no)).  <message> is displayed
 first on the stream as a prompt."
   (declare (type String message) (type Stream stream in-stream out-stream)
-	   (type List option-list)
-	   (:returns (type (Member option-list) option)))
+	   (type List option-list))
   (kr:s-value selector-display :beep-p beep)
   (gg:display-query-and-wait selector-display message option-list))
 

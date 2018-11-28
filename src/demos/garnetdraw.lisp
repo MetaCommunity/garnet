@@ -783,11 +783,9 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "line.bm"
-		    (common-lisp-user::garnet-pathnames 
-		     #+apple "garnetdraw:"
-                     #-apple "garnetdraw/" 
-                     common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "line.bm"
+				   (merge-pathnames "garnetdraw/" 
+						    common-lisp-user::garnet-bitmap-pathname))))))))
 
        (:rect-tool ,opal:aggregadget
 	(:left 5) (:height 32) (:width 32)
@@ -799,11 +797,9 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "rectangle.bm"
-		    (common-lisp-user::garnet-pathnames 
-		       #+apple "garnetdraw:"
-                       #-apple "garnetdraw/"
-                           common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "rectangle.bm"
+				   (merge-pathnames "garnetdraw/"
+						    common-lisp-user::garnet-bitmap-pathname))))))))
        (:roundrect-tool ,opal:aggregadget
 	(:left 5) (:height 32) (:width 32)
 	(:top ,(o-formula (+ 31 (gvl :parent :rect-tool :top))))
@@ -814,11 +810,9 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "roundrect.bm"
-		    (common-lisp-user::garnet-pathnames 
-		      #+apple "garnetdraw:"
-                      #-apple "garnetdraw/"
-                       common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "roundrect.bm"
+				   (merge-pathnames "garnetdraw/"
+						    common-lisp-user::garnet-bitmap-pathname))))))))
        (:oval-tool ,opal:aggregadget
 	(:feedback-object ,moving-oval)
 	(:creator-object ,creator-oval)
@@ -829,11 +823,9 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "oval.bm"
-		    (common-lisp-user::garnet-pathnames
-                       #+apple "garnetdraw:"
-                       #-apple "garnetdraw/"
-		            common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "oval.bm"
+				   (merge-pathnames "garnetdraw/"
+						    common-lisp-user::garnet-bitmap-pathname))))))))
        (:text-tool ,opal:aggregadget
 	(:feedback-object ,TEXT-FEEDBACK)
 	(:creator-object ,TEXT-FEEDBACK)
@@ -861,11 +853,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "polygon.bm"
-		    (common-lisp-user::garnet-pathnames
-                      #+apple "garnetdraw:"
-                      #-apple "garnetdraw/"
-		         common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "polygon.bm"
+				   (merge-pathnames
+				    "garnetdraw/"
+				    common-lisp-user::garnet-bitmap-pathname))))))))
 				       
        (:arrowline-tool ,opal:aggregadget
 	(:feedback-object ,new-moving-arrowline)
@@ -877,11 +868,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "linearrow.bm"
-		    (common-lisp-user::garnet-pathnames 
-		     #+apple "garnetdraw:" 
-                     #-apple "garnetdraw/"
-                           common-lisp-user::garnet-bitmap-pathname))))))))
+		  (merge-pathnames "linearrow.bm"
+		    (merge-pathnames 
+		     "garnetdraw/"
+		     common-lisp-user::garnet-bitmap-pathname))))))))
        (:doublearrowline-tool ,opal:aggregadget
 	(:feedback-object ,MOVING-DOUBLEARROWLINE)
 	(:creator-object ,creator-DOUBLEARROWLINE)
@@ -892,11 +882,10 @@ where it goes.
 	       (:left 5) (:top ,(o-formula (gvl :parent :top)))
 	       (:image
 		,(opal:read-image
-		  (common-lisp-user::garnet-pathnames "doublelinearrow.bm"
-		    (common-lisp-user::garnet-pathnames 
-		     #+apple "garnetdraw:" 
-                     #-apple "garnetdraw/"
-                         common-lisp-user::garnet-bitmap-pathname))))))))))
+		  (merge-pathnames "doublelinearrow.bm"
+				   (merge-pathnames 
+				    "garnetdraw/"
+				    common-lisp-user::garnet-bitmap-pathname))))))))))
     (:interactors
      `((:tool-interactor ,inter:button-interactor
 	(:window ,(o-formula (gvl :operates-on :window)))

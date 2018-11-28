@@ -1,64 +1,68 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id$
+;;
+
+
 ;;;  Motif Horizontal Scroll Bar
-;;;
-;;;  Features and operation of the horizontal scroll bar:
-;;;     1)  Drag the indicator with the left mouse button.
-;;;     2)  Click the left mouse button in the scroll bar trough to cause
-;;;         the indicator to jump by :page-incr increments.
-;;;     3)  Click the left mouse button in the trill boxes to move the
-;;;         indicator by :scr-incr increments.
-;;;     4)  The top level :value slot is the position of the indicator.
-;;;         This slot may be set directly and formulae may depend on it.
-;;;     5)  The function specified in :selection-function will be executed
-;;;         when the :values slot changes.
-;;;
-;;;  Customizable slots:
-;;;     1)  Left, top, width, height
-;;;     2)  Scr-trill-p  --  Whether to have arrow trill boxes that increment
-;;;                          by :scr-incr
-;;;     3)  Val-1, Val-2  --  Range of values the indicator spans.
-;;;                           Val-1 corresponds to the left of the scroll bar.
-;;;     4)  Scr-Incr  --  Value to increment position by with the trill arrows.
-;;;     5)  Page-Incr  --  Value to increment postion by when mouse is clicked
-;;;                        in trough.
-;;;     6)  Percent-Visible -- Percent of the scrollbar that should be occupied
-;;;                            by the indicator (from 0 to 1).
-;;;     7)  Foreground-Color
-;;;     8)  Value -- The current value chosen by the user.
-;;;     9)  Scroll-p -- Whether to allow scrolling.
-;;;    10)  Keyboard-selection-p -- Whether the keyboard interactor should
-;;;            operate on the scroll bar.
-;;;    11)  Selection-function -- Function executed whenever :value changes.
-;;;
-;;;  NOTE:  This module requires schemata defined in Motif-Parts.
-;;;
-;;;  Motif vertical scroll bar demo:
-;;;     This module contains a function which creates a window and a scroll bar
-;;;     in the window.  To run it, enter (GARNET-GADGETS:motif-h-scroll-go).
-;;;     To stop, enter (GARNET-GADGETS:motif-h-scroll-stop).
-;;;
-;;;  Written by Andrew Mickish
+;; 
+;;   Features and operation of the horizontal scroll bar:
+;;      1)  Drag the indicator with the left mouse button.
+;;      2)  Click the left mouse button in the scroll bar trough to cause
+;;          the indicator to jump by :page-incr increments.
+;;      3)  Click the left mouse button in the trill boxes to move the
+;;          indicator by :scr-incr increments.
+;;      4)  The top level :value slot is the position of the indicator.
+;;          This slot may be set directly and formulae may depend on it.
+;;      5)  The function specified in :selection-function will be executed
+;;          when the :values slot changes.
+;; 
+;;   Customizable slots:
+;;      1)  Left, top, width, height
+;;      2)  Scr-trill-p  --  Whether to have arrow trill boxes that increment
+;;                           by :scr-incr
+;;      3)  Val-1, Val-2  --  Range of values the indicator spans.
+;;                            Val-1 corresponds to the left of the scroll bar.
+;;      4)  Scr-Incr  --  Value to increment position by with the trill arrows.
+;;      5)  Page-Incr  --  Value to increment postion by when mouse is clicked
+;;                         in trough.
+;;      6)  Percent-Visible -- Percent of the scrollbar that should be occupied
+;;                             by the indicator (from 0 to 1).
+;;      7)  Foreground-Color
+;;      8)  Value -- The current value chosen by the user.
+;;      9)  Scroll-p -- Whether to allow scrolling.
+;;     10)  Keyboard-selection-p -- Whether the keyboard interactor should
+;;             operate on the scroll bar.
+;;     11)  Selection-function -- Function executed whenever :value changes.
+;; 
+;;   NOTE:  This module requires schemata defined in Motif-Parts.
+;; 
+;;   Motif vertical scroll bar demo:
+;;      This module contains a function which creates a window and a scroll bar
+;;      in the window.  To run it, enter (GARNET-GADGETS:motif-h-scroll-go).
+;;      To stop, enter (GARNET-GADGETS:motif-h-scroll-stop).
+;; 
+;;   Written by Andrew Mickish
 
+
 ;;;  CHANGE LOG:
-;;;  12/15/92  Andrew Mickish - Added type and parameter declarations
-;;;  06/24/92  Andrew Mickish - Changed :JUMP interactor to be MOTIF-JUMP,
-;;;              implemented auto-repeat for trill buttons
-;;;  02/11/92  Andrew Mickish - Added :maybe-constant list
-;;;  03/01/91  Andrew Mickish - Created
-;;;  
+;;   12/15/92  Andrew Mickish - Added type and parameter declarations
+;;   06/24/92  Andrew Mickish - Changed :JUMP interactor to be MOTIF-JUMP,
+;;               implemented auto-repeat for trill buttons
+;;   02/11/92  Andrew Mickish - Added :maybe-constant list
+;;   03/01/91  Andrew Mickish - Created
 
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Motif-H-Scroll-Bar))
   #+garnet-test
   (export '(Motif-H-Scroll-Go Motif-H-Scroll-Stop
@@ -181,10 +185,8 @@
 			 :keyboard-selection-p :foreground-color :value
 			 :active-p :selection-function :visible)
 	    (:type (number :val-1 :val-2 :scr-incr :page-incr :value)
-		   (kr-boolean :scr-trill-p :scroll-p :keyboard-selection-p
-		    :active-p)
-		   #+(or lucid allegro-V3.1) (number :percent-visible)
-		   #-(or lucid allegro-V3.1) ((real 0 1) :percent-visible)
+		   (kr-boolean :scr-trill-p :scroll-p :keyboard-selection-p :active-p)
+		   ((real 0 1) :percent-visible)
 		   ((is-a-p opal:color) :foreground-color)
 		   ((or null function symbol) :selection-function))
 	    (:maybe-constant :left :top :width :height :val-1 :val-2 :scr-incr
@@ -262,16 +264,26 @@
               (:attach-point :where-hit)
               (:running-where T))
       (:JUMP ,MOTIF-JUMP)
+      ;; WHEEL is like KEY only uses the scroll wheel events.
+      (:WHEEL ,inter:button-interactor
+	      (:active ,(o-formula (let ((p (gvl :operates-on)))
+				     (and (gvl :window)
+					  (gv p :scroll-p) (gv p :active-p)))))
+	      (:window ,(o-formula (gv-local :self :operates-on :window)))
+	      (:continuous NIL)
+	      (:start-where ,(o-formula (list :in-box (gvl :operates-on :bounding-area))))
+	      (:start-event (:upscrollup :downscrollup))
+	      (:final-function MOTIF-KEY-TRILL-FN))
       (:KEY ,inter:button-interactor
-       (:active ,(o-formula (let ((p (gvl :operates-on)))
-			      (and (gvl :window)
-				   (gv p :scroll-p) (gv p :active-p)
-				   (gv p :keyboard-selection-p)))))
-       (:window ,(o-formula (gv-local :self :operates-on :window)))
-       (:continuous NIL)
-       (:start-where T)
-       (:start-event (:leftarrow :rightarrow))
-       (:final-function MOTIF-KEY-TRILL-FN)))))
+	    (:active ,(o-formula (let ((p (gvl :operates-on)))
+				   (and (gvl :window)
+					(gv p :scroll-p) (gv p :active-p)
+					(gv p :keyboard-selection-p)))))
+	    (:window ,(o-formula (gv-local :self :operates-on :window)))
+	    (:continuous NIL)
+	    (:start-where T)
+	    (:start-event (:leftarrow :rightarrow))
+	    (:final-function MOTIF-KEY-TRILL-FN)))))
 
 
 

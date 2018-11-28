@@ -89,7 +89,7 @@ Change log:
         (common-lisp-user::garnet-load "gestures:gesture-loader")
 
         ;; load training code
-        (load (common-lisp-user::garnet-pathnames "train"
+        (load (merge-pathnames "train"
 			       common-lisp-user::Garnet-Gesture-PathName))))
 
 ;; global variables definitions

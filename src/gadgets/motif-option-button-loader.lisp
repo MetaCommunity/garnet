@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $	
+
 
 #|
 ==================================================================
@@ -30,9 +32,7 @@ Change log:
 		  (:motif-menu "motif-menu-loader")
 		  (:motif-option-button "motif-option-button")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Motif-Option-Button.~%"))
  

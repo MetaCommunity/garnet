@@ -568,8 +568,7 @@ Change log:
 
                 ;; make the new number-box and the menu item selected
                 (s-value *Selection-Obj* :obj-over new-obj)
-                (Mode-Menu-Select :number)
-            )
+                (Mode-Menu-Select :number))
             (:PLUS
                 (setf new-obj 
                       (create-instance NIL plus-box (:func '+)
@@ -580,8 +579,7 @@ Change log:
 
                 ;; make the new plus-box and the menu item selected
                 (s-value *Selection-Obj* :obj-over new-obj)
-                (Mode-Menu-Select :plus)
-            )
+                (Mode-Menu-Select :plus))
             (:TIMES
                 ; check if the bounding box of this gesture entirely
                 ; covers the bounding box of a box or arrow. If not,
@@ -614,12 +612,7 @@ Change log:
                             ; only delete object that haven't been deleted
                             (when (kr:schema-p cur)
                                 (s-value *Selection-Obj* :obj-over cur)
-                                (Delete-Object NIL NIL)
-                            )
-                        )
-                    )
-                )
-            )
+                                (Delete-Object NIL NIL))))))
             ((:MINUS :ARROW :DIVIDE)
                 ; first have to find the objects where the line is drawn
                 (let ((from-box (opal:point-to-component *objs-agg* 
@@ -691,18 +684,9 @@ Change log:
                                       (g-value from-box :lines-from-me))
                                 (push new-line 
                                       (g-value to-box :lines-to-me))
-                                (opal:add-component *objs-agg* new-line)
-                            )
-                        )
-                    )
-                )
-            )
+                                (opal:add-component *objs-agg* new-line))))))
             (otherwise
-                (format T "unrecognized gesture...~%~%")
-            )
-        )
-    )
-)
+                (format T "unrecognized gesture...~%~%")))))
 
 
 ;;;********************************************************************
@@ -806,9 +790,7 @@ Change log:
        (:start-where T) 
        (:window work-win)
        (:classifier (inter:gest-classifier-read 
-                        (common-lisp-user::garnet-pathnames "demo-arith.classifier"
-			     #-cmu common-lisp-user::Garnet-Gesture-Data-Pathname
-			     #+cmu "gesture-data:")))
+                        (merge-pathnames "demo-arith.classifier" common-lisp-user::Garnet-Gesture-Data-Pathname)))
        (:final-function #'handle-gesture)
        (:max-dist-to-mean 20)
        (:min-non-ambig-prob .4)
@@ -859,5 +841,6 @@ Change log:
   )
 
 (defun Do-Stop ()
-  (opal:destroy TOP-WIN))
+  (when (schema-p TOP-WIN)
+    (opal:destroy TOP-WIN)))
 

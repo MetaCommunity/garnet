@@ -11,6 +11,8 @@
 ;;  These functions are used to generate labels for the gadgets.  They are
 ;;  defined in this aggregadget file because they are used in several different
 ;;  gadget files.
+;;;
+;;; $Id::                                                             $	
 
 
 #|
@@ -22,7 +24,7 @@ Change log:
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Single-Button-Get-Label Panel-Get-Label)))
 
 ;;

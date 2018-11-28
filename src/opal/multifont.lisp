@@ -1,123 +1,127 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; CHANGE LOG:
-;;; 22-May-94 Mickish  Commented out mysterious g-value of :colormap-index slot
-;;;                    in :draw method because the :colormap-index formula is
-;;;                    still buggy in the Mac version
-;;; 14-Dec-93 Mickish  Ignored variables to eliminate compiler warnings
-;;; 27-Oct-93 Mickish  Copy-Frag ---> Copy-The-Frag
-;;; 24-Sep-93 McDaniel Removed some unnecessary checks from width-break.
-;;;                    Changed test in wrap-line from >= to just >.
-;;;                    Fixed break-line to better handle breaking lines
-;;;                    next to object fragments.
-;;;                    Rewrote calculate-cursor-x.  It was getting out
-;;;                    of hand and needed to be simplified.
-;;;                    Changed add-newline to comply with the new version
-;;;                    of break-line.
-;;; 20-Sep-93 Fernando Renamed "position" variables to "frag-position"
-;;; 15-Sep-93 McDaniel Fixed bug in Merge-Lines.  Calculate-Cursor-Pos was
-;;;                    being called with the wrong line.
-;;; 20-Aug-93 Goldberg Added :write-slots mf-specific function.
-;;;                    Fixed add-space-to-line so that objects are valid lines.
-;;; 06-Aug-93 Goldberg Added lisp-mode-p parameters to ADD-CHAR and DELETE-
-;;;                    SELECTION
-;;; 02-Aug-93 Mickish  Resize-Object ---> Notice-Resize-Object
-;;; 20-Jul-93 Goldberg Moved call to set-line-style in multifont-line
-;;;                    draw-method so that it is set for frag colors.
-;;; 16-Jul-93 Goldberg Put Cursor at the front of the multifont-text
-;;;                    aggregate rather than at the back so that it
-;;;                    does not get drawn over.
-;;; 23-Jun-93 Goldberg Added Marks
-;;;  6-Jun-93 Goldberg Fixed bugs in adding objects as frags.
-;;;                    Added Color.
-;;; 31-May-93 Mickish Added :force-update slot to cursor (see note in
-;;;                   TOGGLE-SELECTION).
-;;;  3-May-93 RGM fixed syntax error in merge-frags that caused certain
-;;;               problems with updating fonts.
-;;;  3-May-93 RGM converted some g-value's in the line draw method to
-;;;               be aref's from the update-values array.
-;;; 23-Apr-93 Mickish Added :do-not-dump-slots and :do-not-dump-objects
-;;; 20-Apr-93 Mickish Fixed to work with opal:font-from-files; Modified
-;;;                   Check-Text to print the offending fragment.
-;;;  6-Apr-93 koz Converted with-*-styles macros to set-*-style fns
-;;;               And omitted "clip-mask" as argument to draw function.
-;;; 10-Mar-93 Mickish Restored Extract-Key-From-Font which was deleted from
-;;;                   multifont-textinter.lisp
-;;;  9-Mar-93 RGM Fixed return value for functions Delete-Word,
-;;;               Delete-Prev-Word, Go-To-Next-Word, and Go-To-Prev-Word.
-;;;  5-Mar-93 Mickish Added parameter and type declarations
-;;; 10-Feb-93 RGM Added function EMPTY-TEXT-P to check for blank text formats.
-;;; 02-Feb-93 Mickish Implemeted :force-update slot for fast-redraw; finished
-;;;                   Reset-Multifont-Sizes for changing displays
-;;; 12-Jan-93 RGM Changed allocation of fragments so that they are allocated
-;;;               off of a free list, *Free-Frag-Head*.  Renamed :string
-;;;               slot to :initial-text; Set-Strings ---> Set-Text
-;;; 11-Jan-93 RGM Added check-text function to provide better error checking
-;;;               in input strings.
-;;; 03-Dec-92 Mickish Reordered :update-slots, added :set-frr-bbox method
-;;;                   so MULTIFONT-LINE's can be fast redraw objects;
-;;;                   Added :fix-update-slots method to replace the call to
-;;;                   Update-Text-Width from the formula in :text-toggle;
-;;;                   Made :draw method slightly more efficient.
-;;; 22-Oct-92 RGM Fixed format bug in INSERT-TEXT procedure.
-;;; 23-Sep-92 Mickish/koz Pushed some :update-slots slots from MULTIFONT-TEXT
-;;;           down into MULTIFONT-LINE instances (partial fix -- remaining
-;;;           slots must be dealt with).
-;;; 27-Aug-92 Mickish G-value --> gv in :width formula of multifont-text
-;;; 26-Jun-92 Mickish Replaced calls to opal::*-method-aggregate with kr-sends
-;;;                   of the corresponding methods.
-;;; 18-May-92 ECP Added hack to update-text-width to make cursor valid.
-;;; 12-May-92 RGM Fixed initialization so that last-line's next-line is NIL.
-;;;  7-Apr-92 ECP Moved declaration of frag-height to after defstruct of frag.
-;;;  6-Apr-92 Mickish Fixed a typo and missing parameter in a call to
-;;;                   calculate-size-of-line in ADD-CHAR
-;;;  6-Apr-92 ECP Renamed copy-selection to copy-selected-text so as not
-;;;		  to collide with the name of inter:copy-selection.
-;;;  2-Apr-92 RGM Released new version.  Made major changes.  Added word wrap
-;;;           and the ability to select text.
-;;; 21-Oct-91 ECP Implemented :fill-background-p for multifont-text.
-;;; 11-Jun-91 ECP Released to test version
-;;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;         The Garnet User Interface Development Environment.        ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.  If you are using this code or any part of Garnet,       ;;
+;;  please contact garnet@cs.cmu.edu to be put on the mailing list.  ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
 
-;;; Notes to maintainers:
-;;; A) The multifont-text is an aggregate.  The components of the aggregate
-;;;    are multifont-lines which draw the strings of the text and one
-;;;    multifont-cursor which is a line showing the position of the cursor.
-;;; B) Multifont-line are kept as a linked list within the multifont-text:
-;;;    the slot, :prev-line, points to the line above and :next-line to the
-;;;    line below.  Each line contains a single linked list of "fragments."
-;;; C) A fragment is a structure (frag) that holds the actual strings.  There
-;;;    is exactly the number of fragments in a line as there are different
-;;;    fonts.  If two lines are merges and the first and last fragments of
-;;;    corresponding lines contain the same font (which they must), the
-;;;    fragments must be merged to form one.  Also, there is not allowed to be
-;;;    a fragment of zero length with one exception.  If the first character
-;;;    of a line has a different font than the last character of the line
-;;;    above, there must be a zero length fragment on that line with the font
-;;;    from the line above.  The reason for the extra fragment is to make new
-;;;    characters at the beginning of the line the same font as the character
-;;;    at the end of the last line.  The procedure calculate-size-of-line is
-;;;    able to make a line follow the above conventions.
-;;; D) The state of the cursor has five parts: line, character position,
-;;;    fragment, fragment position, and x offset.  The cursor is not allowed
-;;;    to point to the very beginning of a fragment (frag-pos = 0) unless
-;;;    the cursor is at the very beginning of the line.  If the fragment
-;;;    position is zero and there exists a previous fragment, the cursor must
-;;;    be set to point to the last character in the previous fragment. 
-;;; E) The state of the selection pointer consists of four parts: line,
-;;;    position, fragment, and fragment position.  A selection area is
-;;;    highlighted by setting the multifont-text's :selection-p to true,
-;;;    and having the highlight-start and highlight-end components of the
-;;;    fragments to be nonequal.
+;; $Id$
+;;
+;; CHANGE LOG:
+;; 22-May-94 Mickish  Commented out mysterious g-value of :colormap-index slot
+;;                    in :draw method because the :colormap-index formula is
+;;                    still buggy in the Mac version
+;; 14-Dec-93 Mickish  Ignored variables to eliminate compiler warnings
+;; 27-Oct-93 Mickish  Copy-Frag ---> Copy-The-Frag
+;; 24-Sep-93 McDaniel Removed some unnecessary checks from width-break.
+;;                    Changed test in wrap-line from >= to just >.
+;;                    Fixed break-line to better handle breaking lines
+;;                    next to object fragments.
+;;                    Rewrote calculate-cursor-x.  It was getting out
+;;                    of hand and needed to be simplified.
+;;                    Changed add-newline to comply with the new version
+;;                    of break-line.
+;; 20-Sep-93 Fernando Renamed "position" variables to "frag-position"
+;; 15-Sep-93 McDaniel Fixed bug in Merge-Lines.  Calculate-Cursor-Pos was
+;;                    being called with the wrong line.
+;; 20-Aug-93 Goldberg Added :write-slots mf-specific function.
+;;                    Fixed add-space-to-line so that objects are valid lines.
+;; 06-Aug-93 Goldberg Added lisp-mode-p parameters to ADD-CHAR and DELETE-
+;;                    SELECTION
+;; 02-Aug-93 Mickish  Resize-Object ---> Notice-Resize-Object
+;; 20-Jul-93 Goldberg Moved call to set-line-style in multifont-line
+;;                    draw-method so that it is set for frag colors.
+;; 16-Jul-93 Goldberg Put Cursor at the front of the multifont-text
+;;                    aggregate rather than at the back so that it
+;;                    does not get drawn over.
+;; 23-Jun-93 Goldberg Added Marks
+;;  6-Jun-93 Goldberg Fixed bugs in adding objects as frags.
+;;                    Added Color.
+;; 31-May-93 Mickish Added :force-update slot to cursor (see note in
+;;                   TOGGLE-SELECTION).
+;;  3-May-93 RGM fixed syntax error in merge-frags that caused certain
+;;               problems with updating fonts.
+;;  3-May-93 RGM converted some g-value's in the line draw method to
+;;               be aref's from the update-values array.
+;; 23-Apr-93 Mickish Added :do-not-dump-slots and :do-not-dump-objects
+;; 20-Apr-93 Mickish Fixed to work with opal:font-from-files; Modified
+;;                   Check-Text to print the offending fragment.
+;;  6-Apr-93 koz Converted with-*-styles macros to set-*-style fns
+;;               And omitted "clip-mask" as argument to draw function.
+;; 10-Mar-93 Mickish Restored Extract-Key-From-Font which was deleted from
+;;                   multifont-textinter.lisp
+;;  9-Mar-93 RGM Fixed return value for functions Delete-Word,
+;;               Delete-Prev-Word, Go-To-Next-Word, and Go-To-Prev-Word.
+;;  5-Mar-93 Mickish Added parameter and type declarations
+;; 10-Feb-93 RGM Added function EMPTY-TEXT-P to check for blank text formats.
+;; 02-Feb-93 Mickish Implemeted :force-update slot for fast-redraw; finished
+;;                   Reset-Multifont-Sizes for changing displays
+;; 12-Jan-93 RGM Changed allocation of fragments so that they are allocated
+;;               off of a free list, *Free-Frag-Head*.  Renamed :string
+;;               slot to :initial-text; Set-Strings ---> Set-Text
+;; 11-Jan-93 RGM Added check-text function to provide better error checking
+;;               in input strings.
+;; 03-Dec-92 Mickish Reordered :update-slots, added :set-frr-bbox method
+;;                   so MULTIFONT-LINE's can be fast redraw objects;
+;;                   Added :fix-update-slots method to replace the call to
+;;                   Update-Text-Width from the formula in :text-toggle;
+;;                   Made :draw method slightly more efficient.
+;; 22-Oct-92 RGM Fixed format bug in INSERT-TEXT procedure.
+;; 23-Sep-92 Mickish/koz Pushed some :update-slots slots from MULTIFONT-TEXT
+;;           down into MULTIFONT-LINE instances (partial fix -- remaining
+;;           slots must be dealt with).
+;; 27-Aug-92 Mickish G-value --> gv in :width formula of multifont-text
+;; 26-Jun-92 Mickish Replaced calls to opal::*-method-aggregate with kr-sends
+;;                   of the corresponding methods.
+;; 18-May-92 ECP Added hack to update-text-width to make cursor valid.
+;; 12-May-92 RGM Fixed initialization so that last-line's next-line is NIL.
+;;  7-Apr-92 ECP Moved declaration of frag-height to after defstruct of frag.
+;;  6-Apr-92 Mickish Fixed a typo and missing parameter in a call to
+;;                   calculate-size-of-line in ADD-CHAR
+;;  6-Apr-92 ECP Renamed copy-selection to copy-selected-text so as not
+;;		  to collide with the name of inter:copy-selection.
+;;  2-Apr-92 RGM Released new version.  Made major changes.  Added word wrap
+;;           and the ability to select text.
+;; 21-Oct-91 ECP Implemented :fill-background-p for multifont-text.
+;; 11-Jun-91 ECP Released to test version
+;;
 
+
+;; Notes to maintainers:
+;; A) The multifont-text is an aggregate.  The components of the aggregate
+;;    are multifont-lines which draw the strings of the text and one
+;;    multifont-cursor which is a line showing the position of the cursor.
+;; B) Multifont-line are kept as a linked list within the multifont-text:
+;;    the slot, :prev-line, points to the line above and :next-line to the
+;;    line below.  Each line contains a single linked list of "fragments."
+;; C) A fragment is a structure (frag) that holds the actual strings.  There
+;;    is exactly the number of fragments in a line as there are different
+;;    fonts.  If two lines are merges and the first and last fragments of
+;;    corresponding lines contain the same font (which they must), the
+;;    fragments must be merged to form one.  Also, there is not allowed to be
+;;    a fragment of zero length with one exception.  If the first character
+;;    of a line has a different font than the last character of the line
+;;    above, there must be a zero length fragment on that line with the font
+;;    from the line above.  The reason for the extra fragment is to make new
+;;    characters at the beginning of the line the same font as the character
+;;    at the end of the last line.  The procedure calculate-size-of-line is
+;;    able to make a line follow the above conventions.
+;; D) The state of the cursor has five parts: line, character position,
+;;    fragment, fragment position, and x offset.  The cursor is not allowed
+;;    to point to the very beginning of a fragment (frag-pos = 0) unless
+;;    the cursor is at the very beginning of the line.  If the fragment
+;;    position is zero and there exists a previous fragment, the cursor must
+;;    be set to point to the last character in the previous fragment. 
+;; E) The state of the selection pointer consists of four parts: line,
+;;    position, fragment, and fragment position.  A selection area is
+;;    highlighted by setting the multifont-text's :selection-p to true,
+;;    and having the highlight-start and highlight-end components of the
+;;    fragments to be nonequal.
+
+
 (in-package "OPAL")
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
@@ -180,7 +184,8 @@
 	    CONCATENATE-TEXT
 	    EMPTY-TEXT-P)))
 
-;;; Global Variables
+
+;; Global Variables
 
 (defvar *default-color* nil)
 #| DZG
@@ -192,11 +197,7 @@
 (defparameter *Free-Frag-Head* nil)
 (defparameter *Free-Mark-Head* nil)
 
-#+(or allegro-v3.1 allegro-v4.0 lucid)
-(defmacro nth-value (n form)
-  `(nth ,n (multiple-value-list ,form)))
-
-;;; TYPE w/ print function
+;; TYPE w/ print function
 
 ;; FRAG : A fragment of text, with just one font
 (defstruct (frag (:print-function print-the-frag))
@@ -218,6 +219,7 @@
   break-p         ; T if end-of-line is a break, not a true \newline
 )
 
+
 (defun print-the-frag (frag stream depth)
   (declare (ignore depth))
   (if (frag-object-p frag)
@@ -252,14 +254,15 @@
 	  (if (mark-sticky-left mark) :LEFT :RIGHT)))
 
 
+
 ;; INSTANCES
 
-(defconstant *multifont-top* 2)
-(defconstant *multifont-left* 3)
-(defconstant *multifont-height* 4)
-(defconstant *multifont-width* 5)
-(defconstant *multifont-lstyle* 6)
-(defconstant *multifont-force-update* 9)
+(defconstant +multifont-top+ 2)
+(defconstant +multifont-left+ 3)
+(defconstant +multifont-height+ 4)
+(defconstant +multifont-width+ 5)
+(defconstant +multifont-lstyle+ 6)
+(defconstant +multifont-force-update+ 9)
 
 ;; MULTIFONT-LINE : A single line of text
 (create-instance 'opal::MULTIFONT-LINE opal:graphical-object
@@ -290,9 +293,7 @@
   (:prev-line nil)
   (:next-line nil))
 
-
-
-;;; MULTIFONT-TEXT : An aggregate of multifont-lines plus a cursor
+;; MULTIFONT-TEXT : An aggregate of multifont-lines plus a cursor
 (create-instance 'opal:MULTIFONT-TEXT opal:aggregate
   :declare ((:parameters :left :top :initial-text :word-wrap-p :text-width
 			 :current-font :fill-background-p :draw-function
@@ -330,21 +331,21 @@
 			      (gv cursor-line :ascent)))))
   (:CURRENT-FONT (o-formula (let ((cursor-frag (gvl :cursor-frag)))
 			      (if (frag-object-p cursor-frag)
-				(search-for-font (gvl :cursor-line)
-						 cursor-frag)
-				(frag-font cursor-frag)))))
+				  (search-for-font (gvl :cursor-line)
+						   cursor-frag)
+				  (frag-font cursor-frag)))))
   (:CURRENT-FCOLOR (o-formula (let ((cursor-frag (gvl :cursor-frag)))
 				(if (frag-object-p cursor-frag)
-				  (nth-value 0
-					     (search-for-color (gvl :cursor-line)
-							       cursor-frag))
-				  (frag-fcolor cursor-frag)))))
+				    (nth-value 0
+					       (search-for-color (gvl :cursor-line)
+								 cursor-frag))
+				    (frag-fcolor cursor-frag)))))
   (:CURRENT-BCOLOR (o-formula (let ((cursor-frag (gvl :cursor-frag)))
 				(if (frag-object-p cursor-frag)
-				  (nth-value 1
-					     (search-for-color (gvl :cursor-line)
-							       cursor-frag))
-				  (frag-bcolor cursor-frag)))))
+				    (nth-value 1
+					       (search-for-color (gvl :cursor-line)
+								 cursor-frag))
+				    (frag-bcolor cursor-frag)))))
 
   (:LEFT 0)
   (:TOP 0)
@@ -352,16 +353,13 @@
 			(+ (- (gv last-line :top) (gvl :top))
 			   (gv last-line :height)))))
   (:WIDTH (o-formula (if (gvl :word-wrap-p)
-		       (gvl :text-width)
-		       (let ((w 0))
-			 (do ((line (gvl :first-line)
-				    (g-value line :next-line)))
-			     ((null line))
-			   (setq w (max w (gv line :width)))
-			   )
-			 w
-			 )
-		       )))
+			 (gvl :text-width)
+			 (let ((w 0))
+			   (do ((line (gvl :first-line)
+				      (g-value line :next-line)))
+			       ((null line))
+			     (setq w (max w (gv line :width))))
+			   w))))
   (:INITIAL-TEXT (list ""))
   (:WORD-WRAP-P NIL)
   (:TEXT-WIDTH 300)
@@ -369,58 +367,45 @@
   (:FILL-BACKGROUND-P T)
   (:LINE-STYLE (o-formula (let ((parent-win (gvl :window)))
 			    (if parent-win
-			      (let ((bgc (gv parent-win :background-color)))
-				(if bgc
-				  (create-instance nil opal:line-style
-				    (:background-color
-				     bgc))
-				  OPAL:DEFAULT-LINE-STYLE))
-			      OPAL:DEFAULT-LINE-STYLE))))
+				(let ((bgc (gv parent-win :background-color)))
+				  (if bgc
+				      (create-instance nil opal:line-style
+					(:background-color
+					 bgc))
+				      OPAL:DEFAULT-LINE-STYLE))
+				OPAL:DEFAULT-LINE-STYLE))))
   (:do-not-dump-objects :me)
   )
 
 
- ;; MULTIFONT-TEXT-CURSOR : Cursor for multifont-text
- (create-instance 'MULTIFONT-TEXT-CURSOR opal:rectangle
-   (:update-slots '(:visible :fast-redraw-p :top :left :width :height
-		    :line-style :filling-style :draw-function :force-update))
-   (:draw-function :xor)
-   (:filling-style opal:black-fill)
-   (:line-style nil)
-   (:fast-redraw-p T)
-   (:visible nil)
-   (:ascent (o-formula
+;; MULTIFONT-TEXT-CURSOR : Cursor for multifont-text
+(create-instance 'MULTIFONT-TEXT-CURSOR opal:rectangle
+  (:update-slots '(:visible :fast-redraw-p :top :left :width :height
+		   :line-style :filling-style :draw-function :force-update))
+  (:draw-function :xor)
+  (:filling-style opal:black-fill)
+  (:line-style nil)
+  (:fast-redraw-p T)
+  (:visible nil)
+  (:ascent (o-formula
+	    (let* ((parent (gvl :parent))
+		   (cursor-frag (gv parent :cursor-frag)))
+	      (if (frag-object-p cursor-frag)
+		  (frag-ascent cursor-frag)
+		  (min (gv parent :current-font :max-char-ascent)
+		       (gv parent :cursor-line :ascent))))))
+  (:descent (o-formula
 	     (let* ((parent (gvl :parent))
 		    (cursor-frag (gv parent :cursor-frag)))
-	      (if (frag-object-p cursor-frag)
-		(frag-ascent cursor-frag)
-		(min (gv parent :current-font :max-char-ascent)
-		     (gv parent :cursor-line :ascent))))))
-   (:descent (o-formula
-	      (let* ((parent (gvl :parent))
-		    (cursor-frag (gv parent :cursor-frag)))
 	       (if (frag-object-p cursor-frag)
-		 (frag-descent cursor-frag)
-		 (min (gv parent :current-font :max-char-descent)
-		      (gv parent :cursor-line :descent))))))
-   (:top (o-formula (- (gvl :parent :base-line) (gvl :ascent))))
-   (:left (o-formula (let ((parent (gvl :parent)))
-		       (+ (gv parent :left) (gv parent :cursor-x-offset)))))
-   (:width 2)
-   (:height (o-formula (+ (gvl :ascent) (gvl :descent)))))
-
-
-(define-method :set-styles MULTIFONT-LINE (obj line-style filling-style)
-  (let ((update-vals (g-local-value obj :update-slots-values)))
-    (vector update-vals)
-    (setf (aref update-vals *multifont-lstyle*) line-style)))
-
-(define-method :set-frr-bbox MULTIFONT-LINE (obj)
-  (let ((update-vals (g-local-value obj :update-slots-values)))
-    (set-frr-bbox-fn (aref update-vals *multifont-left*)
-		     (aref update-vals *multifont-top*)
-		     (aref update-vals *multifont-width*)
-		     (aref update-vals *multifont-height*))))
+		   (frag-descent cursor-frag)
+		   (min (gv parent :current-font :max-char-descent)
+			(gv parent :cursor-line :descent))))))
+  (:top (o-formula (- (gvl :parent :base-line) (gvl :ascent))))
+  (:left (o-formula (let ((parent (gvl :parent)))
+		      (+ (gv parent :left) (gv parent :cursor-x-offset)))))
+  (:width 2)
+  (:height (o-formula (+ (gvl :ascent) (gvl :descent)))))
 
 
 (s-value MULTIFONT-TEXT :do-not-dump-slots
@@ -429,6 +414,7 @@
 		    :first-mark :last-mark)
 		  (g-value MULTIFONT-TEXT :do-not-dump-slots)))
 
+
 ;;; Helper Functions for Methods
 
 ;; This function will check an input in the :strings format to see whether or
@@ -627,8 +613,8 @@
        (eq (frag-line-style frag1) (frag-line-style frag2))))
 
 
-;;; Merge first-frag into second-frag if fonts & colors are equal.
-;;; Return second frag if successful; otherwise, return first-frag.
+;; Merge first-frag into second-frag if fonts & colors are equal.
+;; Return second frag if successful; otherwise, return first-frag.
 (defun merge-frags (my-line first-frag second-frag)
   (cond
     ((and (zerop (frag-length first-frag))
@@ -706,7 +692,6 @@
      first-frag)))
 
 
-
 ;; Splits a frag into two pieces, the first (old) being left-frag
 ;; and the second (new) being right-frag.  Returns right-frag.
 (defun split-frag (left-frag cursor-sub-index)
@@ -782,9 +767,9 @@
     right-frag))
 
 
-;;; Determine all attributes (other than fragments) of the given line by
-;;; running through all of its constituent fragments.  Remove zero length
-;;; fragments from line (except for the first fragment which is a special case)
+;; Determine all attributes (other than fragments) of the given line by
+;; running through all of its constituent fragments.  Remove zero length
+;; fragments from line (except for the first fragment which is a special case)
 (defun calculate-size-of-line (gob my-line)
   (let ((length 0)
 	(width 0)
@@ -899,10 +884,10 @@
     (values cursor-frag frag-offset x-offset)))
 
 
-;;; Break the line at the given character position.  The cursor position is
-;;; changed correctly if it is on the line.  The parameter break-p is used to
-;;; fill the break-p slot in the broken frag.
-;;;
+;; Break the line at the given character position.  The cursor position is
+;; changed correctly if it is on the line.  The parameter break-p is used to
+;; fill the break-p slot in the broken frag.
+;;
 (defun break-line (gob my-line my-position break-p)
   (let ((length my-position)
 	(next-line (g-value my-line :next-line)) 
@@ -983,17 +968,17 @@
 	(s-value gob :select-frag-pos frag-pos)))))
 
 
-; ;; If line is too long, wrap excess onto next line.
+;; If line is too long, wrap excess onto next line.
 (defun wrap-line (gob my-line)
   (if my-line
-    (let ((width (g-value gob :text-width)))
-      (when (> (g-value my-line :width) width)
-	(break-line gob my-line
-		    (find-wrap width my-line (find-spaces my-line)) t)
-	(wrap-line gob (g-value my-line :next-line))))))
+      (let ((width (g-value gob :text-width)))
+	(when (> (g-value my-line :width) width)
+	  (break-line gob my-line
+		      (find-wrap width my-line (find-spaces my-line)) t)
+	  (wrap-line gob (g-value my-line :next-line))))))
 
 
-;;; Break line at newlines, and put a space at the end of the line.
+;; Break line at newlines, and put a space at the end of the line.
 (defun add-space-to-line (my-line)
   (let ((ans nil))
     (cond
@@ -1018,28 +1003,28 @@
 		  (true-list (and (stringp string)
 				  specs-list (listp specs-list)))
 		  (last-font (if has-specs
-			       (if true-list
-				 (second frag)
-				 specs-list)
-			       opal:default-font))
+				 (if true-list
+				     (second frag)
+				     specs-list)
+				 opal:default-font))
 		  (last-fcolor (if true-list (third frag) *default-color*))
 		  (last-bcolor (if true-list (fourth frag)  *default-color*)))
 	     (if (stringp string)
-	       (progn
-		 (dolist (sub-my-line (break-at-newlines string))
-		   (push (append (pop frags)
-				 (list (list sub-my-line last-font
-					     last-fcolor last-bcolor)))
-			 ans))
-		 (push (pop ans) frags))
-	       (progn
-		 (when (eq string :mark)
-		   (let ((mark (new-mark)))
-		     (setf (mark-sticky-left mark) (first specs-list))
-		     (setf (mark-name mark) (second specs-list))
-		     (setf (mark-info mark) (third specs-list))
-		     (setq string mark)))
-		 (push (append (pop frags) (list string)) frags)))
+		 (progn
+		   (dolist (sub-my-line (break-at-newlines string))
+		     (push (append (pop frags)
+				   (list (list sub-my-line last-font
+					       last-fcolor last-bcolor)))
+			   ans))
+		   (push (pop ans) frags))
+		 (progn
+		   (when (eq string :mark)
+		     (let ((mark (new-mark)))
+		       (setf (mark-sticky-left mark) (first specs-list))
+		       (setf (mark-name mark) (second specs-list))
+		       (setf (mark-info mark) (third specs-list))
+		       (setq string mark)))
+		   (push (append (pop frags) (list string)) frags)))
 	     (when (= i (1- len))
 	       (push (append
 		      (pop frags)
@@ -1058,7 +1043,6 @@
 
 ;; Puts the whole text into a completely empty multifont object.  This is used
 ;; for initialization and the function SET-STRINGS.
-
 (defun install-text (gob text)
   (let ((cursor (g-value gob :cursor))
 	(prev-line nil) prev-frag  (prev-object nil)
@@ -1220,8 +1204,21 @@
 	  ((null my-line))
 	(wrap-line gob my-line)))))
 
-
+
 ;;; METHODS
+
+(define-method :set-styles MULTIFONT-LINE (obj line-style filling-style)
+  (let ((update-vals (g-local-value obj :update-slots-values)))
+    (vector update-vals)
+    (setf (aref update-vals +multifont-lstyle+) line-style)))
+
+
+(define-method :set-frr-bbox MULTIFONT-LINE (obj)
+  (let ((update-vals (g-local-value obj :update-slots-values)))
+    (set-frr-bbox-fn (aref update-vals +multifont-left+)
+		     (aref update-vals +multifont-top+)
+		     (aref update-vals +multifont-width+)
+		     (aref update-vals +multifont-height+))))
 
 
 (define-method :write-slots opal:multifont-text (agget normal-proto components
@@ -1243,41 +1240,30 @@
 	(if (> (g-value my-line :width) text-width)
 	  (wrap-line gob my-line)
 	  (do ()
-	      ((null (undo-wrap-line gob my-line)))
-	    )
-	  )
-	)
-      )
+	      ((null (undo-wrap-line gob my-line)))))))
     (do ((my-line (g-value gob :first-line) (g-value my-line :next-line)))
 	((null my-line))
-      (if (frag-break-p (g-value my-line :last-frag))
-	(merge-lines gob my-line (g-value my-line :next-line))
-	)
-      )
-    )
-  )
+      (when (frag-break-p (g-value my-line :last-frag))
+	(merge-lines gob my-line (g-value my-line :next-line))))))
 
 
 ;; Method :INITIALIZE : create initial data for text box.
 (define-method :initialize opal:MULTIFONT-TEXT (gob &optional (first-time t))
   (when first-time
-    (kr-send opal:aggregate :initialize gob)
-    )
+    (kr-send opal:aggregate :initialize gob))
   (let ((cursor (create-instance nil multifont-text-cursor))
 	(text (g-value gob :initial-text)))
     (check-text text)
     (s-value gob :cursor cursor)
     (opal:add-component gob cursor :front)
-    (install-text gob text)
-    )
-  )
+    (install-text gob text)))
 
 
 ;; These should be moved to update-constants.lisp
-(defparameter *mf-text-lstyle* 6)
-(defparameter *mf-text-draw-function* 7)
-(defparameter *mf-text-fill-background-p* 8)
-(defparameter *mf-text-force-update* 9)
+(defconstant +mf-text-lstyle+ 6)
+(defconstant +mf-text-draw-function+ 7)
+(defconstant +mf-text-fill-background-p+ 8)
+(defconstant +mf-text-force-update+ 9)
 
 
 (define-method :draw opal::MULTIFONT-TEXT-CURSOR (gob a-window)
@@ -1297,12 +1283,12 @@
 (define-method :draw opal::MULTIFONT-LINE (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
 	 (show-marks (g-value gob :show-marks))
-	 (left (aref update-vals *text-left*))
-	 (top (+ (aref update-vals *text-top*) (g-value gob :ascent)))
-	 (line-style (aref update-vals *mf-text-lstyle*))
-	 (function (aref update-vals *mf-text-draw-function*))
-	 (fill-p (aref update-vals *mf-text-fill-background-p*)))
-    (setf (aref update-vals *multifont-force-update*) NIL)
+	 (left (aref update-vals +text-left+))
+	 (top (+ (aref update-vals +text-top+) (g-value gob :ascent)))
+	 (line-style (aref update-vals +mf-text-lstyle+))
+	 (function (aref update-vals +mf-text-draw-function+))
+	 (fill-p (aref update-vals +mf-text-fill-background-p+)))
+    (setf (aref update-vals +multifont-force-update+) NIL)
     (with-demons-disabled
 	(s-value gob :force-update NIL))
     (when line-style
@@ -1402,7 +1388,7 @@
 						  :display a-window))))))))))))
 
 
-
+
 ;;; Helper functions for Operations
 
 ;; This returns neccessary computations to update the position of the cursor.
@@ -1445,1038 +1431,904 @@
       (values cursor-frag cursor-frag-pos cursor-offset cursor-position))))
 
 
- ;; Makes certain that line gets redrawn even though no slot in the line schema
- ;; has changed.
- (defmacro invalidate-line (line)
-   `(s-value ,line :force-update T)
- )
+;; Makes certain that line gets redrawn even though no slot in the line schema
+;; has changed.
+(defmacro invalidate-line (line)
+   `(s-value ,line :force-update T))
 
 
- ;; Reset font and colors.  This is neccessary since it is possible for
- ;;the user to set the font with a s-value to :current-font.  This must be
- ;;reset whenever any operation other than adding characters is performed.
- (defmacro reset-font (gob)
-   `(let* ((frag (g-value ,gob :cursor-frag))
-	   (prev (frag-prev frag)))
-        (when (and prev (zerop (g-value ,gob :cursor-frag-pos)))
-	    (if (frag-object-p prev)
-		(setq frag (frag-prev prev))
-		(setq frag prev)))
-        (when (not (frag-object-p frag))
-	  (s-value ,gob :current-font
-		   (frag-font frag))
-	  (s-value ,gob :current-fcolor
-		   (frag-fcolor frag))
-	  (s-value ,gob :current-bcolor
-		   (frag-bcolor frag)))))
+;; Reset font and colors.  This is neccessary since it is possible for
+;;the user to set the font with a s-value to :current-font.  This must be
+;;reset whenever any operation other than adding characters is performed.
+(defmacro reset-font (gob)
+  `(let* ((frag (g-value ,gob :cursor-frag))
+	  (prev (frag-prev frag)))
+     (when (and prev (zerop (g-value ,gob :cursor-frag-pos)))
+       (if (frag-object-p prev)
+	   (setq frag (frag-prev prev))
+	   (setq frag prev)))
+     (when (not (frag-object-p frag))
+       (s-value ,gob :current-font
+		(frag-font frag))
+       (s-value ,gob :current-fcolor
+		(frag-fcolor frag))
+       (s-value ,gob :current-bcolor
+		(frag-bcolor frag)))))
 
 
- ;; Returns t if cursor position 1 is higher (or equal) to cursor position 2,
- ;; nil otherwise.
- (defun higher-cursor (line1 pos1 line2 pos2)
-    (if (< (g-value line1 :top) (g-value line2 :top))
-       t
-       (if (eq line1 line2)
+;; Returns t if cursor position 1 is higher (or equal) to cursor position 2,
+;; nil otherwise.
+(defun higher-cursor (line1 pos1 line2 pos2)
+  (if (< (g-value line1 :top) (g-value line2 :top))
+      t
+      (if (eq line1 line2)
 	  (<= pos1 pos2)
-	  nil
-       )
-    )
- )
+	  nil)))
 
 
- ;; Switch highlight on for the single line between positions pos1 and pos2.
- (defun turn-on-segment-mid (my-line pos1 pos2)
-    (unless (= pos1 pos2)
-       (invalidate-line my-line)
-       (let ((dec-pos1 pos1)
-	     (dec-pos2 pos2))
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos1)
-	        (if (>= length dec-pos2)
+;; Switch highlight on for the single line between positions pos1 and pos2.
+(defun turn-on-segment-mid (my-line pos1 pos2)
+  (unless (= pos1 pos2)
+    (invalidate-line my-line)
+    (let ((dec-pos1 pos1)
+	  (dec-pos2 pos2))
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos1)
+	    (if (>= length dec-pos2)
+		(let ((start-highlight (frag-start-highlight frag)))
+		  (if (= start-highlight (frag-end-highlight frag))
+		      (progn
+			(setf (frag-start-highlight frag) dec-pos1)
+			(setf (frag-end-highlight frag) dec-pos2))
+		      (if (> start-highlight dec-pos1)
+			  (setf (frag-start-highlight frag) dec-pos1)
+			  (setf (frag-end-highlight frag) dec-pos2))))
+		(progn
 		  (let ((start-highlight (frag-start-highlight frag)))
 		    (if (= start-highlight (frag-end-highlight frag))
-		       (progn
-			  (setf (frag-start-highlight frag) dec-pos1)
-			  (setf (frag-end-highlight frag) dec-pos2)
-		       )
-		       (if (> start-highlight dec-pos1)
-			  (setf (frag-start-highlight frag) dec-pos1)
-			  (setf (frag-end-highlight frag) dec-pos2)
-		       )
-		     ))
-		  (progn
-		    (let ((start-highlight (frag-start-highlight frag)))
-		      (if (= start-highlight (frag-end-highlight frag))
-			  (setf (frag-start-highlight frag) dec-pos1)
-			  (when (> start-highlight dec-pos1)
-			     (setf (frag-start-highlight frag) dec-pos1))
-		       ))
-		       (setf (frag-end-highlight frag) length)
-		       (decf dec-pos2 length)
-		       (do* ((nfrag (frag-next frag) (frag-next nfrag))
-			     (nlength (frag-length nfrag) (frag-length nfrag)))
-			   ((>= nlength dec-pos2)
-			    (let ((end-highlight (frag-end-highlight nfrag)))
-			      (if (= (frag-start-highlight nfrag)
-				     end-highlight)
-				 (setf (frag-end-highlight nfrag) dec-pos2)
-				 (when (< end-highlight dec-pos2)
-				    (setf (frag-end-highlight nfrag) dec-pos2))
-			      ))
-			      (setf (frag-start-highlight nfrag) 0)
-			   )
-			  (setf (frag-start-highlight nfrag) 0)
-			  (setf (frag-end-highlight nfrag) nlength)
-			  (decf dec-pos2 nlength)
-		       )
-		    )
-		 )
-	      )
-	     (decf dec-pos1 length)
-	     (decf dec-pos2 length)
-	  )
-       )
-    )
- )
+			(setf (frag-start-highlight frag) dec-pos1)
+			(when (> start-highlight dec-pos1)
+			  (setf (frag-start-highlight frag) dec-pos1))))
+		  (setf (frag-end-highlight frag) length)
+		  (decf dec-pos2 length)
+		  (do* ((nfrag (frag-next frag) (frag-next nfrag))
+			(nlength (frag-length nfrag) (frag-length nfrag)))
+		       ((>= nlength dec-pos2)
+			(let ((end-highlight (frag-end-highlight nfrag)))
+			  (if (= (frag-start-highlight nfrag)
+				 end-highlight)
+			      (setf (frag-end-highlight nfrag) dec-pos2)
+			      (when (< end-highlight dec-pos2)
+				(setf (frag-end-highlight nfrag) dec-pos2))))
+			(setf (frag-start-highlight nfrag) 0))
+		    (setf (frag-start-highlight nfrag) 0)
+		    (setf (frag-end-highlight nfrag) nlength)
+		    (decf dec-pos2 nlength)))))
+	(decf dec-pos1 length)
+	(decf dec-pos2 length)))))
 
 
- ;; Switch highlight on for the single line between start of line and pos.
- (defun turn-on-segment-left (my-line pos)
-    (unless (= pos 0)
-       (invalidate-line my-line)
-       (let ((dec-pos pos))
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos)
-	       (let ((end-highlight (frag-end-highlight frag)))
-		 (if (= (frag-start-highlight frag) end-highlight)
-		    (setf (frag-end-highlight frag) dec-pos)
-		    (when (< end-highlight dec-pos)
-		       (setf (frag-end-highlight frag) dec-pos))
-		 )
-		 (setf (frag-start-highlight frag) 0)
-	       )
-	      )
-	     (decf dec-pos length)
-	     (setf (frag-start-highlight frag) 0)
-	     (setf (frag-end-highlight frag) length)
-	  )
-       )
-    )
- )
-
-
- ;; Switch highlight on for the single line between pos and end of line.
- (defun turn-on-segment-right (my-line pos)
-    (unless (= pos (g-value my-line :length))
-       (invalidate-line my-line)
-       (let ((dec-pos (g-value my-line :length)))
-	  (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= (- dec-pos length) pos)
-		 (let ((frag-pos (- (+ pos length) dec-pos))
-		       (start-highlight (frag-start-highlight frag)))
-		    (if (= start-highlight (frag-end-highlight frag))
-		       (setf (frag-start-highlight frag) frag-pos)
-		       (when (> start-highlight frag-pos)
-			  (setf (frag-start-highlight frag) frag-pos))
-		    )
-		 )
-		 (setf (frag-end-highlight frag) length)
-	      )
-	     (decf dec-pos length)
-	     (setf (frag-start-highlight frag) 0)
-	     (setf (frag-end-highlight frag) length)
-	  )
-       )
-    )
- )
-
-
- ;; Switch highlight on for the single line.
- (defun turn-on-line (my-line)
+;; Switch highlight on for the single line between start of line and pos.
+(defun turn-on-segment-left (my-line pos)
+  (unless (= pos 0)
     (invalidate-line my-line)
-    (do ((frag (g-value my-line :first-frag) (frag-next frag)))
-	((null frag))
-       (setf (frag-start-highlight frag) 0)
-       (setf (frag-end-highlight frag) (frag-length frag))
-    )
- )
+    (let ((dec-pos pos))
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos)
+	    (let ((end-highlight (frag-end-highlight frag)))
+	      (if (= (frag-start-highlight frag) end-highlight)
+		  (setf (frag-end-highlight frag) dec-pos)
+		  (when (< end-highlight dec-pos)
+		    (setf (frag-end-highlight frag) dec-pos)))
+	      (setf (frag-start-highlight frag) 0)))
+	(decf dec-pos length)
+	(setf (frag-start-highlight frag) 0)
+	(setf (frag-end-highlight frag) length)))))
 
 
- ;; Makes selection box visible between the two points given.
- (defun turn-on-select (line1 pos1 line2 pos2)
-    (if (eq line1 line2)
-       (turn-on-segment-mid line1 pos1 pos2)
-       (progn
-	  (turn-on-segment-right line1 pos1)
-	  (do ((my-line (g-value line1 :next-line)
-			(g-value my-line :next-line)))
-	      ((eq my-line line2))
-	     (turn-on-line my-line))
-	  (turn-on-segment-left line2 pos2)
-       )
-    )
- )
+;; Switch highlight on for the single line between pos and end of line.
+(defun turn-on-segment-right (my-line pos)
+  (unless (= pos (g-value my-line :length))
+    (invalidate-line my-line)
+    (let ((dec-pos (g-value my-line :length)))
+      (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= (- dec-pos length) pos)
+	    (let ((frag-pos (- (+ pos length) dec-pos))
+		  (start-highlight (frag-start-highlight frag)))
+	      (if (= start-highlight (frag-end-highlight frag))
+		  (setf (frag-start-highlight frag) frag-pos)
+		  (when (> start-highlight frag-pos)
+		    (setf (frag-start-highlight frag) frag-pos))))
+	    (setf (frag-end-highlight frag) length))
+	(decf dec-pos length)
+	(setf (frag-start-highlight frag) 0)
+	(setf (frag-end-highlight frag) length)))))
 
 
- ;; Switch highlight off for the single line between pos1 and pos2.
- (defun turn-off-segment-mid (my-line pos1 pos2)
-    (unless (= pos1 pos2)
-       (invalidate-line my-line)
-       (let ((dec-pos1 pos1)
-	     (dec-pos2 pos2))
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos1)
-		 (if (>= length dec-pos2)
-		    (let ((start-highlight (frag-start-highlight frag)))
-		      (unless (= start-highlight (frag-end-highlight frag))
-			(if (= start-highlight dec-pos1)
-			  (setf (frag-start-highlight frag) dec-pos2)
-			  (setf (frag-end-highlight frag) dec-pos1)
-		       )
-		    ))
-		    (progn
-		       (unless (= (frag-start-highlight frag)
+;; Switch highlight on for the single line.
+(defun turn-on-line (my-line)
+  (invalidate-line my-line)
+  (do ((frag (g-value my-line :first-frag) (frag-next frag)))
+      ((null frag))
+    (setf (frag-start-highlight frag) 0)
+    (setf (frag-end-highlight frag) (frag-length frag))))
+
+
+;; Makes selection box visible between the two points given.
+(defun turn-on-select (line1 pos1 line2 pos2)
+  (if (eq line1 line2)
+      (turn-on-segment-mid line1 pos1 pos2)
+      (progn
+	(turn-on-segment-right line1 pos1)
+	(do ((my-line (g-value line1 :next-line)
+		      (g-value my-line :next-line)))
+	    ((eq my-line line2))
+	  (turn-on-line my-line))
+	(turn-on-segment-left line2 pos2))))
+
+
+;; Switch highlight off for the single line between pos1 and pos2.
+(defun turn-off-segment-mid (my-line pos1 pos2)
+  (unless (= pos1 pos2)
+    (invalidate-line my-line)
+    (let ((dec-pos1 pos1)
+	  (dec-pos2 pos2))
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos1)
+	    (if (>= length dec-pos2)
+		(let ((start-highlight (frag-start-highlight frag)))
+		  (unless (= start-highlight (frag-end-highlight frag))
+		    (if (= start-highlight dec-pos1)
+			(setf (frag-start-highlight frag) dec-pos2)
+			(setf (frag-end-highlight frag) dec-pos1))))
+		(progn
+		  (unless (= (frag-start-highlight frag)
 			     (frag-end-highlight frag))
-			  (setf (frag-end-highlight frag) dec-pos1)
-		       )
-		       (decf dec-pos2 length)
-		       (do* ((nfrag (frag-next frag) (frag-next nfrag))
-			     (nlength (frag-length nfrag) (frag-length nfrag)))
-			   ((>= nlength dec-pos2)
-			    (unless (= (frag-start-highlight nfrag)
-				    (frag-end-highlight nfrag))
-				 (setf (frag-start-highlight nfrag) dec-pos2)
-			      )
-			   )
-			  (setf (frag-start-highlight nfrag) 0)
-			  (setf (frag-end-highlight nfrag) 0)
-			  (decf dec-pos2 nlength)
-		       )
-		    )
-		 )
-	      )
-	     (decf dec-pos1 length)
-	     (decf dec-pos2 length)
-	  )
-       )
-    )
- )
+		    (setf (frag-end-highlight frag) dec-pos1))
+		  (decf dec-pos2 length)
+		  (do* ((nfrag (frag-next frag) (frag-next nfrag))
+			(nlength (frag-length nfrag) (frag-length nfrag)))
+		       ((>= nlength dec-pos2)
+			(unless (= (frag-start-highlight nfrag)
+				   (frag-end-highlight nfrag))
+			  (setf (frag-start-highlight nfrag) dec-pos2)))
+		    (setf (frag-start-highlight nfrag) 0)
+		    (setf (frag-end-highlight nfrag) 0)
+		    (decf dec-pos2 nlength)))))
+	(decf dec-pos1 length)
+	(decf dec-pos2 length)))))
 
 
- ;; Switch highlight off for the single line between start of line and pos.
- (defun turn-off-segment-left (my-line pos)
-    (unless (= pos 0)
-       (invalidate-line my-line)
-       (let ((dec-pos pos))
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos)
-		 (setf (frag-start-highlight frag) dec-pos)
-	      )
-	     (decf dec-pos length)
-	     (setf (frag-start-highlight frag) 0)
-	     (setf (frag-end-highlight frag) 0)
-	  )
-       )
-    )
- )
-
-
- ;; Switch highlight off for the single line between pos and end of line.
- (defun turn-off-segment-right (my-line pos)
-    (unless (= pos (g-value my-line :length))
-       (invalidate-line my-line)
-       (let ((dec-pos (g-value my-line :length)))
-	  (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= (- dec-pos length) pos)
-		 (setf (frag-end-highlight frag)
-		       (- (+ pos length) dec-pos))
-	      )
-	     (decf dec-pos length)
-	     (setf (frag-start-highlight frag) 0)
-	     (setf (frag-end-highlight frag) 0)
-	  )
-       )
-    )
- )
-
-
- ;; Switch highlight off for the single line.
- (defun turn-off-line (my-line)
+;; Switch highlight off for the single line between start of line and pos.
+(defun turn-off-segment-left (my-line pos)
+  (unless (= pos 0)
     (invalidate-line my-line)
-    (do ((frag (g-value my-line :first-frag) (frag-next frag)))
-	((null frag))
-       (setf (frag-start-highlight frag) 0)
-       (setf (frag-end-highlight frag) 0)
-    )
- )
+    (let ((dec-pos pos))
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos)
+	    (setf (frag-start-highlight frag) dec-pos))
+	(decf dec-pos length)
+	(setf (frag-start-highlight frag) 0)
+	(setf (frag-end-highlight frag) 0)))))
 
 
- ;; Makes selection box invisible between the two points given.
- (defun turn-off-select (line1 pos1 line2 pos2)
-    (if (eq line1 line2)
-       (turn-off-segment-mid line1 pos1 pos2)
-       (progn
-	  (turn-off-segment-right line1 pos1)
-	  (do ((my-line (g-value line1 :next-line)
-			(g-value my-line :next-line)))
-	      ((eq my-line line2))
-	     (turn-off-line my-line))
-	  (turn-off-segment-left line2 pos2)
-       )
-    )
- )
+;; Switch highlight off for the single line between pos and end of line.
+(defun turn-off-segment-right (my-line pos)
+  (unless (= pos (g-value my-line :length))
+    (invalidate-line my-line)
+    (let ((dec-pos (g-value my-line :length)))
+      (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= (- dec-pos length) pos)
+	    (setf (frag-end-highlight frag)
+		  (- (+ pos length) dec-pos)))
+	(decf dec-pos length)
+	(setf (frag-start-highlight frag) 0)
+	(setf (frag-end-highlight frag) 0)))))
 
 
- ;; When the cursor gets moved to a random position.  The selection box may
- ;; need to be updated aggressively.  This function performs an aggressive
- ;; change to the selection box.  change-line, change-pos is the end-point of
- ;; the selection that was moved.  stable-line, stable-pos is the other
- ;; end-point of the selection.  new-line, new-pos is the new end-point.
- (defun reset-selection (change-line change-pos stable-line stable-pos
-			 new-line new-pos)
-    (if (higher-cursor stable-line stable-pos change-line change-pos)
-       (if (higher-cursor new-line new-pos stable-line stable-pos)
+;; Switch highlight off for the single line.
+(defun turn-off-line (my-line)
+  (invalidate-line my-line)
+  (do ((frag (g-value my-line :first-frag) (frag-next frag)))
+      ((null frag))
+    (setf (frag-start-highlight frag) 0)
+    (setf (frag-end-highlight frag) 0)))
+
+
+;; Makes selection box invisible between the two points given.
+(defun turn-off-select (line1 pos1 line2 pos2)
+  (if (eq line1 line2)
+      (turn-off-segment-mid line1 pos1 pos2)
+      (progn
+	(turn-off-segment-right line1 pos1)
+	(do ((my-line (g-value line1 :next-line)
+		      (g-value my-line :next-line)))
+	    ((eq my-line line2))
+	  (turn-off-line my-line))
+	(turn-off-segment-left line2 pos2))))
+
+
+;; When the cursor gets moved to a random position.  The selection box may
+;; need to be updated aggressively.  This function performs an aggressive
+;; change to the selection box.  change-line, change-pos is the end-point of
+;; the selection that was moved.  stable-line, stable-pos is the other
+;; end-point of the selection.  new-line, new-pos is the new end-point.
+(defun reset-selection (change-line change-pos stable-line stable-pos
+			new-line new-pos)
+  (if (higher-cursor stable-line stable-pos change-line change-pos)
+      (if (higher-cursor new-line new-pos stable-line stable-pos)
 	  (progn
-	     (turn-on-select new-line new-pos stable-line stable-pos)
-	     (turn-off-select stable-line stable-pos change-line change-pos)
-	  )
+	    (turn-on-select new-line new-pos stable-line stable-pos)
+	    (turn-off-select stable-line stable-pos change-line change-pos))
 	  (if (higher-cursor new-line new-pos change-line change-pos)
-	     (turn-off-select new-line new-pos change-line change-pos)
-	     (turn-on-select change-line change-pos new-line new-pos)
-	  )
-       )
-       (if (higher-cursor stable-line stable-pos new-line new-pos)
+	      (turn-off-select new-line new-pos change-line change-pos)
+	      (turn-on-select change-line change-pos new-line new-pos)))
+      (if (higher-cursor stable-line stable-pos new-line new-pos)
 	  (progn
-	     (turn-on-select stable-line stable-pos new-line new-pos)
-	     (turn-off-select change-line change-pos stable-line stable-pos)
-	  )
+	    (turn-on-select stable-line stable-pos new-line new-pos)
+	    (turn-off-select change-line change-pos stable-line stable-pos))
 	  (if (higher-cursor change-line change-pos new-line new-pos)
-	     (turn-off-select change-line change-pos new-line new-pos)
-	     (turn-on-select new-line new-pos change-line change-pos)
-	  )
-       )
-    )
- )
+	      (turn-off-select change-line change-pos new-line new-pos)
+	      (turn-on-select new-line new-pos change-line change-pos)))))
 
 
- ;; Merges first-line and second-line.
- (defun merge-lines (gob first-line second-line)
-   (let ((last-frag-of-first-line (g-value first-line :last-frag))
-	 (first-frag-of-second-line (g-value second-line :first-frag))
-	 (third-line (g-value second-line :next-line))
-	 (first-line-length (g-value first-line :length)))
-     (s-value first-line :next-line third-line)
-     (if third-line
-       (s-value third-line :prev-line first-line)
-       (s-value gob :last-line first-line))
-     (s-value first-line :last-frag (g-value second-line :last-frag))
-     (merge-frags first-line last-frag-of-first-line first-frag-of-second-line)
-     (let ((cursor-line (g-value gob :cursor-line))
-	   (cursor-position (g-value gob :cursor-position)))
-       (if (eq first-line cursor-line)
-	 (multiple-value-bind (frag frag-pos x-offset)
-	     (calculate-cursor-pos first-line cursor-position)
-	   (s-value gob :cursor-frag frag)
-	   (s-value gob :cursor-frag-pos frag-pos)
-	   (s-value gob :cursor-x-offset x-offset))
-	 (when (eq second-line cursor-line)
-	   (let ((length (+ cursor-position first-line-length)))
-	     (s-value gob :cursor-line first-line)
-	     (s-value gob :cursor-position length)
-	     (multiple-value-bind (frag frag-pos x-offset)
-		 (calculate-cursor-pos first-line length)
-	       (s-value gob :cursor-frag frag)
-	       (s-value gob :cursor-frag-pos frag-pos)
-	       (s-value gob :cursor-x-offset x-offset))))))
-     (when (g-value gob :selection-p)
-       (let ((select-line (g-value gob :select-line))
-	     (select-position (g-value gob :select-position)))
-	 (if (eq first-line select-line)
-	   (multiple-value-bind (frag frag-pos)
-	       (calculate-cursor-pos first-line select-position)
-	     (s-value gob :select-frag frag)
-	     (s-value gob :select-frag-pos frag-pos))
-	   (when (eq second-line select-line)
-	     (let ((length (+ select-position first-line-length)))
-	       (s-value gob :select-line first-line)
-	       (s-value gob :select-position length)
-	       (multiple-value-bind (frag frag-pos)
-		   (calculate-cursor-pos first-line length)
-	       (s-value gob :select-frag frag)
-	       (s-value gob :select-frag-pos frag-pos)))))))
-     (incf (g-value first-line :length) (g-value second-line :length))
-     (incf (g-value first-line :width) (g-value second-line :width))
-     (s-value first-line :ascent
-	      (max (g-value first-line :ascent) (g-value second-line :ascent)))
-     (s-value first-line :descent
-	      (max (g-value first-line :descent) (g-value second-line :descent)))
+;; Merges first-line and second-line.
+(defun merge-lines (gob first-line second-line)
+  (let ((last-frag-of-first-line (g-value first-line :last-frag))
+	(first-frag-of-second-line (g-value second-line :first-frag))
+	(third-line (g-value second-line :next-line))
+	(first-line-length (g-value first-line :length)))
+    (s-value first-line :next-line third-line)
+    (if third-line
+	(s-value third-line :prev-line first-line)
+	(s-value gob :last-line first-line))
+    (s-value first-line :last-frag (g-value second-line :last-frag))
+    (merge-frags first-line last-frag-of-first-line first-frag-of-second-line)
+    (let ((cursor-line (g-value gob :cursor-line))
+	  (cursor-position (g-value gob :cursor-position)))
+      (if (eq first-line cursor-line)
+	  (multiple-value-bind (frag frag-pos x-offset)
+	      (calculate-cursor-pos first-line cursor-position)
+	    (s-value gob :cursor-frag frag)
+	    (s-value gob :cursor-frag-pos frag-pos)
+	    (s-value gob :cursor-x-offset x-offset))
+	  (when (eq second-line cursor-line)
+	    (let ((length (+ cursor-position first-line-length)))
+	      (s-value gob :cursor-line first-line)
+	      (s-value gob :cursor-position length)
+	      (multiple-value-bind (frag frag-pos x-offset)
+		  (calculate-cursor-pos first-line length)
+		(s-value gob :cursor-frag frag)
+		(s-value gob :cursor-frag-pos frag-pos)
+		(s-value gob :cursor-x-offset x-offset))))))
+    (when (g-value gob :selection-p)
+      (let ((select-line (g-value gob :select-line))
+	    (select-position (g-value gob :select-position)))
+	(if (eq first-line select-line)
+	    (multiple-value-bind (frag frag-pos)
+		(calculate-cursor-pos first-line select-position)
+	      (s-value gob :select-frag frag)
+	      (s-value gob :select-frag-pos frag-pos))
+	    (when (eq second-line select-line)
+	      (let ((length (+ select-position first-line-length)))
+		(s-value gob :select-line first-line)
+		(s-value gob :select-position length)
+		(multiple-value-bind (frag frag-pos)
+		    (calculate-cursor-pos first-line length)
+		  (s-value gob :select-frag frag)
+		  (s-value gob :select-frag-pos frag-pos)))))))
+    (incf (g-value first-line :length) (g-value second-line :length))
+    (incf (g-value first-line :width) (g-value second-line :width))
+    (s-value first-line :ascent
+	     (max (g-value first-line :ascent) (g-value second-line :ascent)))
+    (s-value first-line :descent
+	     (max (g-value first-line :descent) (g-value second-line :descent)))
 
-     (calculate-size-of-line gob first-line)  ;*************3
-     (s-value second-line :first-frag nil)
-     (s-value second-line :last-frag nil)
-     (destroy-line second-line)
-     (when (g-value gob :word-wrap-p)
-       (wrap-line gob first-line))))
-
-
- ;; Returns non-nil if there exists enough space for part of the second line
- ;; to be merged into the first.  Returns nil otherwise.
- (defun unwrap-space-check (gob first-line second-line)
-    (let ((text-width (g-value gob :text-width))
-	  (first-width (g-value first-line :width))
-	  (second-width (g-value second-line :width)))
-       (if (<= (+ first-width second-width) text-width)
-	  T
-	  (let ((spaces (find-spaces second-line))
-		(size (- text-width first-width)))
-	     (do ((item (pop spaces) (pop spaces)))
-		 ((or (null item) (<= (second item) size))
-		    item
-		 )
-	     )
-	  )
-       )
-    )
- )
+    (calculate-size-of-line gob first-line) ;*************3
+    (s-value second-line :first-frag nil)
+    (s-value second-line :last-frag nil)
+    (destroy-line second-line)
+    (when (g-value gob :word-wrap-p)
+      (wrap-line gob first-line))))
 
 
- ;; Merges line with its next line if the line has enough space to accomodate
- ;; a word of the next line.  Returns non-nil if merge occurs, nil otherwise.
- (defun undo-wrap-line (gob my-line)
-   (let ((next-line (g-value my-line :next-line)))
-     (when next-line
-       (let* ((last-frag (g-value my-line :last-frag))
-	      (last-frag-length (frag-length last-frag))
-	      (first-frag (g-value next-line :first-frag))
-	      (prev-length (g-value my-line :length)))
-	 (when (and (frag-break-p last-frag)
-		    (or (zerop last-frag-length)
-			(frag-object-p last-frag)
-			(not (eq #\space (schar (frag-string last-frag)
-						  (1- last-frag-length))))
-			(and (not (frag-object-p first-frag))
-			     (not (zerop (frag-length first-frag))) ;***
-			     (eq #\space (schar (frag-string first-frag) 0)))
-			(unwrap-space-check gob my-line next-line)))
-	   (merge-lines gob my-line next-line)
-	   (not (= prev-length (g-value my-line :length))))))))
+;; Returns non-nil if there exists enough space for part of the second line
+;; to be merged into the first.  Returns nil otherwise.
+(defun unwrap-space-check (gob first-line second-line)
+  (let ((text-width (g-value gob :text-width))
+	(first-width (g-value first-line :width))
+	(second-width (g-value second-line :width)))
+    (if (<= (+ first-width second-width) text-width)
+	T
+	(let ((spaces (find-spaces second-line))
+	      (size (- text-width first-width)))
+	  (do ((item (pop spaces) (pop spaces)))
+	      ((or (null item) (<= (second item) size))
+	       item))))))
 
 
- ;; Put the pertinent information about a font into a convenient format.
- (defun extract-key-from-font (font)
-    (list (g-value font :family) (g-value font :face) (g-value font :size))
- )
+;; Merges line with its next line if the line has enough space to accomodate
+;; a word of the next line.  Returns non-nil if merge occurs, nil otherwise.
+(defun undo-wrap-line (gob my-line)
+  (let ((next-line (g-value my-line :next-line)))
+    (when next-line
+      (let* ((last-frag (g-value my-line :last-frag))
+	     (last-frag-length (frag-length last-frag))
+	     (first-frag (g-value next-line :first-frag))
+	     (prev-length (g-value my-line :length)))
+	(when (and (frag-break-p last-frag)
+		   (or (zerop last-frag-length)
+		       (frag-object-p last-frag)
+		       (not (eq #\space (schar (frag-string last-frag)
+					       (1- last-frag-length))))
+		       (and (not (frag-object-p first-frag))
+			    (not (zerop (frag-length first-frag))) ;***
+			    (eq #\space (schar (frag-string first-frag) 0)))
+		       (unwrap-space-check gob my-line next-line)))
+	  (merge-lines gob my-line next-line)
+	  (not (= prev-length (g-value my-line :length))))))))
+
+
+;; Put the pertinent information about a font into a convenient format.
+(defun extract-key-from-font (font)
+  (list (g-value font :family) (g-value font :face) (g-value font :size)))
  
- (defun update-font (old-font my-font family size italic bold first-face)
-   (if my-font
-     my-font
-     (let ((key (extract-key-from-font old-font)))
-       (when family
-	 (setf (first key) family))
-       (unless (eq italic :not-supplied)
-	 (if italic
-	   (case italic
-	     (:toggle-first
+(defun update-font (old-font my-font family size italic bold first-face)
+  (if my-font
+      my-font
+      (let ((key (extract-key-from-font old-font)))
+	(when family
+	  (setf (first key) family))
+	(unless (eq italic :not-supplied)
+	  (if italic
+	      (case italic
+		(:toggle-first
 		 (if (or (eq first-face :roman) (eq first-face :bold))
-		   (setf (second key)
+		     (setf (second key)
+			   (case (second key)
+			     (:roman :italic)
+			     (:bold :bold-italic)
+			     (:italic :italic)
+			     (:bold-italic :bold-italic)))
+		     (setf (second key)
+			   (case (second key)
+			     (:roman :roman)
+			     (:bold :bold)
+			     (:italic :roman)
+			     (:bold-italic :bold)))))
+		(:toggle (setf (second key)
+			       (case (second key)
+				 (:roman :italic)
+				 (:bold :bold-italic)
+				 (:italic :roman)
+				 (:bold-italic :bold))))
+		(t (setf (second key)
 			 (case (second key)
 			   (:roman :italic)
 			   (:bold :bold-italic)
 			   (:italic :italic)
-			   (:bold-italic :bold-italic)))
-		   (setf (second key)
-			 (case (second key)
-			   (:roman :roman)
-			   (:bold :bold)
-			   (:italic :roman)
-			   (:bold-italic :bold)))))
-	     (:toggle (setf (second key)
-			    (case (second key)
-			      (:roman :italic)
-			      (:bold :bold-italic)
-			      (:italic :roman)
-			      (:bold-italic :bold))))
-	     (t (setf (second key)
-		      (case (second key)
-			(:roman :italic)
-			(:bold :bold-italic)
-			(:italic :italic)
-			(:bold-italic :bold-italic)))))
-	   (setf (second key)
-		 (case (second key)
-		   (:roman :roman)
-		   (:bold :bold)
-		   (:italic :roman)
-		   (:bold-italic :bold)))))
-       (unless (eq bold :not-supplied)
-	 (if bold
-	   (case bold
-	     (:toggle-first
+			   (:bold-italic :bold-italic)))))
+	      (setf (second key)
+		    (case (second key)
+		      (:roman :roman)
+		      (:bold :bold)
+		      (:italic :roman)
+		      (:bold-italic :bold)))))
+	(unless (eq bold :not-supplied)
+	  (if bold
+	      (case bold
+		(:toggle-first
 		 (if (or (eq first-face :roman) (eq first-face :italic))
-		   (setf (second key)
+		     (setf (second key)
+			   (case (second key)
+			     (:roman :bold)
+			     (:bold :bold)
+			     (:italic :bold-italic)
+			     (:bold-italic :bold-italic)))
+		     (setf (second key)
+			   (case (second key)
+			     (:roman :roman)
+			     (:bold :roman)
+			     (:italic :italic)
+			     (:bold-italic :italic)))))
+		(:toggle (setf (second key)
+			       (case (second key)
+				 (:roman :bold)
+				 (:bold :roman)
+				 (:italic :bold-italic)
+				 (:bold-italic :italic))))
+		(t (setf (second key)
 			 (case (second key)
 			   (:roman :bold)
 			   (:bold :bold)
 			   (:italic :bold-italic)
-			   (:bold-italic :bold-italic)))
-		   (setf (second key)
-			 (case (second key)
-			   (:roman :roman)
-			   (:bold :roman)
-			   (:italic :italic)
-			   (:bold-italic :italic)))))
-	     (:toggle (setf (second key)
-			    (case (second key)
-			      (:roman :bold)
-			      (:bold :roman)
-			      (:italic :bold-italic)
-			      (:bold-italic :italic))))
-	     (t (setf (second key)
-		      (case (second key)
-			(:roman :bold)
-			(:bold :bold)
-			(:italic :bold-italic)
-			(:bold-italic :bold-italic)))))
-	   (setf (second key)
-		 (case (second key)
-		   (:roman :roman)
-		   (:bold :roman)
-		   (:italic :italic)
-		   (:bold-italic :italic)))))
-       (when size
-	 (if (eq size :bigger)
-	   (setf (third key)
-		 (case (third key)
-		   (:small :medium)
-		   (:medium :large)
-		   (:large :very-large)
-		   (:very-large :very-large)))
-	   (if (eq size :smaller)
-	     (setf (third key)
-		   (case (third key)
-		     (:small :small)
-		     (:medium :small)
-		     (:large :medium)
-		     (:very-large :large)))
-	     (setf (third key) size))))
-       (opal:get-standard-font (first key) (second key) (third key)))))
+			   (:bold-italic :bold-italic)))))
+	      (setf (second key)
+		    (case (second key)
+		      (:roman :roman)
+		      (:bold :roman)
+		      (:italic :italic)
+		      (:bold-italic :italic)))))
+	(when size
+	  (if (eq size :bigger)
+	      (setf (third key)
+		    (case (third key)
+		      (:small :medium)
+		      (:medium :large)
+		      (:large :very-large)
+		      (:very-large :very-large)))
+	      (if (eq size :smaller)
+		  (setf (third key)
+			(case (third key)
+			  (:small :small)
+			  (:medium :small)
+			  (:large :medium)
+			  (:very-large :large)))
+		  (setf (third key) size))))
+	(opal:get-standard-font (first key) (second key) (third key)))))
 
- (defun change-font-frag (frag my-font family size italic bold first-face)
-   (unless (frag-object-p frag)
-     (let* ((old-font (frag-font frag))
-	    (new-font (update-font old-font my-font family size italic
-				   bold first-face)))
-       (unless (eq old-font new-font)
-	 (setf (frag-font frag) new-font)
-	 (setf (frag-ascent frag) (g-value new-font :max-char-ascent))
-	 (setf (frag-descent frag) (g-value new-font :max-char-descent))
-	 (setf (frag-width frag)
-	       (opal:string-width new-font (frag-string frag)))))))
+(defun change-font-frag (frag my-font family size italic bold first-face)
+  (unless (frag-object-p frag)
+    (let* ((old-font (frag-font frag))
+	   (new-font (update-font old-font my-font family size italic
+				  bold first-face)))
+      (unless (eq old-font new-font)
+	(setf (frag-font frag) new-font)
+	(setf (frag-ascent frag) (g-value new-font :max-char-ascent))
+	(setf (frag-descent frag) (g-value new-font :max-char-descent))
+	(setf (frag-width frag)
+	      (opal:string-width new-font (frag-string frag)))))))
 
 
- (defun change-font-mid (gob my-line start-pos end-pos
-			     my-font family size italic bold key)
-    (unless (= start-pos end-pos)
-       (invalidate-line my-line)
-       (let ((dec-pos1 start-pos)
-	     (dec-pos2 end-pos)
-	     new-frag)
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos1)
-		 (setq new-frag (split-frag frag dec-pos1))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (decf dec-pos2 (frag-length frag))
-	      )
-	     (decf dec-pos1 length)
- 	     (decf dec-pos2 length)
-	  )
-	  (do* ((frag new-frag (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos2 length)
-		 (setq new-frag (split-frag frag dec-pos2))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-font-frag frag my-font family size italic bold key)
-	      )
-	     (decf dec-pos2 length)
-	     (change-font-frag frag my-font family size italic bold key)
-	  )
-       )
-       (calculate-size-of-line gob my-line)
-    )
- )
-
-
- (defun change-font-right (gob my-line pos my-font family size italic bold key)
-   (let ((line-length (g-value my-line :length)))
-     (unless (= pos line-length)
-       (invalidate-line my-line)
-       (let ((dec-pos (- line-length pos))
-	     new-frag)
-	  (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos length)
-		 (setq dec-pos (- length dec-pos))
-		 (setq new-frag (split-frag frag dec-pos))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-font-frag new-frag my-font
-				   family size italic bold key)
-	      )
-	     (decf dec-pos length)
-	     (change-font-frag frag my-font 
-			       family size italic bold key)
-	  )
-       )
-       (calculate-size-of-line gob my-line)
-     )
-   )
- )
-
-
- (defun change-font-left (gob my-line pos my-font family size italic bold key)
-    (unless (= pos 0)
-       (invalidate-line my-line)
-       (let ((dec-pos pos)
-	     new-frag)
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos length)
-		 (setq new-frag (split-frag frag dec-pos))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-font-frag frag my-font family size italic bold key)
-	      )
-	     (decf dec-pos length)
-	     (change-font-frag frag my-font family size italic bold key)
-	  )
-       )
-       (calculate-size-of-line gob my-line)
-    )
- )
-
-
- (defun change-font-line (gob my-line my-font family size italic bold key)
+(defun change-font-mid (gob my-line start-pos end-pos
+			my-font family size italic bold key)
+  (unless (= start-pos end-pos)
     (invalidate-line my-line)
-    (do ((frag (g-value my-line :first-frag) (frag-next frag)))
-	((null frag))
-       (change-font-frag frag my-font family size italic bold key)
-    )
-    (calculate-size-of-line gob my-line)
- )
+    (let ((dec-pos1 start-pos)
+	  (dec-pos2 end-pos)
+	  new-frag)
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos1)
+	    (setq new-frag (split-frag frag dec-pos1))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (decf dec-pos2 (frag-length frag)))
+	(decf dec-pos1 length)
+	(decf dec-pos2 length))
+      (do* ((frag new-frag (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= dec-pos2 length)
+	    (setq new-frag (split-frag frag dec-pos2))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (change-font-frag frag my-font family size italic bold key))
+	(decf dec-pos2 length)
+	(change-font-frag frag my-font family size italic bold key)))
+    (calculate-size-of-line gob my-line)))
 
 
- ;; Change the font of all character between the given positions.
- (defun change-font (gob start-line start-pos end-line end-pos my-font
-		      family size italic bold first-face)
-   (if (eq start-line end-line)
-     (change-font-mid gob start-line start-pos end-pos
-		      my-font family size italic bold first-face)
-     (progn
-       (change-font-right gob start-line start-pos
-			  my-font family size italic bold first-face)
-       (do ((my-line (g-value start-line :next-line)
-		     (g-value my-line :next-line)))
-	   ((eq my-line end-line))
-	 (change-font-line gob my-line my-font
-			   family size italic bold first-face))
-       (change-font-left gob end-line end-pos my-font family size
-			 italic bold first-face))))
+(defun change-font-right (gob my-line pos my-font family size italic bold key)
+  (let ((line-length (g-value my-line :length)))
+    (unless (= pos line-length)
+      (invalidate-line my-line)
+      (let ((dec-pos (- line-length pos))
+	    new-frag)
+	(do* ((frag (g-value my-line :last-frag) (frag-prev frag))
+	      (length (frag-length frag) (frag-length frag)))
+	     ((<= dec-pos length)
+	      (setq dec-pos (- length dec-pos))
+	      (setq new-frag (split-frag frag dec-pos))
+	      (setf (frag-prev new-frag) frag)
+	      (setf (frag-next frag) new-frag)
+	      (if (frag-next new-frag)
+		  (setf (frag-prev (frag-next new-frag)) new-frag)
+		  (s-value my-line :last-frag new-frag))
+	      (change-font-frag new-frag my-font
+				family size italic bold key))
+	  (decf dec-pos length)
+	  (change-font-frag frag my-font 
+			    family size italic bold key)))
+      (calculate-size-of-line gob my-line))))
 
-;; COLOR stuff
+
+(defun change-font-left (gob my-line pos my-font family size italic bold key)
+  (unless (= pos 0)
+    (invalidate-line my-line)
+    (let ((dec-pos pos)
+	  new-frag)
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= dec-pos length)
+	    (setq new-frag (split-frag frag dec-pos))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (change-font-frag frag my-font family size italic bold key))
+	(decf dec-pos length)
+	(change-font-frag frag my-font family size italic bold key)))
+    (calculate-size-of-line gob my-line)))
+
+
+(defun change-font-line (gob my-line my-font family size italic bold key)
+  (invalidate-line my-line)
+  (do ((frag (g-value my-line :first-frag) (frag-next frag)))
+      ((null frag))
+    (change-font-frag frag my-font family size italic bold key))
+  (calculate-size-of-line gob my-line))
+
+
+;; Change the font of all character between the given positions.
+(defun change-font (gob start-line start-pos end-line end-pos my-font
+		    family size italic bold first-face)
+  (if (eq start-line end-line)
+      (change-font-mid gob start-line start-pos end-pos
+		       my-font family size italic bold first-face)
+      (progn
+	(change-font-right gob start-line start-pos
+			   my-font family size italic bold first-face)
+	(do ((my-line (g-value start-line :next-line)
+		      (g-value my-line :next-line)))
+	    ((eq my-line end-line))
+	  (change-font-line gob my-line my-font
+			    family size italic bold first-face))
+	(change-font-left gob end-line end-pos my-font family size
+			  italic bold first-face))))
+
+
+;;; COLOR stuff
  
- (defun change-color-frag (frag fcolor &optional bcolor)
-   (unless (frag-object-p frag)
-     (let* ((old-fcolor (frag-fcolor frag))
-	    (old-bcolor (frag-bcolor frag)))
-       (unless (eq old-fcolor fcolor)
-	 (setf (frag-fcolor frag) fcolor))
-       (when bcolor
-	 (unless (eq old-bcolor bcolor)
-	   (setf (frag-bcolor frag) bcolor))))))
+(defun change-color-frag (frag fcolor &optional bcolor)
+  (unless (frag-object-p frag)
+    (let* ((old-fcolor (frag-fcolor frag))
+	   (old-bcolor (frag-bcolor frag)))
+      (unless (eq old-fcolor fcolor)
+	(setf (frag-fcolor frag) fcolor))
+      (when bcolor
+	(unless (eq old-bcolor bcolor)
+	  (setf (frag-bcolor frag) bcolor))))))
 
- (defun change-color-mid (gob my-line start-pos end-pos
-			      fcolor &optional bcolor)
-    (unless (= start-pos end-pos)
-       (invalidate-line my-line)
-       (let ((dec-pos1 start-pos)
-	     (dec-pos2 end-pos)
-	     new-frag)
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((>= length dec-pos1)
-		 (setq new-frag (split-frag frag dec-pos1))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (decf dec-pos2 (frag-length frag))
-	      )
-	     (decf dec-pos1 length)
-	     (decf dec-pos2 length)
-	  )
-	  (do* ((frag new-frag (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos2 length)
-		 (setq new-frag (split-frag frag dec-pos2))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-color-frag frag fcolor bcolor)
-	      )
-	     (decf dec-pos2 length)
-	     (change-color-frag frag fcolor bcolor)
-	  )
-       )
-       (calculate-size-of-line gob my-line)
+(defun change-color-mid (gob my-line start-pos end-pos
+			 fcolor &optional bcolor)
+  (unless (= start-pos end-pos)
+    (invalidate-line my-line)
+    (let ((dec-pos1 start-pos)
+	  (dec-pos2 end-pos)
+	  new-frag)
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((>= length dec-pos1)
+	    (setq new-frag (split-frag frag dec-pos1))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (decf dec-pos2 (frag-length frag)))
+	(decf dec-pos1 length)
+	(decf dec-pos2 length))
+      (do* ((frag new-frag (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= dec-pos2 length)
+	    (setq new-frag (split-frag frag dec-pos2))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (change-color-frag frag fcolor bcolor))
+	(decf dec-pos2 length)
+	(change-color-frag frag fcolor bcolor)))
+    (calculate-size-of-line gob my-line)))
+
+
+(defun change-color-right (gob my-line pos fcolor &optional bcolor)
+  (let ((line-length (g-value my-line :length)))
+    (unless (= pos line-length)
+      (invalidate-line my-line)
+      (let ((dec-pos (- line-length pos))
+	    new-frag)
+	(do* ((frag (g-value my-line :last-frag) (frag-prev frag))
+	      (length (frag-length frag) (frag-length frag)))
+	     ((<= dec-pos length)
+	      (setq dec-pos (- length dec-pos))
+	      (setq new-frag (split-frag frag dec-pos))
+	      (setf (frag-prev new-frag) frag)
+	      (setf (frag-next frag) new-frag)
+	      (if (frag-next new-frag)
+		  (setf (frag-prev (frag-next new-frag)) new-frag)
+		  (s-value my-line :last-frag new-frag))
+	      (change-color-frag new-frag fcolor bcolor))
+	  (decf dec-pos length)
+	  (change-color-frag frag fcolor bcolor)))
+      (calculate-size-of-line gob my-line))))
+
+
+(defun change-color-left (gob my-line pos fcolor &optional bcolor)
+  (unless (= pos 0)
+    (invalidate-line my-line)
+    (let ((dec-pos pos)
+	  new-frag)
+      (do* ((frag (g-value my-line :first-frag) (frag-next frag))
+	    (length (frag-length frag) (frag-length frag)))
+	   ((<= dec-pos length)
+	    (setq new-frag (split-frag frag dec-pos))
+	    (setf (frag-prev new-frag) frag)
+	    (setf (frag-next frag) new-frag)
+	    (if (frag-next new-frag)
+		(setf (frag-prev (frag-next new-frag)) new-frag)
+		(s-value my-line :last-frag new-frag))
+	    (change-color-frag frag fcolor bcolor))
+	(decf dec-pos length)
+	(change-color-frag frag fcolor bcolor)))
+    (calculate-size-of-line gob my-line)))
+
+
+(defun change-color-line (gob my-line fcolor &optional bcolor)
+  (invalidate-line my-line)
+  (do ((frag (g-value my-line :first-frag) (frag-next frag)))
+      ((null frag))
+    (change-color-frag frag fcolor bcolor))
+  (calculate-size-of-line gob my-line))
+
+
+;; Change the color of all character between the given positions.
+(defun change-color (gob start-line start-pos end-line end-pos
+		     fcolor &optional bcolor)
+  (if (eq start-line end-line)
+      (change-color-mid gob start-line start-pos end-pos fcolor bcolor)
+      (progn
+	(change-color-right gob start-line start-pos fcolor bcolor)
+	(do ((my-line (g-value start-line :next-line)
+		      (g-value my-line :next-line)))
+	    ((eq my-line end-line))
+	  (change-color-line gob my-line fcolor bcolor))
+	(change-color-left gob end-line end-pos fcolor bcolor))))
+
+
+
+;;; OPERATIONS
+
+(defun SET-CURSOR-VISIBLE (gob vis)
+  (s-value (g-value gob :cursor) :visible vis))
+
+
+(defun SET-CURSOR-TO-X-Y-POSITION (gob x y)
+  (let (new-line)
+    (do ((my-line (g-value gob :first-line) (g-value my-line :next-line)))
+	((or (null my-line) (> (g-value my-line :top) y))
+	 (setq new-line
+	       (if my-line
+		   (or (g-value my-line :prev-line) my-line)
+		   (g-value gob :last-line)))))
+    (multiple-value-bind (frag frag-pos x-offset my-position)
+	(calculate-cursor-x new-line (max 0 (- x (g-value gob :left))))
+      (when (g-value gob :selection-p)
+	(reset-selection (g-value gob :cursor-line)
+			 (g-value gob :cursor-position) (g-value gob :select-line)
+			 (g-value gob :select-position) new-line my-position))
+      (s-value gob :cursor-line new-line)
+      (s-value gob :cursor-frag frag)
+      (s-value gob :cursor-frag-pos frag-pos)
+      (s-value gob :cursor-x-offset x-offset)
+      (s-value gob :cursor-position my-position)))
+  (reset-font gob)
+  t)
+
+
+(defun SET-CURSOR-TO-LINE-CHAR-POSITION (gob my-line char)
+  (let ((new-line (g-value gob :first-line)))
+    (dotimes (i my-line)
+      (when new-line
+	(setq new-line (g-value new-line :next-line))))
+    (unless new-line
+      (setq new-line (g-value gob :last-line)))
+    (setq char (min char (1- (g-value new-line :length))))
+    (when (g-value gob :selection-p)
+      (reset-selection (g-value gob :cursor-line)
+		       (g-value gob :cursor-position) (g-value gob :select-line)
+		       (g-value gob :select-position) new-line char)
+      )
+    (s-value gob :cursor-line new-line)
+    (s-value gob :cursor-position char)
+    (multiple-value-bind (frag frag-pos x-offset)
+	(calculate-cursor-pos new-line char)
+      (s-value gob :cursor-frag frag)
+      (s-value gob :cursor-frag-pos frag-pos)
+      (s-value gob :cursor-x-offset x-offset)
+      )
     )
- )
+  (reset-font gob)
+  t
+  )
 
 
- (defun change-color-right (gob my-line pos fcolor &optional bcolor)
-   (let ((line-length (g-value my-line :length)))
-     (unless (= pos line-length)
-       (invalidate-line my-line)
-       (let ((dec-pos (- line-length pos))
-	     new-frag)
-	  (do* ((frag (g-value my-line :last-frag) (frag-prev frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos length)
-		 (setq dec-pos (- length dec-pos))
-		 (setq new-frag (split-frag frag dec-pos))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-color-frag new-frag fcolor bcolor)
-	      )
-	     (decf dec-pos length)
-	     (change-color-frag frag fcolor bcolor)
-	  )
+;; Returns multiple values.  First line then char position.
+ (defun GET-CURSOR-LINE-CHAR-POSITION (gob)
+   (let ((target (g-value gob :cursor-line)))
+     (do ((my-line (g-value gob :first-line) (g-value my-line :next-line))
+	  (i 0 (1+ i)))
+	 ((eq my-line target)
+	  (values i (g-value gob :cursor-position)))
        )
-       (calculate-size-of-line gob my-line)
      )
    )
- )
 
 
- (defun change-color-left (gob my-line pos fcolor &optional bcolor)
-    (unless (= pos 0)
-       (invalidate-line my-line)
-       (let ((dec-pos pos)
-	     new-frag)
-	  (do* ((frag (g-value my-line :first-frag) (frag-next frag))
-		(length (frag-length frag) (frag-length frag)))
-	      ((<= dec-pos length)
-		 (setq new-frag (split-frag frag dec-pos))
-		 (setf (frag-prev new-frag) frag)
-		 (setf (frag-next frag) new-frag)
-		 (if (frag-next new-frag)
-		    (setf (frag-prev (frag-next new-frag)) new-frag)
-		    (s-value my-line :last-frag new-frag)
-		 )
-		 (change-color-frag frag fcolor bcolor)
-	      )
-	     (decf dec-pos length)
-	     (change-color-frag frag fcolor bcolor)
-	  )
-       )
-       (calculate-size-of-line gob my-line)
-    )
- )
-
-
- (defun change-color-line (gob my-line fcolor &optional bcolor)
-    (invalidate-line my-line)
-    (do ((frag (g-value my-line :first-frag) (frag-next frag)))
-	((null frag))
-       (change-color-frag frag fcolor bcolor)
-    )
-    (calculate-size-of-line gob my-line)
- )
-
-
- ;; Change the color of all character between the given positions.
- (defun change-color (gob start-line start-pos end-line end-pos
-			  fcolor &optional bcolor)
-   (if (eq start-line end-line)
-     (change-color-mid gob start-line start-pos end-pos fcolor bcolor)
-     (progn
-       (change-color-right gob start-line start-pos fcolor bcolor)
-       (do ((my-line (g-value start-line :next-line)
-		     (g-value my-line :next-line)))
-	   ((eq my-line end-line))
-	 (change-color-line gob my-line fcolor bcolor))
-       (change-color-left gob end-line end-pos fcolor bcolor))))
-
-
- ;;; OPERATIONS
-
- (defun SET-CURSOR-VISIBLE (gob vis)
-    (s-value (g-value gob :cursor) :visible vis)
- )
-
-
- (defun SET-CURSOR-TO-X-Y-POSITION (gob x y)
-    (let (new-line)
-       (do ((my-line (g-value gob :first-line) (g-value my-line :next-line)))
-	   ((or (null my-line) (> (g-value my-line :top) y))
-		 (setq new-line
-		       (if my-line
-			  (or (g-value my-line :prev-line) my-line)
-			  (g-value gob :last-line)
-		       ))
-	   )
-       )
-       (multiple-value-bind (frag frag-pos x-offset my-position)
-	     (calculate-cursor-x new-line (max 0 (- x (g-value gob :left))))
+;; Returns character cursor passed over, or #\newline if we went to a 
+;; new line, or nil if at end of text.
+(defun GO-TO-NEXT-CHAR (gob)
+  (let* ((my-line (g-value gob :cursor-line))
+	 (next-line (g-value my-line :next-line))
+	 (frag (g-value gob :cursor-frag))
+	 (frag-pos (g-value gob :cursor-frag-pos)))
+    (when (= frag-pos (frag-length frag))
+      (setq frag (frag-next frag))
+      (do () ((or (null frag) (not (mark-p (frag-object frag)))))
+	(setq frag (frag-next frag)))
+      (setq frag-pos 0))
+    (when (not (frag-object-p frag))
+      (s-value gob :current-font (frag-font frag))
+      (s-value gob :current-fcolor (frag-fcolor frag))
+      (s-value gob :current-bcolor (frag-bcolor frag)))
+    (if (and (null next-line) (>= frag-pos (1- (frag-length frag)))
+	     (null (frag-next frag)))
+	nil
+	(let ((char (if (frag-object-p frag)
+			(frag-object frag)
+			(schar (frag-string frag) frag-pos))))
 	  (when (g-value gob :selection-p)
-	     (reset-selection (g-value gob :cursor-line)
-		   (g-value gob :cursor-position) (g-value gob :select-line)
-		   (g-value gob :select-position) new-line my-position)
-	  )
-	  (s-value gob :cursor-line new-line)
-	  (s-value gob :cursor-frag frag)
-	  (s-value gob :cursor-frag-pos frag-pos)
-	  (s-value gob :cursor-x-offset x-offset)
-	  (s-value gob :cursor-position my-position)
-       )
-    )
-    (reset-font gob)
-    t
- )
+	    (invalidate-line my-line)
+	    (if (= (frag-start-highlight frag) (frag-end-highlight frag))
+		(progn
+		  (setf (frag-start-highlight frag) frag-pos)
+		  (setf (frag-end-highlight frag) (1+ frag-pos)))
+		(if (= (frag-end-highlight frag) frag-pos)
+		    (incf (frag-end-highlight frag))
+		    (incf (frag-start-highlight frag)))))
+	  (incf frag-pos)
+	  (if (= frag-pos (frag-length frag))
+	      (let ((next (frag-next frag)))
+		(if (null next)
+		    (progn
+		      (unless (frag-break-p frag)
+			(setq char #\newline))
+		      (setq frag (g-value next-line :first-frag))
+		      (setq next (frag-next frag))
+		      (setq frag-pos 0)
+		      (s-value gob :cursor-line next-line)
+		      (s-value gob :cursor-position 0)
+		      (s-value gob :cursor-x-offset 0))
+		    (progn
+		      (incf (g-value gob :cursor-position))
+		      (incf (g-value gob :cursor-x-offset)
+			    (if (frag-object-p frag)
+				(frag-width frag)
+				(opal:char-width (frag-font frag) char)))))
+		(if (and (= frag-pos (frag-length frag))
+			 (let ((obj (frag-object next)))
+			   (and (mark-p obj) (mark-sticky-left obj))))
+		    (progn
+		      (do* ((my-frag (frag-next next) (frag-next my-frag))
+			    (my-obj (frag-object my-frag) (frag-object my-frag)))
+			   ((not (mark-p my-obj))
+			    (s-value gob :cursor-frag my-frag)))
+		      (s-value gob :cursor-frag-pos 0))
+		    (progn
+		      (s-value gob :cursor-frag frag)
+		      (s-value gob :cursor-frag-pos frag-pos))))
+	      (progn
+		(s-value gob :cursor-frag frag)
+		(s-value gob :cursor-frag-pos frag-pos)
+		(incf (g-value gob :cursor-position))
+		(incf (g-value gob :cursor-x-offset)
+		      (if (frag-object-p frag)
+			  (frag-width frag)
+			  (opal:char-width (frag-font frag) char)))))
+	  (reset-font gob)
+	  char))))
 
 
- (defun SET-CURSOR-TO-LINE-CHAR-POSITION (gob my-line char)
-    (let ((new-line (g-value gob :first-line)))
-       (dotimes (i my-line)
-	  (when new-line
-	     (setq new-line (g-value new-line :next-line))))
-       (unless new-line
-	  (setq new-line (g-value gob :last-line)))
-       (setq char (min char (1- (g-value new-line :length))))
-       (when (g-value gob :selection-p)
-	  (reset-selection (g-value gob :cursor-line)
-		(g-value gob :cursor-position) (g-value gob :select-line)
-		(g-value gob :select-position) new-line char)
-       )
-       (s-value gob :cursor-line new-line)
-       (s-value gob :cursor-position char)
-       (multiple-value-bind (frag frag-pos x-offset)
-	     (calculate-cursor-pos new-line char)
-	  (s-value gob :cursor-frag frag)
-	  (s-value gob :cursor-frag-pos frag-pos)
-	  (s-value gob :cursor-x-offset x-offset)
-       )
-    )
-    (reset-font gob)
-    t
- )
-
-
- ;; Returns multiple values.  First line then char position.
- (defun GET-CURSOR-LINE-CHAR-POSITION (gob)
-    (let ((target (g-value gob :cursor-line)))
-       (do ((my-line (g-value gob :first-line) (g-value my-line :next-line))
-	    (i 0 (1+ i)))
-	   ((eq my-line target)
-	      (values i (g-value gob :cursor-position)))
-       )
-    )
- )
-
-
- ;; Returns character cursor passed over, or #\newline if we went to a 
- ;; new line, or nil if at end of text.
- (defun GO-TO-NEXT-CHAR (gob)
-   (let* ((my-line (g-value gob :cursor-line))
-	  (next-line (g-value my-line :next-line))
+;; Returns character cursor passed over, or #\newline if cursor went to a 
+;; new line, or nil if at beginning of text.
+(defun GO-TO-PREV-CHAR (gob)
+  (reset-font gob)
+  (block zero
+    (let ((my-line (g-value gob :cursor-line))
 	  (frag (g-value gob :cursor-frag))
-	  (frag-pos (g-value gob :cursor-frag-pos)))
-     (when (= frag-pos (frag-length frag))
-       (setq frag (frag-next frag))
-       (do () ((or (null frag) (not (mark-p (frag-object frag)))))
-	 (setq frag (frag-next frag)))
-       (setq frag-pos 0))
-     (when (not (frag-object-p frag))
-	 (s-value gob :current-font (frag-font frag))
-	 (s-value gob :current-fcolor (frag-fcolor frag))
-	 (s-value gob :current-bcolor (frag-bcolor frag)))
-     (if (and (null next-line) (>= frag-pos (1- (frag-length frag)))
-	      (null (frag-next frag)))
-       nil
-       (let ((char (if (frag-object-p frag)
-		     (frag-object frag)
-		     (schar (frag-string frag) frag-pos))))
-	 (when (g-value gob :selection-p)
-	   (invalidate-line my-line)
-	   (if (= (frag-start-highlight frag) (frag-end-highlight frag))
-	     (progn
-	       (setf (frag-start-highlight frag) frag-pos)
-	       (setf (frag-end-highlight frag) (1+ frag-pos)))
-	     (if (= (frag-end-highlight frag) frag-pos)
-	       (incf (frag-end-highlight frag))
-	       (incf (frag-start-highlight frag)))))
-	 (incf frag-pos)
-	 (if (= frag-pos (frag-length frag))
-	   (let ((next (frag-next frag)))
-	     (if (null next)
-	       (progn
-		 (unless (frag-break-p frag)
-		   (setq char #\newline))
-		 (setq frag (g-value next-line :first-frag))
-		 (setq next (frag-next frag))
-		 (setq frag-pos 0)
-		 (s-value gob :cursor-line next-line)
-		 (s-value gob :cursor-position 0)
-		 (s-value gob :cursor-x-offset 0))
-	       (progn
-		 (incf (g-value gob :cursor-position))
-		     (incf (g-value gob :cursor-x-offset)
-			   (if (frag-object-p frag)
-			       (frag-width frag)
-			     (opal:char-width (frag-font frag) char)))))
-	     (if (and (= frag-pos (frag-length frag))
-		      (let ((obj (frag-object next)))
-			(and (mark-p obj) (mark-sticky-left obj))))
-		 (progn
-		   (do* ((my-frag (frag-next next) (frag-next my-frag))
-			 (my-obj (frag-object my-frag) (frag-object my-frag)))
-			((not (mark-p my-obj))
-			 (s-value gob :cursor-frag my-frag)))
-		   (s-value gob :cursor-frag-pos 0))
-		 (progn
-		   (s-value gob :cursor-frag frag)
-		   (s-value gob :cursor-frag-pos frag-pos))))
-	   (progn
-	     (s-value gob :cursor-frag frag)
-	     (s-value gob :cursor-frag-pos frag-pos)
-	     (incf (g-value gob :cursor-position))
-	     (incf (g-value gob :cursor-x-offset)
-		   (if (frag-object-p frag)
-		       (frag-width frag)
-		       (opal:char-width (frag-font frag) char)))))
-	 (reset-font gob)
-	 char))))
-
-
- ;; Returns character cursor passed over, or #\newline if cursor went to a 
- ;; new line, or nil if at beginning of text.
- (defun GO-TO-PREV-CHAR (gob)
-    (reset-font gob)
-    (block zero
-       (let ((my-line (g-value gob :cursor-line))
-	     (frag (g-value gob :cursor-frag))
-	     (frag-pos (1- (g-value gob :cursor-frag-pos)))
-	     char char-size)
-	 (do ((prev-frag (frag-prev frag) (frag-prev frag)))
-	     ((or (null prev-frag) (>= frag-pos 0)))
-	   (setq frag prev-frag)
-	   (setq frag-pos (1- (frag-length frag))))
-	  (if (< frag-pos 0)
-	     (progn
-		(unless (setq my-line (g-value my-line :prev-line))
-		   (return-from zero nil)
-		)
-		(s-value gob :cursor-line my-line)
-		(setq frag
-		      (s-value gob :cursor-frag (g-value my-line :last-frag)))
-		(s-value gob :cursor-position (g-value my-line :length))
-		(setq frag-pos
-		      (s-value gob :cursor-frag-pos (1- (frag-length frag))))
-		(s-value gob :cursor-x-offset (g-value my-line :width))
-		(if (frag-break-p frag)
-		  (if (frag-object-p frag)
-		   (progn
-		     (setq char (frag-object frag))
-		     (setq char-size (frag-width frag)))
-		   (progn
-		     (setq char (schar (frag-string frag) frag-pos))
-		     (setq char-size (opal:char-width (frag-font frag) char))))
-		  (progn
-		    (setq char #\newline)
-		    (setq char-size (opal:char-width (frag-font frag) #\space))
+	  (frag-pos (1- (g-value gob :cursor-frag-pos)))
+	  char char-size)
+      (do ((prev-frag (frag-prev frag) (frag-prev frag)))
+	  ((or (null prev-frag) (>= frag-pos 0)))
+	(setq frag prev-frag)
+	(setq frag-pos (1- (frag-length frag))))
+      (if (< frag-pos 0)
+	  (progn
+	    (unless (setq my-line (g-value my-line :prev-line))
+	      (return-from zero nil)
+	      )
+	    (s-value gob :cursor-line my-line)
+	    (setq frag
+		  (s-value gob :cursor-frag (g-value my-line :last-frag)))
+	    (s-value gob :cursor-position (g-value my-line :length))
+	    (setq frag-pos
+		  (s-value gob :cursor-frag-pos (1- (frag-length frag))))
+	    (s-value gob :cursor-x-offset (g-value my-line :width))
+	    (if (frag-break-p frag)
+		(if (frag-object-p frag)
+		    (progn
+		      (setq char (frag-object frag))
+		      (setq char-size (frag-width frag)))
+		    (progn
+		      (setq char (schar (frag-string frag) frag-pos))
+		      (setq char-size (opal:char-width (frag-font frag) char))))
+		(progn
+		  (setq char #\newline)
+		  (setq char-size (opal:char-width (frag-font frag) #\space))
 		  )
 		)
-	     )
-	     (if (frag-object-p frag)
-	       (progn
-		 (setq char (frag-object frag))
-		 (setq char-size (frag-width frag)))
-	       (progn
-		 (setq char (schar (frag-string frag) frag-pos))
-		 (setq char-size
-		       (opal:char-width (frag-font frag) char))))
-	  )
-	  (when (g-value gob :selection-p)
-	     (invalidate-line my-line)
-	     (let ((start-highlight (frag-start-highlight frag)))
-	       (if (= start-highlight (frag-end-highlight frag))
-		 (progn
-		   (setf (frag-start-highlight frag) frag-pos)
-		   (setf (frag-end-highlight frag) (1+ frag-pos))
-		 )
-		 (if (> start-highlight frag-pos)
-		   (decf (frag-start-highlight frag))
-		   (decf (frag-end-highlight frag))
-		 )
-	       )
-	  ))
-	  (let ((prev-frag (frag-prev frag)))
-	    (when (and (= frag-pos 0) prev-frag
-		     (let ((obj (frag-object prev-frag)))
-		       (or (not (mark-p obj))
-			   (not (mark-sticky-left obj)))))
-	      (setq frag (frag-prev frag))
-	      (setq frag-pos (frag-length frag))
 	    )
+	  (if (frag-object-p frag)
+	      (progn
+		(setq char (frag-object frag))
+		(setq char-size (frag-width frag)))
+	      (progn
+		(setq char (schar (frag-string frag) frag-pos))
+		(setq char-size
+		      (opal:char-width (frag-font frag) char))))
 	  )
-	  (do ((prev-frag (frag-prev frag) (frag-prev frag)))
-	    ((not (mark-p (frag-object frag))))
-	    (setq frag prev-frag)
-	    (setq frag-pos (frag-length frag))
+      (when (g-value gob :selection-p)
+	(invalidate-line my-line)
+	(let ((start-highlight (frag-start-highlight frag)))
+	  (if (= start-highlight (frag-end-highlight frag))
+	      (progn
+		(setf (frag-start-highlight frag) frag-pos)
+		(setf (frag-end-highlight frag) (1+ frag-pos))
+		)
+	      (if (> start-highlight frag-pos)
+		  (decf (frag-start-highlight frag))
+		  (decf (frag-end-highlight frag))
+		  )
+	      )
+	  ))
+      (let ((prev-frag (frag-prev frag)))
+	(when (and (= frag-pos 0) prev-frag
+		   (let ((obj (frag-object prev-frag)))
+		     (or (not (mark-p obj))
+			 (not (mark-sticky-left obj)))))
+	  (setq frag (frag-prev frag))
+	  (setq frag-pos (frag-length frag))
 	  )
-	  (s-value gob :cursor-line my-line)
-	  (s-value gob :cursor-frag frag)
-	  (s-value gob :cursor-frag-pos frag-pos)
-	  (decf (g-value gob :cursor-position))
-	  (decf (g-value gob :cursor-x-offset) char-size)
-	  (reset-font gob)
-	  char
-       )
+	)
+      (do ((prev-frag (frag-prev frag) (frag-prev frag)))
+	  ((not (mark-p (frag-object frag))))
+	(setq frag prev-frag)
+	(setq frag-pos (frag-length frag))
+	)
+      (s-value gob :cursor-line my-line)
+      (s-value gob :cursor-frag frag)
+      (s-value gob :cursor-frag-pos frag-pos)
+      (decf (g-value gob :cursor-position))
+      (decf (g-value gob :cursor-x-offset) char-size)
+      (reset-font gob)
+      char
+      )
     )
- )
+  )
 
 
 (defmacro delim-char-p (char)
@@ -2919,8 +2771,6 @@
            (cursor-high (higher-cursor cursor-line cursor-pos
 				       select-line select-pos))
 	   frag frag-pos
-; amickish - removed reference to first-fcolor and first-bcolor
-;          first-fcolor first-bcolor
            )
       (if cursor-high
 	(progn
@@ -2930,17 +2780,12 @@
           (setq frag (g-value gob :select-frag))
           (setq frag-pos (g-value gob :select-frag-pos))))
       (when (= frag-pos (frag-length frag))
-	 (setq frag (frag-next frag)))
-; amickish - removed reference to first-fcolor and first-bcolor
-;     (multiple-value-setq (first-fcolor first-bcolor)
-	(search-for-color (if cursor-high cursor-line select-line)
-			  frag)
-;       )
-; amickish - removed reference to first-fcolor and first-bcolor
-;     (multiple-value-setq (first-fcolor first-bcolor)
-	(search-for-color (if cursor-high cursor-line select-line)
-			  frag)
-;       )
+	(setq frag (frag-next frag)))
+
+      #-(and) ;; This seems useless. FMG
+      (search-for-color (if cursor-high cursor-line select-line)
+			frag)
+
       (if cursor-high
 	(change-color gob cursor-line cursor-pos select-line select-pos
 		      fcolor bcolor)
@@ -4150,6 +3995,7 @@
     (invalidate-line my-line)))
 
 
+
 ;;; The following are conversion functions, useful for turning text lists into
 ;;; other things.  Note there is no STRING-TO-TEXT function since by
 ;;; definition a string is a valid form of text.
@@ -4295,6 +4141,8 @@
       (and (= (length text) 1) (empty-line-p (first text)))
       T)))
 
+
+
 ;;;
 ;;; These functions are needed to reinitialize the font information
 ;;; when you change the display

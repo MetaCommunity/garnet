@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;;  MOTIF-TEXT-BUTTONS-LOADER: Loads the gadgets module "motif-text-buttons"
 ;;;   and "parts" modules if required.
 
@@ -30,9 +32,7 @@ Change log:
   (dolist (pair '((:motif-parts "motif-parts")
 		  (:motif-text-buttons "motif-text-buttons")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Motif-Text-Buttons.~%"))
 

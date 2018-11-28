@@ -2,10 +2,12 @@
 ;;; A simple CLOS class browser using Garnet, by Jose E. Hernandez, LLNL ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(in-package :common-lisp-user)
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (load garnet-aggregraphs-loader)
-  (load (common-lisp-user::garnet-pathnames "motif-scrolling-window-loader"
-				common-lisp-user::Garnet-Gadgets-PathName)))
+  (load (merge-pathnames "motif-scrolling-window-loader"
+			 Garnet-Gadgets-PathName)))
 
 (defparameter *clos-class-browser-max-width* 900) ;max width for the window
 (defparameter *clos-class-browser-max-height* 700) ;max height for the window
@@ -44,13 +46,13 @@
 	
 	(let ((class-object (cond
 			     ((symbolp arg) (find-class arg))
-			     ((subtypep (type-of arg) 'clos::standard-object)
+			     ((subtypep (type-of arg) 'standard-object)
 			      (class-of arg))
 			     (t (error "Illegal object."))))
 	      (window (gensym)))
 	  
 	  ;; create the window to hold the graph
-	  (kr:create-instance window garnet-gadgets:scrolling-window-with-bars
+	  (kr:create-instance window garnet-gadgets:motif-scrolling-window-with-bars
 	      (:left left) (:top top) (:visible nil)
 	      (:width (if width width
 			(kr:o-formula
@@ -80,8 +82,8 @@
 	  
 	  (let ((childrens-of
 		 (case direction
-		   (:up #'clos::class-direct-superclasses)
-		   (:down #'clos::class-direct-subclasses)
+		   (:up #'sb-mop:class-direct-superclasses)
+		   (:down #'sb-mop:class-direct-subclasses)
 		   (t (error "Illegal keyword for direction, must be :up or :down")))))
 	    
 	    ;; create the graph
@@ -165,7 +167,7 @@
 			      ,#'(lambda (inter node)
 				   (declare (ignore inter))
 				   (mapc #'print
-					 (clos::class-direct-methods
+					 (sb-mop:specializer-direct-methods
 					  (kr:g-value node :source-node)))
 				   (format t "~%")))))))))
 	  

@@ -141,6 +141,16 @@
   '(or (is-a-p opal::aggregate) null)
   "[either an instance of opal:AGGREGATE or NIL]")
 
+(def-kr-type BOOLEAN ()
+  '(member t nil))
+
+(def-kr-type FIXNUM ()
+  '(satisfies
+    #+sbcl sb-int:fixnump
+    #+cmu ext:fixnump
+    #+allegro excl:fixnump
+    #-(or sbcl cmu allegro) integerp)
+  "Potential efficiency hack.")
 
 ;;;; Unnamed types used in Opal, Interactors, etc.
 

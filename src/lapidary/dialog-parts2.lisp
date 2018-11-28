@@ -239,8 +239,18 @@
 					(gvl :shadow-offset)
 					0))))
       (:min-frame-width ,(o-formula (gvl :parent :min-frame-width)))
+      ;; XXX The following breaks during compilation with CCL because
+      ;; (gvl :rank) is null.
+      #-ccl
       (:string ,(o-formula (let* ((p (kr-path 0 :parent))
 				  (item (nth (gvl :rank) (gv p :items))))
+			     (if (listp item) (first item) item))))
+      #+ccl
+      (:string ,(o-formula (let* ((p (kr-path 0 :parent))
+				  (item 
+				   (nth
+				    (or (gvl :rank) 0)
+				    (gv p :items))))
 			     (if (listp item) (first item) item))))
       (:action ,(o-formula (let* ((p (kr-path 0 :parent))
 				  (item (nth (gvl :rank) (gv p :items))))

@@ -1,24 +1,19 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER; Base: 10 -*-
-;;; 
-;;; ______________________________________________________________________
-;;;
-;;; The Garnet User Interface Development Environment
-;;; Copyright (c) 1989, 1990 Carnegie Mellon University
-;;; All rights reserved.  The CMU software License Agreement specifies
-;;; the terms and conditions for use and redistribution.
-;;;
-;;; If you want to use this code or anything developed as part of the Garnet
-;;; Project, please contact Brad Myers (Brad.Myers@CS.CMU.EDU).
-;;; ______________________________________________________________________
-;;;
+;;                                                                   ;;
+;;*******************************************************************;;
+;;  The Garnet User Interface Development Environment                ;;
+;;  Copyright (c) 1989, 1990 Carnegie Mellon University              ;;
+;;  All rights reserved.  The CMU software License Agreement         ;;
+;;  specifies the terms and conditions for use and redistribution.   ;;
+;;*******************************************************************;;
 
-#|
-============================================================
-Change log:
-	4/ 5/93 Dave Kosbie - created
-============================================================
-|#
+;;; $Id$
+;;
 
+;;; Change log:
+;;	4/ 5/93 Dave Kosbie - created
+
+
 (in-package "COMMON-LISP-USER")
 
 (format t "Loading Utils...~%")
@@ -34,7 +29,6 @@ Change log:
 
 (dolist (file Garnet-Utils-Files)
   (garnet-load (concatenate 'string "utils:" file)))
-
 
 (setf (get :garnet-modules :utils)  t)
 (format t "...Done Utils.~%")

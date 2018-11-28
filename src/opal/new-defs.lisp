@@ -51,11 +51,11 @@
 (in-package "OPAL")
 
 (defstruct bbox
-	x1
-	y1
-	x2
-	y2
-	valid-p)
+  (x1 0 :type fixnum)
+  (y1 0 :type fixnum)
+  (x2 0 :type fixnum)
+  (y2 0 :type fixnum)
+  (valid-p nil :type (or t nil)))
 
 
 ;; Force-Computation-P is necessary since if an object R is in an aggregate A,
@@ -158,6 +158,16 @@
 	exposed-bbox
 )
 
+#+allegro
+(defun set-win-update-info-height (win-update-info value)
+  (setf (win-update-info-height win-update-info)
+	value))
+
+#+allegro
+(defun set-win-update-info-width (win-update-info value)
+  (setf (win-update-info-height win-update-info)
+	value))
+
 ;;; The invalid objects slot used to be unprintable because it had
 ;;; an extra item at the end, but that has been eliminated.
 (defun win-update-info-print-function (struct stream depth)
@@ -173,7 +183,9 @@
 
 (defvar *free-cons* NIL)
 
-(defvar *font-hash-table* (make-hash-table :test #'equal))
+(defvar *font-hash-table* (make-hash-table 
+			   :test #'equal
+			   #+sb-thread :synchronized #+sb-thread t))
 
 
 

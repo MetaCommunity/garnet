@@ -144,7 +144,7 @@ Good values of number-of-rectangles are 3..50"
     (opal:update Win)
 
     (format T "~%DEMO-MANYOBJS:
-  Press on any object with the left button to start moving it.
+  Press and drag on any object with the left button to move it.
   Press on gray rectangle with right button to generate new random
   locations for all objects.
   Execute the function (Demo-Manyobjs:Move n) to move an object n times (e.g., 100)~%")

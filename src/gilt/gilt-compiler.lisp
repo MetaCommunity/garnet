@@ -28,6 +28,19 @@ Change log:
 
 (in-package "COMMON-LISP-USER")
 
+(defvar *debug-gilt-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-gilt-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
+
 (format t "Compiling Gilt...~%")
 
 ;; check first to see if pathname variable is set
@@ -71,7 +84,7 @@ Change log:
 #+allegroV3.1
 (common-lisp-user::gc t)
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-gilt-Pathname))
 
 (defvar gilt-files
@@ -92,11 +105,11 @@ Change log:
     "error-check"
 		     ))
 
+(with-compilation-unit ()
 (dolist (file gilt-files)
   (let ((gilt-str (concatenate 'string "gilt:" file)))
     (garnet-compile gilt-str)
-    (garnet-load gilt-str))
-  #+allegroV3.1(common-lisp-user::gc t))
+    (garnet-load gilt-str))))
 
 (garnet-copy-files Garnet-Gilt-Src Garnet-Gilt-Pathname
 		   '("filter-functions-loader.lisp"

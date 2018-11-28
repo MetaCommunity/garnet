@@ -1,17 +1,20 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;; Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id::                                                             $
+;;
+
+
 (in-package "INTERACTORS")
 
-
-;;;;    definitions of garnet mouse keywords for the left button release
+
+;; definitions of garnet mouse keywords for the left button release
 (define-mouse-up *left-button* nil :leftup)
 
 (define-mouse-up *left-button* '(:control) :control-leftup)
@@ -37,8 +40,8 @@
 
 (define-mouse-up *left-button* '(:control :shift :lock :meta) :shift-control-meta-leftup)
 
-
-;;;;    definitions of garnet mouse keywords for the middle button release
+
+;; definitions of garnet mouse keywords for the middle button release
 (define-mouse-up *middle-button* nil :middleup)
 
 (define-mouse-up *middle-button* '(:control) :control-middleup)
@@ -67,8 +70,8 @@
   :shift-control-meta-middleup)
 
 
-
-;;;;    definitions of garnet mouse keywords for the right button release
+
+;;    definitions of garnet mouse keywords for the right button release
 (define-mouse-up *right-button* nil :rightup)
 
 (define-mouse-up *right-button* '(:control) :control-rightup)
@@ -98,7 +101,7 @@
 
 
 
-;;;;    definitions of garnet mouse keywords for the left button press
+;;    definitions of garnet mouse keywords for the left button press
 (define-mouse-down *left-button* nil :leftdown)
 
 (define-mouse-down *left-button* '(:control) :control-leftdown)
@@ -153,8 +156,8 @@
 (define-mouse-down *middle-button* '(:control :shift :lock :meta) :shift-control-meta-middledown)
 
 
-
-;;;;    definitions of garnet mouse keywords for the right button press
+
+;;    definitions of garnet mouse keywords for the right button press
 (define-mouse-down *right-button* nil :rightdown)
 
 (define-mouse-down *right-button* '(:control) :control-rightdown)
@@ -183,11 +186,134 @@
   :shift-control-meta-rightdown)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Now repeat the entire set for the double-click version
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Scroll wheel buttons.
+;;
 
-;;;;    definitions of garnet mouse keywords for the left button release
+;;    definitions of garnet mouse keywords for the up-scroll button release
+(define-mouse-up *up-scroll-button* nil :upscrollup)
+
+(define-mouse-up *up-scroll-button* '(:control) :control-upscrollup)
+(define-mouse-up *up-scroll-button* '(:shift) :shift-upscrollup)
+(define-mouse-up *up-scroll-button* '(:lock) :shift-upscrollup)
+(define-mouse-up *up-scroll-button* '(:meta) :meta-upscrollup)
+
+
+(define-mouse-up *up-scroll-button* '(:control :shift) :shift-control-upscrollup) 
+(define-mouse-up *up-scroll-button* '(:control :lock) :shift-control-upscrollup) 
+(define-mouse-up *up-scroll-button* '(:control :meta) :control-meta-upscrollup)
+
+(define-mouse-up *up-scroll-button* '(:shift :lock) :shift-upscrollup)
+(define-mouse-up *up-scroll-button* '(:shift :meta) :shift-meta-upscrollup)
+
+(define-mouse-up *up-scroll-button* '(:lock :meta) :shift-meta-upscrollup)
+
+
+(define-mouse-up *up-scroll-button* '(:control :shift :lock) :shift-control-upscrollup)
+(define-mouse-up *up-scroll-button* '(:control :shift :meta) :shift-control-meta-upscrollup)
+
+(define-mouse-up *up-scroll-button* '(:shift :lock :meta) :shift-meta-upscrollup)
+
+
+(define-mouse-up *up-scroll-button* '(:control :shift :lock :meta)
+  :shift-control-meta-upscrollup)
+
+
+;;;    definitions of garnet mouse keywords for the down-scroll button release
+(define-mouse-up *down-scroll-button* nil :downscrollup)
+
+(define-mouse-up *down-scroll-button* '(:control) :control-downscrollup)
+(define-mouse-up *down-scroll-button* '(:shift) :shift-downscrollup)
+(define-mouse-up *down-scroll-button* '(:lock) :shift-downscrollup)
+(define-mouse-up *down-scroll-button* '(:meta) :meta-downscrollup)
+
+
+(define-mouse-up *down-scroll-button* '(:control :shift) :shift-control-downscrollup) 
+(define-mouse-up *down-scroll-button* '(:control :lock) :shift-control-downscrollup) 
+(define-mouse-up *down-scroll-button* '(:control :meta) :control-meta-downscrollup)
+
+(define-mouse-up *down-scroll-button* '(:shift :lock) :shift-downscrollup)
+(define-mouse-up *down-scroll-button* '(:shift :meta) :shift-meta-downscrollup)
+
+(define-mouse-up *down-scroll-button* '(:lock :meta) :shift-meta-downscrollup)
+
+
+(define-mouse-up *down-scroll-button* '(:control :shift :lock) :shift-control-downscrollup)
+(define-mouse-up *down-scroll-button* '(:control :shift :meta) :shift-control-meta-downscrollup)
+
+(define-mouse-up *down-scroll-button* '(:shift :lock :meta) :shift-meta-downscrollup)
+
+
+(define-mouse-up *down-scroll-button* '(:control :shift :lock :meta)
+  :shift-control-meta-downscrollup)
+
+
+
+;;;    definitions of garnet mouse keywords for the up-scroll button press
+
+(define-mouse-down *up-scroll-button* nil :upscrolldown)
+
+(define-mouse-down *up-scroll-button* '(:control) :control-upscrolldown)
+(define-mouse-down *up-scroll-button* '(:shift) :shift-upscrolldown)
+(define-mouse-down *up-scroll-button* '(:lock) :shift-upscrolldown)
+(define-mouse-down *up-scroll-button* '(:meta) :meta-upscrolldown)
+
+
+(define-mouse-down *up-scroll-button* '(:control :shift) :shift-control-upscrolldown) 
+(define-mouse-down *up-scroll-button* '(:control :lock) :shift-control-upscrolldown) 
+(define-mouse-down *up-scroll-button* '(:control :meta) :control-meta-upscrolldown)
+
+(define-mouse-down *up-scroll-button* '(:shift :lock) :shift-upscrolldown)
+(define-mouse-down *up-scroll-button* '(:shift :meta) :shift-meta-upscrolldown)
+
+(define-mouse-down *up-scroll-button* '(:lock :meta) :shift-meta-upscrolldown)
+
+
+(define-mouse-down *up-scroll-button* '(:control :shift :lock) :shift-control-upscrolldown)
+(define-mouse-down *up-scroll-button* '(:control :shift :meta) :shift-control-meta-upscrolldown)
+
+(define-mouse-down *up-scroll-button* '(:shift :lock :meta) :shift-meta-upscrolldown)
+
+
+(define-mouse-down *up-scroll-button* '(:control :shift :lock :meta)
+  :shift-control-meta-upscrolldown)
+
+
+
+;;;  definitions of garnet mouse keywords for the down-scroll button press
+
+(define-mouse-down *down-scroll-button* nil :downscrolldown)
+
+(define-mouse-down *down-scroll-button* '(:control) :control-downscrolldown)
+(define-mouse-down *down-scroll-button* '(:shift) :shift-downscrolldown)
+(define-mouse-down *down-scroll-button* '(:lock) :shift-downscrolldown)
+(define-mouse-down *down-scroll-button* '(:meta) :meta-downscrolldown)
+
+
+(define-mouse-down *down-scroll-button* '(:control :shift) :shift-control-downscrolldown) 
+(define-mouse-down *down-scroll-button* '(:control :lock) :shift-control-downscrolldown) 
+(define-mouse-down *down-scroll-button* '(:control :meta) :control-meta-downscrolldown)
+
+(define-mouse-down *down-scroll-button* '(:shift :lock) :shift-downscrolldown)
+(define-mouse-down *down-scroll-button* '(:shift :meta) :shift-meta-downscrolldown)
+
+(define-mouse-down *down-scroll-button* '(:lock :meta) :shift-meta-downscrolldown)
+
+
+(define-mouse-down *down-scroll-button* '(:control :shift :lock) :shift-control-downscrolldown)
+(define-mouse-down *down-scroll-button* '(:control :shift :meta) :shift-control-meta-downscrolldown)
+
+(define-mouse-down *down-scroll-button* '(:shift :lock :meta) :shift-meta-downscrolldown)
+
+
+(define-mouse-down *down-scroll-button* '(:control :shift :lock :meta)
+  :shift-control-meta-downscrolldown)
+
+
+;;; Now repeat the entire set for the double-click version
+;;
+
+;;;    definitions of garnet mouse keywords for the left button release
 (define-mouse-up *double-left-button* nil :double-leftup)
 
 (define-mouse-up *double-left-button* '(:control) :control-double-leftup)
@@ -216,7 +342,7 @@
   :shift-control-meta-double-leftup)
 
 
-;;;;    definitions of garnet mouse keywords for the middle button release
+;;; definitions of garnet mouse keywords for the middle button release
 (define-mouse-up *double-middle-button* nil :double-middleup)
 
 (define-mouse-up *double-middle-button* '(:control) :control-double-middleup)
@@ -255,7 +381,7 @@
 
 
 
-;;;;    definitions of garnet mouse keywords for the right button release
+;;; definitions of garnet mouse keywords for the right button release
 (define-mouse-up *double-right-button* nil :double-rightup)
 
 (define-mouse-up *double-right-button* '(:control) :control-double-rightup)
@@ -293,7 +419,7 @@
 
 
 
-;;;;    definitions of garnet mouse keywords for the left button press
+;;; definitions of garnet mouse keywords for the left button press
 (define-mouse-down *double-left-button* nil :double-leftdown)
 
 (define-mouse-down *double-left-button* '(:control) :control-double-leftdown)
@@ -330,7 +456,7 @@
   :shift-control-meta-double-leftdown)
 
 
-;;;;    definitions of garnet mouse keywords for the middle button press
+;;; definitions of garnet mouse keywords for the middle button press
 (define-mouse-down *double-middle-button* nil :double-middledown)
 
 (define-mouse-down *double-middle-button* '(:control)
@@ -369,8 +495,8 @@
   :shift-control-meta-double-middledown)
 
 
-
-;;;;    definitions of garnet mouse keywords for the right button press
+
+;;; definitions of garnet mouse keywords for the right button press
 (define-mouse-down *double-right-button* nil :double-rightdown)
 
 (define-mouse-down *double-right-button* '(:control) :control-double-rightdown)

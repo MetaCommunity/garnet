@@ -36,17 +36,14 @@ Change log:
                   (:scrolling-window-parts "scrolling-window-parts")
                   (:scrolling-window "scrolling-window")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-                             #+cmu "gadgets:"
-                             #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
             :verbose T)))
   (format t "...Done Scrolling-Window.~%"))
 
 ; Load scrolling functions for multifont if multifont files already loaded
 ; (otherwise they will be loaded by the multifont-loader when needed).
 (if (get :garnet-modules :multifont)
-    (load (common-lisp-user::garnet-pathnames "scrolling-window-multifont"
-			   Garnet-Gadgets-Pathname)
+    (load (merge-pathnames "scrolling-window-multifont" Garnet-Gadgets-Pathname)
 	  :verbose T))
 
 (setf (get :garnet-modules :scrolling-window-parts) t)

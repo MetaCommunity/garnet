@@ -208,7 +208,8 @@
 ;;;   (:height 100))
 ;;; 
 
-(define-method :point-in-gob opal::window (gob x y)
+(define-method :point-in-gob window (gob x y)
+  (declare (fixnum x y))
   (and (<= 0 x (g-value gob :width))
        (<= 0 y (g-value gob :height))))
 
@@ -247,21 +248,20 @@
 			    ;; DZG (xlib:window-id event-window)
 			    ))
   (if a-window
-    (kr:with-demon-disabled  (g-value opal::window :invalidate-demon)
+    (kr:with-demon-disabled  (g-value window :invalidate-demon)
       (s-value a-window :visible t)))
   t)
 
 (defvar *exit-main-event-loop-function* NIL)
 
-(defvar *inside-main-event-loop* nil)
 
 ;; returns t if any top level window is visible
 (defun any-top-level-window-visible ()
-  (dolist (win *garnet-windows*)
-    (when (and (schema-p win)
-	       (g-value win :visible)
-	       (not (g-value win :parent)))
-      (return-from any-top-level-window-visible t)))
+  (some #'(lambda (win)
+	    (and (schema-p win)
+		 (g-value win :visible)
+		 (not (g-value win :parent))))
+	*garnet-windows*))
   #|
   (maphash #'(lambda (xwin win)
 		(declare (ignore xwin))
@@ -271,7 +271,7 @@
 		  (return-from any-top-level-window-visible t)))
 	    *drawable-to-window-mapping*)
   |#
-  NIL)
+
 
 ;;; Unmap-notify is called when an :unmap-notify event occurs.
 ;;; It sets the :visible slot of the unmapped window as follows,
@@ -289,7 +289,7 @@
 			    ))
   (when (schema-p a-window)
     (if (g-value a-window :visible)
-      (with-demon-disabled (g-value opal::WINDOW :invalidate-demon)
+      (with-demon-disabled (g-value WINDOW :invalidate-demon)
 	(s-value a-window :visible :iconified)))
     (if (and *exit-main-event-loop-function*
 	     (not (any-top-level-window-visible)))
@@ -306,12 +306,6 @@
   (when event-debug (format t "gravity-notify~%"))
   t)
 
-
-
-#+clx-mit-r4
-;;; From file windows.lisp
-;;; This was marked #+clx-mit-r4; is it still needed, or should we get rid of
-;;; it?
 (defun iconify-window (a-window)
   (let ((drawable (g-value a-window :drawable)))
     (when drawable
@@ -320,16 +314,13 @@
       (gem:flush-output a-window))))
 
 
-#-clx-mit-r4
-(defun iconify-window (a-window) (declare (ignore a-window)))
-
 (defun deiconify-window (a-window)
   (s-value a-window :visible t)
   (update a-window))
 
 
 (defun raise-window (a-window)
-  (cond ((is-a-p a-window opal::window)
+  (cond ((is-a-p a-window window)
 	 (let ((drawable (g-value a-window :drawable)))
 	   (when drawable
 	     (gem:raise-or-lower a-window T))
@@ -342,7 +333,7 @@
 
 (defun lower-window (a-window)
   (cond
-    ((is-a-p a-window opal::window)
+    ((is-a-p a-window window)
      (let ((drawable (g-value a-window :drawable)))
        (unless drawable
 	 (setq drawable (create-x-drawable a-window)))
@@ -457,13 +448,9 @@
 				'(:left :top :width :height))))
 	(when (gem:window-has-grown a-window width height)
 	  (expand-buffer a-window)
-          ;; Sometimes the grow icon is not drawn, but calling this function
-          ;; additionally draws the expansion lines along the right and bottom
-          ;; sides of the window.
-;;          #+apple (traps:_DrawGrowIcon (ccl:wptr drawable))
 	  ;; This update will redraw contents of window into new buffer.
 	  (update a-window t))
-	(opal:update-all))))
+	(update-all))))
   t)
 
 
@@ -486,7 +473,7 @@
 	    (unless exposed-bbox
 	      (setq exposed-bbox
 		    (setf (win-update-info-exposed-bbox win-ui)
-			  (opal::make-bbox :valid-p NIL))))
+			  (make-bbox :valid-p NIL))))
 	    (if (bbox-valid-p exposed-bbox)
 	      ;; already valid, so merge into existing bbox
 	      (setf (bbox-x2 exposed-bbox)
@@ -513,9 +500,9 @@
   t)
 
 (defun initialize-display (root-window)
-  (unless opal:diamond-fill
+  (unless diamond-fill
     ;; Moved here from halftones.lisp.  Used to be done at load time.
-    (setf opal:diamond-fill
+    (setf diamond-fill
 	  (make-filling-style '((1 1 1 1 1 1 1 1 1)
 				(1 1 1 1 0 1 1 1 1)
 				(1 1 1 0 0 0 1 1 1)
@@ -540,15 +527,11 @@
 ;; 2) A three-element list consisting of a font and two indices into the font
 ;;    indicating a cursor character and its mask
 ;; 3) Same as #2 only with :CURSOR as the first element instead of a font.
-;;    In this case, opal:CURSOR-FONT is used as the font.
+;;    In this case, CURSOR-FONT is used as the font.
 ;;
 (defun set-window-cursor (a-window drawable pair)
   (declare (ignore drawable))
 
-  ;; NIY for Mac
-  #+apple (declare (ignore a-window pair))
-
-  #-apple
   ;; First, look up the bitmap pair in the association list of known cursors
   (let ((old-cursor (cdr (assoc pair (g-value a-window :cursor-pairs)
 				:test #'equal))))
@@ -560,7 +543,7 @@
       (let ((pair-car (car pair))
 	    (new-cursor NIL))
 	(cond
-	  ((is-a-p pair-car opal:bitmap)
+	  ((is-a-p pair-car bitmap)
 	   (let ((cursor-bm (g-value pair-car :image)))
 	     (multiple-value-bind (cursor-width cursor-height)
 		 (gem:image-size a-window cursor-bm)
@@ -592,8 +575,8 @@
 		   (setf new-cursor
 			 (gem:create-cursor a-window cursor-pm
 					    (if mask-bm mask-pm)
-					    (g-value opal:black :xcolor)
-					    (g-value opal:white :xcolor)
+					    (g-value black :xcolor)
+					    (g-value white :xcolor)
 					    NIL ;; not from-font
 					    (or x 0)
 					    (or y 0))))
@@ -602,14 +585,14 @@
 		 (if mask-bm (gem:delete-pixmap a-window mask-pm))))))
 
 	  ((or (eq pair-car :CURSOR)
-	       (is-a-p pair-car opal:font-from-file))
-	   (let* ((font (if (eq pair-car :CURSOR) opal::CURSOR-FONT pair-car))
+	       (is-a-p pair-car font-from-file))
+	   (let* ((font (if (eq pair-car :CURSOR) CURSOR-FONT pair-car))
 		  (cursor-char (second pair))
 		  (mask-char (third pair)))
 	     (setf new-cursor
 		   (gem:create-cursor a-window font font
-				      (g-value opal:black :xcolor)
-				      (g-value opal:white :xcolor)
+				      (g-value black :xcolor)
+				      (g-value white :xcolor)
 				      T	;; from font
 				      cursor-char mask-char))
 	     (gem:set-window-property a-window :CURSOR new-cursor)))
@@ -651,21 +634,21 @@
 
 (defmacro With-Cursor (cursor &body body)
   `(unwind-protect (progn
-		     (opal:change-cursors ,cursor)
+		     (change-cursors ,cursor)
 		     ,@body)
-    (opal:restore-cursors)))
+    (restore-cursors)))
 
 
 (defmacro With-HourGlass-Cursor (&body body)
   `(unwind-protect (progn
-		     (opal:change-cursors opal:HourGlass-Pair)
+		     (change-cursors HourGlass-Pair)
 		     ,@body)
-    (opal:restore-cursors)))
+    (restore-cursors)))
   
 
 ;;; Set the :window slot of the window to be the window itself!
 ;;;
-(define-method :initialize opal::window (a-window)
+(define-method :initialize window (a-window)
   (call-prototype-method a-window)
   (let ((win-info (make-win-update-info))
 	(a-window-update-info (g-local-value a-window :update-info)))
@@ -702,10 +685,10 @@
   (if bitmap-file
     (if (stringp bitmap-file)
       (if (probe-file bitmap-file)
-	(let ((image (opal:read-image bitmap-file a-window)))
+	(let ((image (read-image bitmap-file a-window)))
 	  (multiple-value-bind (width height)
 	      (gem:image-size a-window image)
-	    (opal::build-pixmap a-window image width height t)))
+	    (gem:build-pixmap a-window image width height t)))
 	(format t "Warning: Icon bitmap file ~A does not exist." bitmap-file))
       (warn
        "Warning: the :icon-bitmap slot of a window should be NIL or a string."
@@ -746,12 +729,9 @@
 			(or (g-value a-window :icon-title) title-name)
 			background border-width
 			(if (g-value a-window :save-under) :on :off)
-                        ;; The visible parameter should be T or NIL for
-                        ;; the Mac, and something completely bizarre for X.
-                        #-apple (if (eq (g-value a-window :visible) :iconified)
-			           :iconic
-			           :normal)
-                        #+apple (g-value a-window :visible)
+			(if (eq (g-value a-window :visible) :iconified)
+			    :iconic
+			    :normal)
 			(g-value a-window :min-width)
 			(g-value a-window :min-height)
 			(g-value a-window :max-width)
@@ -793,7 +773,7 @@
         ;; redrawn as they are mapped.  If you are interested in this line of
         ;; code, you will probably also be interested in the ccl:validate-view
         ;; instruction at the end of the update method.
-        #-(or apple cmu)
+        #-cmu
 	(s-value a-window :very-first-exposure t)
 
 	;; set the cursor to hemlock's cursor or specified cursor/mask combo
@@ -902,6 +882,8 @@
     (if make-new-buffer
       (expand-buffer a-window))))
 
+
+;; XXX FMG Modularity leakage (xlib symbols in opal).
 (defun Delete-Notify (event-debug event-window)
   (if event-debug (format t " delete-notify ~s~%" event-window))
   ;; Will be changed to take a-window as a parameter, rather than event-window.
@@ -918,7 +900,7 @@
 	;; Then event-window is an orphaned window
 	(gem:delete-window NIL event-window)))))
 
-(define-method :destroy-me opal::window (a-window)
+(define-method :destroy-me window (a-window)
   ;; first recursively destroy all subwindows
   (dolist (child (g-value a-window :child))
     (when (eq a-window (g-value child :parent))
@@ -944,7 +926,7 @@
   (call-prototype-method a-window))
 
 
-(define-method :destroy opal::window (a-window)
+(define-method :destroy window (a-window)
   (dolist (instance (copy-list (g-local-value a-window :is-a-inv)))
     (destroy instance))
   (destroy-me a-window)
@@ -953,7 +935,7 @@
     (funcall *exit-main-event-loop-function*)))
 
 
-(define-method :flush opal::window (a-window)
+(define-method :flush window (a-window)
   (gem:flush-output a-window))
 
 

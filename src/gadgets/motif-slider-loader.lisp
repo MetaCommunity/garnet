@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;;  MOTIF-SLIDER-LOADER:  Loads the gadgets module "motif-slider" and
 ;;;  "parts" modules if required.
 
@@ -31,9 +33,7 @@ Change log:
 		  (:motif-v-scroll-bar "motif-v-scroll-loader")
 		  (:motif-slider "motif-slider")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Motif-Slider.~%"))
 

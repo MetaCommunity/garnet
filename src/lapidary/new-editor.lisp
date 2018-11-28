@@ -93,7 +93,7 @@
   (create-instance 'editor-menu-divider-line opal:line
     (:x1 170)
     (:x2 170)
-    (:y1 0)
+    (:y1 (o-formula (gv editor-menu :height)))
     (:y2 (o-formula (gvl :window :height))))
 
   (create-instance 'selection-mode-label opal:text

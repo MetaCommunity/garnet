@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -26,9 +27,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :Path-Functions)
   (format t "Loading Path functions...~%")
-  (load (garnet-pathnames "path-functions"
-			 #+cmu "gilt:"
-			 #+(not cmu) Garnet-Gilt-PathName)
+  (load (merge-pathnames "path-functions" Garnet-Gilt-PathName)
 	:verbose T)
   (format t "...Done Path Functions.~%"))
 

@@ -47,7 +47,7 @@ Change log:
 
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(gesture-interactor
 
 	    gest-classify                 ;; functions in classify.lisp
@@ -186,13 +186,12 @@ Change log:
 
 
 (defun Gesture-Interactor-Initialize (new-Gesture-schema)
-    (if-debug new-Gesture-schema 
-              (format T "Gesture initialize ~s~%" new-Gesture-schema))
+  (if-debug new-Gesture-schema 
+	    (format T "Gesture initialize ~s~%" new-Gesture-schema))
 
-    (Check-Interactor-Type new-Gesture-schema inter:gesture-interactor)
-    (Check-Required-Slots new-Gesture-schema)
-    (Set-Up-Defaults new-Gesture-schema)
-) ;end initialize procedure
+  (Check-Interactor-Type new-Gesture-schema inter:gesture-interactor)
+  (Check-Required-Slots new-Gesture-schema)
+  (Set-Up-Defaults new-Gesture-schema))
 
 
 ;; Draws the latest point in the path

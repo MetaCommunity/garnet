@@ -23,18 +23,18 @@
 
 ;;; Roundtangles
 
-(define-method :draw opal:roundtangle (gob a-window)
+(define-method :draw roundtangle (gob a-window)
   (let* ((update-vals (g-local-value gob :update-slots-values))
-	 (r (aref update-vals *roundt-draw-radius*)))
+	 (r (aref update-vals +roundt-draw-radius+)))
     (gem:draw-roundtangle a-window
-			  (aref update-vals *roundt-left*)
-			  (aref update-vals *roundt-top*)
-			  (max 0 (aref update-vals *roundt-width*))
-			  (max 0 (aref update-vals *roundt-height*))
+			  (aref update-vals +roundt-left+)
+			  (aref update-vals +roundt-top+)
+			  (max 0 (aref update-vals +roundt-width+))
+			  (max 0 (aref update-vals +roundt-height+))
 			  r r
-			  (aref update-vals opal::*roundt-draw-function*)
-			  (aref update-vals *roundt-lstyle*)
-			  (aref update-vals *roundt-fstyle*))))
+			  (aref update-vals +roundt-draw-function+)
+			  (aref update-vals +roundt-lstyle+)
+			  (aref update-vals +roundt-fstyle+))))
 
 
 (defun point-in-roundtangle (x y left top right bottom radius)
@@ -58,7 +58,7 @@
 	  ))))
 
 
-(define-method :point-in-gob opal:roundtangle (gob x y)
+(define-method :point-in-gob roundtangle (gob x y)
  (and (g-value gob :visible)
   (let* ((thickness (get-thickness gob))
 	 (width (g-value gob :width))

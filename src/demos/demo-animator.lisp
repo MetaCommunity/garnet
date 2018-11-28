@@ -48,7 +48,7 @@ Change log:
 		    (format T "~a..." (1+ i))
 		    (force-output)
 		    (setq filename
-			  (common-lisp-user::garnet-pathnames
+			  (merge-pathnames
 			   (format NIL "~a~a.xpm" pixmapfilename
 					   (1+ i))
 			   #+Garnet.ASDF

@@ -2,6 +2,8 @@
 ;;; A simple CLOS class browser using Garnet, by Jose E. Hernandez, LLNL ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(in-package :common-lisp-user)
+
 ;;; RGA --- Somebody has added Portable-Mop to this which used to be
 ;;; clos-class-browswer.lisp  I renamed it and restored the old one on
 ;;; the grounds that it might work on some lisp implementations (e.g.,
@@ -9,8 +11,8 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (load garnet-aggregraphs-loader)
-  (load (common-lisp-user::garnet-pathnames "motif-scrolling-window-loader"
-				common-lisp-user::Garnet-Gadgets-PathName)))
+  (load (merge-pathnames "motif-scrolling-window-loader"
+			 Garnet-Gadgets-PathName)))
 
 (defpackage "PORTABLE-MOP"
   (:nicknames "PMOP")

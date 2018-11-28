@@ -1,48 +1,50 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*- ;;
+;;-------------------------------------------------------------------;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;-------------------------------------------------------------------;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;-------------------------------------------------------------------;;
+
+;;; $Id$	
+;;
+
 ;;; CHANGE LOG:
-;;;
-;;; 29/05/01 gilham   - Fix for cmucl 18 removing cmu17 from *features*.
-;;; 12/06/94 haible   - Referenced :SYSTEM package in CLISP instructions
-;;; 12/06/94 amickish - Added Russell Almond's libfile and flush-source-info?
-;;;            parameters to opal:make-image
-;;; 05/25/94 amickish - Bound and closed error-stream in opal:shell-exec
-;;; 05/05/94 amickish - Added Mac version of Directory-P
-;;; 01/16/94 amickish - Added :init-file argument to Mac's make-image command
-;;; 01/12/94 amickish - Added Drawable-To-Window
-;;; 01/08/94 amickish - Added Clip-And-Map (from movegrowinter.lisp)
-;;; 12/14/93 amickish - Added Mac version of Make-Image
-;;; 10/18/93 dzg - replaced 'string-char (which is obsolete in CLtL 2) with
-;;;	       'character
-;;; 10/03/93 amickish - Added Extract-Image-Args so that opal:Make-Image can
-;;;            take arbitrary arguments
-;;; 09/30/93 amickish - Added Bruno Haible's industrial-strength DIRECTORY-P.
-;;; 09/22/93 amickish - In opal:make-image, (1) ignored gc for LispWorks
-;;;            and CLISP, (2) only copied readtable for Allegro
-;;; 09/20/93 amickish - Called system:os-wait for Allegro in opal:shell-exec
-;;; 09/06/93 amickish - Changed opal:directory-p's command-string to use
-;;;            TEST -d; Changed shell for opal:shell-exec to /bin/sh
-;;; 09/03/93 Bruno Haible - Added #+clisp switches
-;;; 08/17/93 amickish - Removed redundant "csh" from directory-p; added
-;;;            lispworks switches for opal:make-image
-;;; 08/15/93 rajan - Added directory-p
-;;; 08/13/93 amickish - When saving Allegro image, *do* read init file;
-;;;            copied *readtable* into user::Garnet-Readtable and used
-;;;            value in excl:*cl-default-special-bindings*
-;;; 05/04/93 amickish - Removed "total" GC for Lucid in opal:make-image
-;;; 04/22/93 amickish - Added Get-Garnet-Bitmap
-;;; 04/20/93 amickish - Added GC option to make-image
-;;; 03/30/93 amickish - Added RETURN-FROM in make-image to jump out of save
-;;;            function in CMUCL when restarting
-;;; 03/05/93 amickish - Created with shell-exec and make-image
+;; 
+;;  29/05/01 gilham   - Fix for cmucl 18 removing cmu17 from *features*.
+;;  12/06/94 haible   - Referenced :SYSTEM package in CLISP instructions
+;;  12/06/94 amickish - Added Russell Almond's libfile and flush-source-info?
+;;             parameters to opal:make-image
+;;  05/25/94 amickish - Bound and closed error-stream in opal:shell-exec
+;;  05/05/94 amickish - Added Mac version of Directory-P
+;;  01/16/94 amickish - Added :init-file argument to Mac's make-image command
+;;  01/12/94 amickish - Added Drawable-To-Window
+;;  01/08/94 amickish - Added Clip-And-Map (from movegrowinter.lisp)
+;;  12/14/93 amickish - Added Mac version of Make-Image
+;;  10/18/93 dzg - replaced 'string-char (which is obsolete in CLtL 2) with
+;; 	       'character
+;;  10/03/93 amickish - Added Extract-Image-Args so that opal:Make-Image can
+;;             take arbitrary arguments
+;;  09/30/93 amickish - Added Bruno Haible's industrial-strength DIRECTORY-P.
+;;  09/22/93 amickish - In opal:make-image, (1) ignored gc for LispWorks
+;;             and CLISP, (2) only copied readtable for Allegro
+;;  09/20/93 amickish - Called system:os-wait for Allegro in opal:shell-exec
+;;  09/06/93 amickish - Changed opal:directory-p's command-string to use
+;;             TEST -d; Changed shell for opal:shell-exec to /bin/sh
+;;  09/03/93 Bruno Haible - Added #+clisp switches
+;;  08/17/93 amickish - Removed redundant "csh" from directory-p; added
+;;             lispworks switches for opal:make-image
+;;  08/15/93 rajan - Added directory-p
+;;  08/13/93 amickish - When saving Allegro image, *do* read init file;
+;;             copied *readtable* into user::Garnet-Readtable and used
+;;             value in excl:*cl-default-special-bindings*
+;;  05/04/93 amickish - Removed "total" GC for Lucid in opal:make-image
+;;  04/22/93 amickish - Added Get-Garnet-Bitmap
+;;  04/20/93 amickish - Added GC option to make-image
+;;  03/30/93 amickish - Added RETURN-FROM in make-image to jump out of save
+;;             function in CMUCL when restarting
+;;  03/05/93 amickish - Created with shell-exec and make-image
 
 (in-package "OPAL")
 
@@ -60,46 +62,44 @@
 			    device-drawable))
 
 (defun shell-exec (command)
-  #+apple (declare (ignore command))
   ;; Alas, can't use with-open-file because there are two streams returned
   ;; by most of the lisp-specific commands.  Must close both streams.
   (multiple-value-bind (the-stream error-stream)
-      #+allegro
-    (excl:run-shell-command command :wait NIL :output :stream
-                            :error-output :stream)
-    #+sbcl
-    (let ((process
-           (sb-ext:run-program "/bin/sh" (list "-c" command)
-                               :wait t :output :stream
-                               :error :stream)))
-      (values (sb-ext:process-output process)
-              (sb-ext:process-error process)))
-    #+lucid
-    (lcl:run-program "/bin/sh" :arguments (list "-c" command)
-                     :wait NIL :output :stream :error-output :stream)
-    #+cmu
-    (ext:process-output (ext:run-program "/bin/sh" (list "-c" command)
-                                         :wait NIL :output :stream))
-    #+lispworks
-    (foreign::open-pipe command :shell-type "/bin/sh" :buffered t)
-    #+clisp
-    (system::make-pipe-input-stream (string command))
-    #-(or allegro lucid cmu lispworks clisp sbcl)
-    (error "Don't know how to execute shell functions in this lisp")
+      #+allegro (excl:run-shell-command command :wait NIL :output :stream
+					:error-output :stream)
+      #+sbcl
+      (let ((process
+	     (sb-ext:run-program "/bin/sh" (list "-c" command)
+				 :wait t :output :stream
+				 :error :stream)))
+	(values (sb-ext:process-output process)
+		(sb-ext:process-error process)))
+      #+cmu
+      (let ((p
+	     (ext:run-program "/bin/sh" (list "-c" command)
+			  :wait NIL :output :stream :error :stream)))
+	(values (ext:process-output p) (ext:process-error p)))
+      #+ccl
+      (let ((p
+	     (ccl:run-program "/bin/sh" (list "-c" command)
+			      :wait NIL :output :stream :error :stream)))
+	(values (ccl:external-process-output-stream p)
+		(ccl:external-process-error-stream p)))
       
-    (let ((output-string (make-array '(0)
-                                     :element-type #+lucid 'string-char
-                                     #+allegro-v4.0 'cltl1::string-char
-                                     #-(or lucid allegro-v4.0) 'character
-                                     :fill-pointer 0 :adjustable T)))
-      (do ((next-char (read-char the-stream NIL :eof)
-		      (read-char the-stream NIL :eof)))
-	  ((eq next-char :eof)
-	   (close the-stream)
-	   (if (streamp error-stream) (close error-stream))
-	   #+allegro (system:os-wait))
-	(vector-push-extend next-char output-string))
-      output-string)))
+      #-(or allegro cmu ccl sbcl)
+      (error "Don't know how to execute shell functions in this lisp")
+      
+      (let ((output-string (make-array '(0)
+				       :element-type 'character
+				       :fill-pointer 0 :adjustable T)))
+	(do ((next-char (read-char the-stream NIL :eof)
+			(read-char the-stream NIL :eof)))
+	    ((eq next-char :eof)
+	     (close the-stream)
+	     (if (streamp error-stream) (close error-stream))
+	     #+allegro (system:os-wait))
+	  (vector-push-extend next-char output-string))
+	output-string)))
 
 
 (defparameter *util_month-list*
@@ -127,6 +127,7 @@
 (defun garnet-restart-function ()
   (format t "*** Restarting Garnet ~A image created with opal:make-image ***~%"
 	  common-lisp-user::Garnet-Version-Number)
+  (format t "*** Lisp: ~A, ~A ***~%" (lisp-implementation-type) (lisp-implementation-version))
   (if (boundp 'garnet-image-date)
       (format t "*** Image creation date: ~A ***~%" garnet-image-date))
   (opal:reconnect-garnet))
@@ -162,17 +163,14 @@
 
 
 (defun make-image (filename &rest args)
-  #-(or cmu allegro lucid lispworks clisp apple sbcl)
+  #-(or allegro ccl cmu sbcl)
     (error "Don't know how to automatically save an image for this lisp.
 Please consult your lisp's user manual for instructions.~%")
 
-  #+clisp (declare (compile))
-  
   (multiple-value-bind (quit gc verbose libfile flush-source-info? extra-args)
       (Extract-Image-Args args)
-  #+apple (declare (ignore quit))
-  #-presto (declare (ignore libfile))
-  #-allegro (declare (ignore flush-source-info?))
+    (declare (ignore libfile #+sbcl quit))
+    #-allegro (declare (ignore flush-source-info?))
 
   ;; When the image is restarted, we want *readtable* to be restored to its
   ;; current value, instead of being reinitialized to the default.  This will
@@ -200,41 +198,26 @@ Please consult your lisp's user manual for instructions.~%")
     (excl:discard-all-source-file-info)
     (format t "Fssssh-gurgle-hisss!~%"))
 
-  ;; LispWorks and CLISP GC are done below, during the save
-  #+(or allegro lucid cmu apple)
+  #+(or allegro cmu ccl sbcl)
   (when gc
     (if verbose (format t "Garbage collecting..."))
     #+allegro (excl:gc T)
     #+(and cmu (not gencgc)) (ext:gc T)
     #+(and cmu gencgc) (ext:gc :full t)
-    ; There is no equivalent of "total" garbage collection in Lucid
-    #+lucid   (lcl:gc)
-    #+apple   (ccl:gc)
+    #+sbcl (sb-ext:gc :full t)
+    #+ccl
+    (progn
+      (ccl::impurify)
+      (ccl:gc)
+      (ccl::purify))
+
     (if verbose (format t "collected.~%")))
-  
-  ;; RGA added code for prestoized lisp images.
-  #+presto
-  (when libfile
-    (if verbose (format t "Saving stub functions . . ."))
-    (sys:presto-build-lib libfile))
 
   (if verbose (format t "Saving image..."))
-  #+(and allegro (version>= 4 3)) (setq excl:*read-init-files* t)
-  #+(and allegro (version>= 4 3)) (setq excl:*restart-init-function* #'garnet-restart-function)
-  #+(and allegro (version>= 4 3))
-  (apply #'excl:dumplisp :name filename
-                         :checkpoint NIL
-                         extra-args)
-  #+(and allegro (not (version>= 4 3)))
-  (apply #'excl:dumplisp :name filename
-	                 :restart-function #'garnet-restart-function
-			 :checkpoint NIL
-			 :read-init-file T
-			 extra-args)
-  #+lucid
-  (apply #'lcl:disksave filename
-	                :restart-function #'garnet-restart-function
-			extra-args)
+  #+allegro (setq excl:*read-init-files* t)
+  #+allegro (setq excl:*restart-init-function* #'garnet-restart-function)
+  #+allegro
+  (apply #'excl:dumplisp :name filename :checkpoint NIL extra-args)
   #+cmu
   (progn
     (setf (getf ext:*herald-items* :garnet)
@@ -258,37 +241,14 @@ Please consult your lisp's user manual for instructions.~%")
     (pushnew #'garnet-restart-function sb-ext:*init-hooks*)
     (apply #'sb-ext:save-lisp-and-die filename extra-args))
   
-  #+lispworks
-  (apply #'system:save-image filename
-	                     :gc gc
-			     :restart-function #'garnet-restart-function
-			     extra-args)
-  #+CLISP
-  (let* ((old-driver system::*driver*)
-	 (system::*driver* #'(lambda ()
-			       (setq system::*driver* old-driver)
-			       (garnet-restart-function)
-			       (funcall system::*driver*))))
-    (apply #'system::saveinitmem extra-args)
-    (rename-file "lispinit.mem" filename))
-
-  #+apple
-  (progn
-    (pushnew #'garnet-restart-function ccl:*lisp-startup-functions*)
-    (apply #'ccl:save-application filename extra-args))
-  
   (if verbose (format t "saved.~%"))
 
-  ;; Mac Lisp always quits
-  #-apple
+  #-sbcl ;; SBCL quits automatically.
   (cond
     (quit
      (if verbose (format t "Quitting lisp...~%"))
      #+allegro (excl:exit)
-     #+lucid (lcl:quit)
      #+cmu (ext:quit)
-     #+lispworks (system:bye)
-     #+clisp (system::exit)
      )
     (t
      (if verbose (format t "Reconnecting Garnet..."))
@@ -297,27 +257,20 @@ Please consult your lisp's user manual for instructions.~%")
      ))
   ))
 
-
 (defun Get-Garnet-Bitmap (bitmapname)
-  (opal:read-image (common-lisp-user::garnet-pathnames bitmapname
-				    common-lisp-user::Garnet-Bitmap-PathName)))
+  (opal:read-image (merge-pathnames bitmapname cl-user::Garnet-Bitmap-PathName)))
 
-
-
-;;; If the -d test is true, shell-exec returns "1".  Otherwise, it returns "".
-;;; This syntax works for all kinds of Unix shells: sh, csh, ksh, tcsh, ...
-;;;
+;; If the -d test is true, shell-exec returns "1".  Otherwise, it returns "".
+;; This syntax works for all kinds of Unix shells: sh, csh, ksh, tcsh, ...
+;;
 (defun directory-p (pathname)
-  #+(or clisp sbcl allegro)
+  #+(or sbcl allegro)
   ;; 1. Needn't call a shell if we can do the test ourselves.
   ;; 2. In case pathname contains Latin-1 characters. clisp is 8 bit clean,
   ;;    while most Unix shells aren't.
   (garnet-utils:probe-directory pathname)
 
-  #+clozure-common-lisp
-  (ccl:directory-pathname-p pathname)
-
-  #-(or clisp clozure-common-lisp sbcl allegro)
+  #-(or sbcl allegro)
   ;; command-string is the string that's going to be executed.
   (let ((command-string
 	 (concatenate 'string "test -d " pathname " && echo 1")))

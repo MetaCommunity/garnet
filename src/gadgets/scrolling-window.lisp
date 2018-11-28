@@ -1,110 +1,111 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;
-;;;  Scrolling Window
-;;;    set the x-offset and y-offset fields to move the contents
-;;; 
-;;;     Customizable slots
-;;;   	  :left, :top, :width, :height, Default=0,0,150,150 - left, top,
-;;; 				width and height of outer window
-;;;	  :position-by-hand, default=NIL - if T, the user is asked for the
-;;;                             outer window's position.
-;;;       :border-width, default=2 - of outer window
-;;;       :parent-window, default=NIL - window this scrolling-window is
-;;;				inside of, or NIL
-;;;       :double-buffered-p, default=NIL
-;;;       :title, default="Scrolling-Window"
-;;;       :icon-title, default=(same as title)
-;;;       :total-width, default=200 - total size of the scrollable area inside
-;;;       :total-height, default=200)  
-;;;       :X-Offset, default=0 - offset in the scrollable area
-;;;       :Y-Offset, default=0
-;;;       :visible, default=T - whether the entire window is visible (mapped)
-;;;    Read-Only slots
-;;;       :Inner-Window - these are created by the update method
-;;;       :inner-aggregate - add your objects to this aggregate (but have to
-;;;			  	update first)
-;;;       :outer-window - call Opal:Update on this window (or on gadget itself)
-;;; 
-;;; Useful functions:
-;;;     Scroll-Win-Inc (scroll-win-gadget xinc yinc) - scroll a window by
-;;; 			adding the specified values (can be negative)
-;;;     Scroll-Win-To (scroll-win-gadget x y) - scroll to a position
-;;;
-;;;
-;;;  Scrolling-Window-With-Bars
-;;;    contains two optional scroll bars
-;;; 
-;;;     Customizable slots
-;;;   	  :left, :top, :width, :height, Default=0,0,150,150 - left, top,
-;;;			width and height of outer window (size of visible
-;;;			portion smaller by :min-scroll-bar-width)
-;;;	  :position-by-hand, default=NIL - if T, the user is asked for the
-;;;                     outer window's position.
-;;;       :border-width, default=2 - of outer window
-;;;       :parent-window, default=NIL - window this scrolling-window is
-;;;			inside of, or NIL
-;;;       :double-buffered-p, default=NIL
-;;;       :title, default="Scrolling-Window"
-;;;       :icon-title, default=(same as title)
-;;;       :total-width, default=200 - total size of the scrollable area inside
-;;;       :total-height, default=200)  
-;;;       :X-Offset, default=0 - offset in the scrollable area; DO NOT SET
-;;; 		     THESE OR PUT FORMULAS IN THEM, use the exported functions
-;;;       :Y-Offset, default=0   
-;;;       :visible, default=T - whether the entire window is visible (mapped)
-;;;
-;;;       :h-scroll-bar-p, default=T - Is there a horizontal scroll bar?
-;;;       :v-scroll-bar-p, default=T - Is there a vertical scroll bar?
-;;;
-;;;     Scroll Bar slots
-;;;       :h-scroll-on-top-p, default=NIL - whether horiz bar is above or below
-;;;       :v-scroll-on-left-p, default=T - whether vert bar is on left or right
-;;;       :min-scroll-bar-width, default=20 - these control both scroll bars
-;;;       :scr-trill-p, default=T
-;;;       :page-trill-p, default=T
-;;;       :indicator-text-p, default=NIL - Whether the pixel position is
-;;; 						shown in the bars
-;;;       :h-scr-incr, default=10 - in pixels
-;;;       :h-page-incr - default jumps one page
-;;;       :v-scr-incr, default=10 - in pixels
-;;;       :v-page-incr - default jumps one page
-;;;       :int-feedback-p, default=T - use NIL for continuous movement
-;;;       :indicator-font
-;;;
-;;;    Read-Only slots
-;;;       :Inner-Window - these are created by the update method
-;;;       :inner-aggregate - add your objects to this aggregate (but have to
-;;;				  ; update first)
-;;;       :outer-window - call Opal:Update on this window (or on gadget itself)
-;;;       :clip-window
-;;;
-;;; NOTE: Create either of these, then call Update on it.  Do not add it
-;;; to an aggregate or a window.  If you want the scrolling window in
-;;; another window, specify the :parent-window slot instead:
-;;;     (create-instance NIL garnet-gadgets:scrolling-window(-with-bars)
-;;; 			(...)(:parent-window other-window) )
-;;;
-;;;  Designed and written by Brad Myers
-;;;  Based on an idea from Roderick J. Williams at the University of Leeds
-;;;
-;;;  *** KNOWN BUG *** When the user changes the size or position of the outer
-;;;  window with the window manager, the fields of the scrolling
-;;;  window gadget are not updated.  Circular constraints won't work
-;;;  because the user will usually override the values for the slots
-;;;  when the window is created.  I think the fix will have to wait
-;;;  for eager evaluation --BAM
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;          The Garnet User Interface Development Environment.      ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;  This code was written as part of the Garnet project at          ;;
+;;  Carnegie Mellon University, and has been placed in the public   ;;
+;;  domain.                                                         ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
 
-#|
-============================================================
+;;; $Id$
+;;
+;;  Scrolling Window
+;;    set the x-offset and y-offset fields to move the contents
+;; 
+;;     Customizable slots
+;;   	  :left, :top, :width, :height, Default=0,0,150,150 - left, top,
+;; 				width and height of outer window
+;;	  :position-by-hand, default=NIL - if T, the user is asked for the
+;;                             outer window's position.
+;;       :border-width, default=2 - of outer window
+;;       :parent-window, default=NIL - window this scrolling-window is
+;;				inside of, or NIL
+;;       :double-buffered-p, default=NIL
+;;       :title, default="Scrolling-Window"
+;;       :icon-title, default=(same as title)
+;;       :total-width, default=200 - total size of the scrollable area inside
+;;       :total-height, default=200)  
+;;       :X-Offset, default=0 - offset in the scrollable area
+;;       :Y-Offset, default=0
+;;       :visible, default=T - whether the entire window is visible (mapped)
+;;    Read-Only slots
+;;       :Inner-Window - these are created by the update method
+;;       :inner-aggregate - add your objects to this aggregate (but have to
+;;			  	update first)
+;;       :outer-window - call Opal:Update on this window (or on gadget itself)
+;; 
+;; Useful functions:
+;;     Scroll-Win-Inc (scroll-win-gadget xinc yinc) - scroll a window by
+;; 			adding the specified values (can be negative)
+;;     Scroll-Win-To (scroll-win-gadget x y) - scroll to a position
+;;
+;;
+;;  Scrolling-Window-With-Bars
+;;    contains two optional scroll bars
+;; 
+;;     Customizable slots
+;;   	  :left, :top, :width, :height, Default=0,0,150,150 - left, top,
+;;			width and height of outer window (size of visible
+;;			portion smaller by :min-scroll-bar-width)
+;;	  :position-by-hand, default=NIL - if T, the user is asked for the
+;;                     outer window's position.
+;;       :border-width, default=2 - of outer window
+;;       :parent-window, default=NIL - window this scrolling-window is
+;;			inside of, or NIL
+;;       :double-buffered-p, default=NIL
+;;       :title, default="Scrolling-Window"
+;;       :icon-title, default=(same as title)
+;;       :total-width, default=200 - total size of the scrollable area inside
+;;       :total-height, default=200)  
+;;       :X-Offset, default=0 - offset in the scrollable area; DO NOT SET
+;; 		     THESE OR PUT FORMULAS IN THEM, use the exported functions
+;;       :Y-Offset, default=0   
+;;       :visible, default=T - whether the entire window is visible (mapped)
+;;
+;;       :h-scroll-bar-p, default=T - Is there a horizontal scroll bar?
+;;       :v-scroll-bar-p, default=T - Is there a vertical scroll bar?
+;;
+;;     Scroll Bar slots
+;;       :h-scroll-on-top-p, default=NIL - whether horiz bar is above or below
+;;       :v-scroll-on-left-p, default=T - whether vert bar is on left or right
+;;       :min-scroll-bar-width, default=20 - these control both scroll bars
+;;       :scr-trill-p, default=T
+;;       :page-trill-p, default=T
+;;       :indicator-text-p, default=NIL - Whether the pixel position is
+;; 						shown in the bars
+;;       :h-scr-incr, default=10 - in pixels
+;;       :h-page-incr - default jumps one page
+;;       :v-scr-incr, default=10 - in pixels
+;;       :v-page-incr - default jumps one page
+;;       :int-feedback-p, default=T - use NIL for continuous movement
+;;       :indicator-font
+;;
+;;    Read-Only slots
+;;       :Inner-Window - these are created by the update method
+;;       :inner-aggregate - add your objects to this aggregate (but have to
+;;				  ; update first)
+;;       :outer-window - call Opal:Update on this window (or on gadget itself)
+;;       :clip-window
+;;
+;; NOTE: Create either of these, then call Update on it.  Do not add it
+;; to an aggregate or a window.  If you want the scrolling window in
+;; another window, specify the :parent-window slot instead:
+;;     (create-instance NIL garnet-gadgets:scrolling-window(-with-bars)
+;; 			(...)(:parent-window other-window) )
+;;
+;;  Designed and written by Brad Myers
+;;  Based on an idea from Roderick J. Williams at the University of Leeds
+;;
+;;  *** KNOWN BUG *** When the user changes the size or position of the outer
+;;  window with the window manager, the fields of the scrolling
+;;  window gadget are not updated.  Circular constraints won't work
+;;  because the user will usually override the values for the slots
+;;  when the window is created.  I think the fix will have to wait
+;;  for eager evaluation --BAM
+
+
+;;; ============================================================
+#||
 Change log:
         ????????  Russell Almond - Changed #+garnet-debug around demo
                        functions to #+garnet-test (This causes them
@@ -133,17 +134,18 @@ Change log:
 			:visible works
 	 6/20/90  Brad Myers - created 
 ============================================================
-|#
+||#
 
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Scrolling-Window-With-Bars
             Scrolling-Window-With-Bars-Go Scrolling-Window-With-Bars-Stop)))
 
-;;; ** Scrolling-window-parts must be loaded first **
+;; ** Scrolling-window-parts must be loaded first **
 
-;;; Must return the outer-window
+;; Must return the outer-window
 (defun Scrolling-Window-With-Bars-Creator (window-gadget)
   (let* ((outer-window (create-instance NIL inter:interactor-window
 		 (:scroll-win-gadget window-gadget)
@@ -196,6 +198,10 @@ Change log:
     outer-window
     ))
 
+
+
+;;; The Scrolling Window With Bars instance.
+;;
 (create-instance 'Scrolling-Window-With-Bars opal:aggregadget
   :declare ((:parameters :left :top :width :height :position-by-hand
 			 :border-width :parent-window :double-buffered-p
@@ -353,6 +359,7 @@ Change log:
 		       (s-value (g-value gadget :parent) :x-offset
 				(- new-val))))))))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Demo programs 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
