@@ -76,6 +76,8 @@
 	    
 (declaim (special default-font-from-file)) ; This is an opal instance we forward-reference.
 
+;; FIXME Ensure that these changes have been retained across the rebase/merge onto 3.3-devel [spchamp]
+
 ;;; Moved here from opal:defs.lisp for the sake of modularity. This is sort of
 ;;  the X footprint in opal. So we import the symbols into opal.
 ;;  This defstruct generates the functions Make-Display-Info, Copy-Display-Info,
@@ -1229,6 +1231,29 @@ pixmap format in the list of valid formats."
 ;;;
 
 
+
+;;; Used, for example, by the MouseLine.
+;;;
+
+;;; NB Retained across rebase/merge onto 3.3-devel. [FIXME] Needs linting [spchamp]
+
+(defun do-client-message (event-window type data format display)
+  (cond ((and (eq format 32)
+	      (eq type :WM_PROTOCOLS)
+	      (eq (xlib:atom-name display (aref (the (simple-array
+						      (unsigned-byte 32) (5))
+						     data) 0))
+		  :WM_DELETE_WINDOW))
+	 (Delete-Notify NIL event-window))
+	((and (eq format 32)
+	      (eq type :TIMER_EVENT))
+	 (if interactors::*trans-from-file*
+	   T
+	   ;; ignore events when read transcript
+	   (interactors::Queue-Timer-Event (aref (the (simple-array
+						       (unsigned-byte 32) (5))
+						      data) 0)))))
+  NIL)
 
 
 
@@ -2649,7 +2674,7 @@ the X drawable."
     (:device-type :X))
 
   (attach-X-methods X-DEVICE)
-  
+
   (opal::initialize-device-values
    (or display-name (get-full-display-name))
    *root-window*)
