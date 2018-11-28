@@ -36,7 +36,7 @@
                #:garnet-aggregadgets ;; incl. aggregraphs
                #:garnetdraw
                ;; #:garnet-protected-eval ;; not used in demos (??)
-               #:garnet-gestures
+               #:garnet-gesture
                #:garnet-ps
                )
   ;; specific gadgets this system depends on:
