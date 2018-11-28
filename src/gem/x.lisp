@@ -203,6 +203,7 @@
 ;;; cache gcontexts better.
 
 (defmacro set-gc (gem-gcontext xlib-gcontext slot value)
+  ; FIXME: This may shadow a definition in opal gdi.lisp
   (case slot
     (:foreground
      `(let ((v ,value))
@@ -241,14 +242,14 @@
 	       (setf (xlib:gcontext-join-style ,xlib-gcontext) v)))))
     (:dashes
      `(let ((v ,value))
-       (unless (eq v (opal::opal-gc-dashes ,opal-gcontext))
-	 (setf (opal::opal-gc-dashes ,opal-gcontext)
+        (unless (eq v (opal::opal-gc-dashes ,gem-gcontext))
+	 (setf (opal::opal-gc-dashes ,gem-gcontext)
 	       (if v;; do not set to NIL
 		 (setf (xlib:gcontext-dashes ,xlib-gcontext) v))))))
     (:font
      `(let ((v ,value))
-       (unless (eq v (opal::opal-gc-font ,opal-gcontext))
-	 (setf (opal::opal-gc-font ,opal-gcontext)
+       (unless (eq v (opal::opal-gc-font ,gem-gcontext))
+	 (setf (opal::opal-gc-font ,gem-gcontext)
 	       (if v;; do not set to NIL
 		 (setf (xlib:gcontext-font ,xlib-gcontext) v))))))
     (:fill-style
@@ -263,8 +264,8 @@
 	       (setf (xlib:gcontext-fill-rule ,xlib-gcontext) v)))))
     (:stipple
      `(let ((v ,value))
-       (unless (eq v (opal::opal-gc-stipple ,opal-gcontext))
-	 (setf (opal::opal-gc-stipple ,opal-gcontext)
+       (unless (eq v (opal::opal-gc-stipple ,gem-gcontext))
+	 (setf (opal::opal-gc-stipple ,gem-gcontext)
 	       (if v;; do not set to NIL
 		 (setf (xlib:gcontext-stipple ,xlib-gcontext) v))))))
     (:clip-mask
@@ -2632,8 +2633,9 @@ integer.  We want to specify nice keywords instead of those silly
     (:device-type :X))
 
   (attach-X-methods X-DEVICE)
-  
+
   (opal::initialize-device-values
+   ;; ^ NB: This is defined in opal defs.lisp in Garnet 3.3
    (or display-name (get-full-display-name))
    *root-window*)
 

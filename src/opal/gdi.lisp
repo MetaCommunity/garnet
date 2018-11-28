@@ -101,6 +101,7 @@
 ;;; cache gcontexts better.
 #+clx
 (defmacro set-gc (opal-gcontext xlib-gcontext slot value)
+  ;; FIXME: This may shadow a definition in gem x.lisp
   (case slot
     (:foreground
      `(let ((v ,value))
