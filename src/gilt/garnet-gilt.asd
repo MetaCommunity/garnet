@@ -22,6 +22,7 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (require '#:asdf)
   (asdf:find-system '#:garnet-shared))
 
 (in-package #:garnet-sys)
@@ -35,6 +36,7 @@
   :defsystem-depends-on (#:garnet-shared)
   ;; NB Gadgets that this system specifically depends on,
   ;; referncimg ./gilt-loader.lisp
+  #+NIL
   '(`"motif-error-gadget-loader"
     "motif-prop-sheet-win-loader"
     "multi-selection-loader"
@@ -53,25 +55,25 @@
 
   ;; FIXME see gilt-loader.lisp
   :components
-  (#+NOTYET
-   '(
-    "gilt-functions-loader"
-    "filter-functions-loader"
-    "path-functions-loader"
-
-     "gilt-gadget-utils"
-    "motif-gilt-gadgets"
-    "gilt-gadgets"
-    "gilt"
-    "line-imp"  "motif-line-props"
-    "fill-imp"  "motif-fill-props"
-    "align"
-    "motif-gilt-save" "motif-gilt-read"
-    "gilt-font-imp"  "motif-gilt-font-props"
-    "color-imp"  "motif-color-props"
-    "value-control"
-    "enable-control"
-    "error-check"
-    )
-   
+  ((:file "gilt-functions-loader")
+   (:file "filter-functions-loader")
+   (:file "path-functions-loader")
+   (:file "gilt-gadget-utils")
+   (:file "motif-gilt-gadgets")
+   (:file "gilt-gadgets")
+   (:file "gilt")
+   (:file "line-imp")
+   (:file "motif-line-props")
+   (:file "fill-imp")
+   (:file "motif-fill-props")
+   (:file "align")
+   (:file "motif-gilt-save")
+   (:file "motif-gilt-read")
+   (:file "gilt-font-imp")
+   (:file "motif-gilt-font-props")
+   (:file "color-imp")
+   (:file "motif-color-props")
+   (:file "value-control")
+   (:file "enable-control")
+   (:file "error-check")
    ))
