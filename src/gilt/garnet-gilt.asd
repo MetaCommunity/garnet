@@ -37,27 +37,31 @@
   ;; NB Gadgets that this system specifically depends on,
   ;; referncimg ./gilt-loader.lisp
   #+NIL
-  '(`"motif-error-gadget-loader"
-    "motif-prop-sheet-win-loader"
-    "multi-selection-loader"
-    "motif-text-buttons-loader"
-    "motif-scrolling-labeled-box-loader"
-    "motif-scrolling-window-loader"
-    "motif-radio-buttons-loader"
-    "motif-menubar-loader"
-    "motif-menu-loader"
-    "motif-check-buttons-loader"
-    "motif-slider-loader"
-    "standard-edit-loader"
-    #+lucid "option-button-loader"
-    #+lucid "popup-menu-button-loader"
-  )
+  ("motif-error-gadget-loader"
+   "motif-prop-sheet-win-loader"
+   "multi-selection-loader"
+   "motif-text-buttons-loader"
+   "motif-scrolling-labeled-box-loader"
+   "motif-scrolling-window-loader"
+   "motif-radio-buttons-loader"
+   "motif-menubar-loader"
+   "motif-menu-loader"
+   "motif-check-buttons-loader"
+   "motif-slider-loader"
+   "standard-edit-loader"
+   #+lucid "option-button-loader"
+   #+lucid "popup-menu-button-loader"
+   )
 
   ;; FIXME see gilt-loader.lisp
   :components
-  ((:file "gilt-functions-loader")
+  (#+NIL ;; FIXME: Map into defsystem
+   (:file "gilt-functions-loader")
+   #+NIL  ;; FIXME: Map into defsystem
    (:file "filter-functions-loader")
+   #+NIL  ;; FIXME: Map into defsystem
    (:file "path-functions-loader")
+
    (:file "gilt-gadget-utils")
    (:file "motif-gilt-gadgets")
    (:file "gilt-gadgets")
