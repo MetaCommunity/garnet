@@ -42,8 +42,9 @@
                                            `((quote ,pksym))))
                         (cond
                           (,%foundp (fdefinition ,%sym))
-                          (t (error "No symbol ~A found~<<in package ~A>>"
-                                    (quote ,fsym) (quote ,pksym)))))))))
+                          (t (error #+NIL "No symbol ~A found~<<in package ~A>>"
+                                    "No symbol ~A found" ;; FIXME
+                                    (quote ,fsym) #+NIL (quote ,pksym)))))))))
 
       (let ((%bind (mapcar #'transform-ref specs))
             (%names (mapcar #'car specs)))
@@ -69,5 +70,12 @@
     ;; with "Normal" or "Non-normal" exit. Under "Normal" exit, any
     ;; changes onto *FEATURES* should be noted with a warning condition
     ;; ... unless set in something like an 'adds-features' slot on the
-    ;; COMPONENT 
+    ;; COMPONENT
     (asdf:operate op component)))
+
+
+(eval-when ()
+  (setq sb-ext:*muffled-warnings*
+        '(or sb-kernel::uninteresting-redefinition
+          sb-int:package-at-variance))
+  )
