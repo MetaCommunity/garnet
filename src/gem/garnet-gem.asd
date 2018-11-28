@@ -53,7 +53,7 @@
                  ;; method -- principally, utilizing the respective
                  ;; platform device initializer such that will have been
                  ;; defined here in the Gem system 
-                 #-(and apple (not clx))
+                 #+(and apple (not clx))
                  (funcall register :mac mactli) ;; cf ./mac.lisp
                  #-(and apple (not clx))
 	         (funcall register :x xtli) ;; cf ./x.lisp
