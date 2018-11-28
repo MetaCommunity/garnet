@@ -37,9 +37,9 @@ Change log:
 
 
 (unless (get :garnet-modules :multifont)
-  (load (garnet-pathnames "multifont-loader" Garnet-Opal-PathName)))
+  (load (merge-pathnames "multifont-loader" Garnet-Opal-PathName)))
 (unless (get :garnet-modules :text-buttons)
-  (load (garnet-pathnames "text-buttons-loader" Garnet-Gadgets-PathName)))
+  (load (merge-pathnames "text-buttons-loader" Garnet-Gadgets-PathName)))
 (unless (get :garnet-modules :error-gadget-utils)
   (garnet-load "gg:error-gadget-utils"))
 
@@ -55,10 +55,7 @@ Change log:
 
 (unless (get :garnet-modules :debug)
   (dolist (file Garnet-Debug-Files)
-	  (load (garnet-pathnames file 
-				 #+cmu "debug:"
-				 #+(not cmu) Garnet-Debug-PathName
-				 )
+	  (load (merge-pathnames file Garnet-Debug-PathName)
 		:verbose T)))
 
 (setf (get :garnet-modules :debug)  t)

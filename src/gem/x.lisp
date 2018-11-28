@@ -1,54 +1,138 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GEM; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;-------------------------------------------------------------------;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;-------------------------------------------------------------------;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.  If you are using this code or any part of Garnet,       ;;
+;;  please contact garnet@cs.cmu.edu to be put on the mailing list.  ;;
+;;-------------------------------------------------------------------;;
+
+;;; $Id$
+
+
 ;;; CHANGE LOG:
-;;; 
-;;; [2003/11/20:rga]        - Added further patch to Robert's for same
-;;;                           problem.
-;;; [2003/11/20:rpg]        - Fix remaining bugs in gem:create-image, where
-;;;                           depth and bits-per-pixel don't match.
-;;; 17-DEC-1999 Fred Gilham - Fix problem where pixmap format doesn't match
-;;;                           valid pixmap formats in displays where `depth'
-;;;                           and `bits-per-pixel' values differ
-;;;                           (see also pixmap.lisp).
-;;; 08/20/98 Fred Gilham    - Added CMU to x-map-and-wait conditioanl for
-;;;                           better updating.
-;;; 08/01/98 Fred Gilham    - Fixed problems with color displays deeper than
-;;;                           8 bits.
-;;; 01/30/95 Andrew Mickish - New destroy-notify-window for CMUCL
-;;; 12/02/94 Andrew Mickish - Removed stippled-p parameter from draw-image
-;;; 05/29/94 Andrew Mickish - Added ability to specify a list for font :face
-;;; 05/25/94 Andrew Mickish - Added optional drawable parameter to X-Draw-Line
-;;; 04/15/94 Andrew Mickish - Fixed tiny width and height for X-Draw-Arc
-;;; 04/13/94 Andrew Mickish - Fixed :QUERY-COLORS branch of X-Colormap-Property
-;;; 03/25/94 Andrew Mickish - Fixed title clause in x-set-window-property
-;;; 03/21/94 Andrew Mickish - Fixed corner fill of roundtangles
-;;; 01/21/94 Andrew Mickish - New Gem method color-to-index
-;;; 01/12/94 Andrew Mickish - New window-from-drawable
-;;; 01/07/94 Andrew Mickish - Fixed functions that destroy window from X menu
-;;; 01/03/94 Andrew Mickish - Moved PI variables to utils/general.lisp
-;;; 12/17/93 Andrew Mickish - New X-Device-Image
-;;; 12/15/93 Andrew Mickish - Moved macros to macros.lisp
-;;; 11/23/93 Andrew Mickish - Fixed line and fill placement in x-draw-arc,
-;;;                           line placement in x-draw-rectangle, and fill
-;;;                           placement in x-draw-roundtangle.
-;;; 11/18/93 Andrew Mickish - Removed "list" from call to xlib:free-colors
-;;; 11/11/93 Andrew Mickish - Put into CLTL2 form
+;;  
+;;  [2003/11/20:rga]        - Added further patch to Robert's for same
+;;                            problem.
+;;  [2003/11/20:rpg]        - Fix remaining bugs in gem:create-image, where
+;;                            depth and bits-per-pixel don't match.
+;;  17-DEC-1999 Fred Gilham - Fix problem where pixmap format doesn't match
+;;                            valid pixmap formats in displays where `depth'
+;;                            and `bits-per-pixel' values differ
+;;                            (see also pixmap.lisp).
+;;  08/20/98 Fred Gilham    - Added CMU to x-map-and-wait conditioanl for
+;;                            better updating.
+;;  08/01/98 Fred Gilham    - Fixed problems with color displays deeper than
+;;                            8 bits.
+;;  01/30/95 Andrew Mickish - New destroy-notify-window for CMUCL
+;;  12/02/94 Andrew Mickish - Removed stippled-p parameter from draw-image
+;;  05/29/94 Andrew Mickish - Added ability to specify a list for font :face
+;;  05/25/94 Andrew Mickish - Added optional drawable parameter to X-Draw-Line
+;;  04/15/94 Andrew Mickish - Fixed tiny width and height for X-Draw-Arc
+;;  04/13/94 Andrew Mickish - Fixed :QUERY-COLORS branch of X-Colormap-Property
+;;  03/25/94 Andrew Mickish - Fixed title clause in x-set-window-property
+;;  03/21/94 Andrew Mickish - Fixed corner fill of roundtangles
+;;  01/21/94 Andrew Mickish - New Gem method color-to-index
+;;  01/12/94 Andrew Mickish - New window-from-drawable
+;;  01/07/94 Andrew Mickish - Fixed functions that destroy window from X menu
+;;  01/03/94 Andrew Mickish - Moved PI variables to utils/general.lisp
+;;  12/17/93 Andrew Mickish - New X-Device-Image
+;;  12/15/93 Andrew Mickish - Moved macros to macros.lisp
+;;  11/23/93 Andrew Mickish - Fixed line and fill placement in x-draw-arc,
+;;                            line placement in x-draw-rectangle, and fill
+;;                            placement in x-draw-roundtangle.
+;;  11/18/93 Andrew Mickish - Removed "list" from call to xlib:free-colors
+;;  11/11/93 Andrew Mickish - Put into CLTL2 form
+
+
+;;; This is the device handler for the X window system.  It implements the
+;;  Gem methods.
 
 (in-package "GEM")
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(Display-Info
+	    Make-Display-Info Copy-Display-Info
+	    Display-Info-Display Display-Info-Screen Display-Info-Root-Window
+	    Display-Info-Line-Style-GC and Display-Info-Filling-Style-GC
+	    *screen-width* *screen-height*
+	    *function-alist*
+	    *white* *black*
+	    *color-screen-p*
+	    *default-x-colormap*
+	    *read-write-colormap-cells-p*
+	    *update-lock*
+	    *garnet-break-key*
+	    ;; Font stuff.
+	    *Fixed-Font-Family* *Serif-Font-Family* *Sans-Serif-Font-Family*
+	    *Small-Font-Size* *Medium-Font-Size*
+	    *Large-Font-Size* *Very-Large-Font-Size*
+	    *Small-Font-Point-Size* *Medium-Font-Point-Size* 
+	    *Large-Font-Point-Size* *Very-Large-Font-Point-Size*
+	    default-font-from-file
+	    *Exposure-Event-Mask*
+	    )))
+	    
+(declaim (special default-font-from-file)) ; This is an opal instance we forward-reference.
 
-;;; This is the device handler for the X window system.  It implements the
-;;; Gem methods.
+;; FIXME Ensure that these changes have been retained across the rebase/merge onto 3.3-devel [spchamp]
+
+;;; Moved here from opal:defs.lisp for the sake of modularity. This is sort of
+;;  the X footprint in opal. So we import the symbols into opal.
+;;  This defstruct generates the functions Make-Display-Info, Copy-Display-Info,
+;;  Display-Info-Display, Display-Info-Screen, Display-Info-Root-Window,
+;;  Display-Info-Line-Style-GC, and Display-Info-Filling-Style-GC.
+(defstruct (DISPLAY-INFO (:print-function display-info-printer))
+  display
+  screen
+  root-window
+  line-style-gc
+  filling-style-gc)
+
+(defun display-info-printer (s stream ignore)
+  (declare (ignore ignore))
+  (format stream "#<GEM-DISPLAY-INFO ~A>" (display-info-display s)))
 
 
+(defstruct (gem-gc (:print-function gem-gc-print-function))
+  gcontext
+  opal-style				; This is either a line or filling style
+
+  function
+  foreground
+  background
+  line-width
+  line-style
+  cap-style
+  join-style
+  dashes				; do not set to NIL
+  font					; do not set to NIL
+  fill-style
+  fill-rule
+  stipple
+  clip-mask
+  ;; The clip-mask actually stored in
+  ;; the xlib:gcontext -- except if the
+  ;; clip-mask is :none, in which case
+  ;; this contains a list like '(nil 0 0 0)
+  ;; (to avoid unnecessary consing)
+  stored-clip-mask
+  )
+
+(defun gem-gc-print-function (gc stream depth)
+  (declare (ignore depth))
+  (format stream "#<GEM-GC function ~A clip-mask ~A>"
+	  (gem-gc-function gc)
+	  (gem-gc-clip-mask gc)))
+
+
+(defvar *default-x-display-name*)
+(setf (documentation '*default-x-display-name* 'variable)
+      "This is an unfortunately misnamed entity, since it is
+actually an X HOSTNAME and not a display name in the sense of
+being a string display designator.")
+(defvar *default-x-display*)
 (defvar *default-x-display-number*)
 (defvar *default-x-screen-number*)
 (defvar *default-x-screen*)
@@ -113,7 +197,7 @@
     (setq *read-write-colormap-cells-p* 
 	  (and *color-screen-p*
 	       (member screen-type '(:direct-color :pseudo-color) :test #'eq))))
-  (setq *HP-display-type?* (and *color-screen-p* (zerop gem:*black*))))
+  (setq *HP-display-type?* (and *color-screen-p* (zerop *black*))))
 
 
 (defun x-color-to-index (root-window a-color)
@@ -125,9 +209,9 @@
           *white*)))
 
 
-;;; The following two variables used to be in Inter/i-windows.lisp ; they
-;;; have been moved here because nobody seems to be using them.
-;;;
+;; The following two variables used to be in Inter/i-windows.lisp; they
+;; have been moved here because nobody seems to be using them.
+;;
 (defvar *mouse-debug* nil
   "When true, *mouse-throw-aways* will increment each time a mouse-moved
    event is thrown away")
@@ -135,8 +219,7 @@
 (defvar *mouse-throw-aways* 0)
 
 
-;;; Debugging only
-;;;
+;; Debugging only
 (defparameter *debug-on* NIL)
 
 (defmacro debug-print (&rest arguments)
@@ -150,18 +233,18 @@
 
 (defvar *x-font-faces* '(:roman :bold :italic :bold-italic))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Set Styles Functions (from opal: new-defs.lisp)
-;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; Set Styles Functions (from opal: new-defs.lisp)
+;;
 
+
 ;;; This is called by with-*-styles, and it replaces the old :x-tiles slot.
-;;; It gets the *-style's :stipple, and checks its :root-pixmap-plist slot for
-;;; an entry for this Root.  If so, it returns it.  Else, it creates the
-;;; entry and places it at the head of the plist.
-;;; These were split into two macros because the draw method for opal:bitmap
-;;; also needs to use the first macro now...
-;;;
+;;  It gets the *-style's :stipple, and checks its :root-pixmap-plist slot for
+;;  an entry for this Root.  If so, it returns it.  Else, it creates the
+;;  entry and places it at the head of the plist.
+;;  These were split into two macros because the draw method for opal:bitmap
+;;  also needs to use the first macro now...
+
 (defun get-stipple-schema-pixmap (stipple-schema root-window bitmap-p)
   (let ((root-plist (g-value stipple-schema :root-pixmap-plist)))
     (or (getf root-plist root-window)
@@ -193,17 +276,16 @@
 
 
 
-
+
 ;;; With-styles works like xlib:with-gcontext except it takes a gob and
-;;; extracts all the relevant things for you. This is a win for the simple
-;;; draw methods, it will be a lose for performance. See below.
-;;;
-;;; This is a quick hack to get around the caching of various gcontext
-;;; values, it will work until we understand how CLX and the RT X11 server
-;;; cache gcontexts better.
+;;  extracts all the relevant things for you. This is a win for the simple
+;;  draw methods; it will be a lose for performance. See below.
+;; 
+;;  This is a quick hack to get around the caching of various gcontext
+;;  values; it will work until we understand how CLX and the RT X11 server
+;;  cache gcontexts better.
 
 (defmacro set-gc (gem-gcontext xlib-gcontext slot value)
-  ; FIXME: This may shadow a definition in opal gdi.lisp
   (case slot
     (:foreground
      `(let ((v ,value))
@@ -242,15 +324,15 @@
 	       (setf (xlib:gcontext-join-style ,xlib-gcontext) v)))))
     (:dashes
      `(let ((v ,value))
-        (unless (eq v (opal::opal-gc-dashes ,gem-gcontext))
-	 (setf (opal::opal-gc-dashes ,gem-gcontext)
-	       (if v;; do not set to NIL
+       (unless (eq v (gem-gc-dashes ,gem-gcontext))
+	 (setf (gem-gc-dashes ,gem-gcontext)
+	       (if v			; do not set to NIL
 		 (setf (xlib:gcontext-dashes ,xlib-gcontext) v))))))
     (:font
      `(let ((v ,value))
-       (unless (eq v (opal::opal-gc-font ,gem-gcontext))
-	 (setf (opal::opal-gc-font ,gem-gcontext)
-	       (if v;; do not set to NIL
+       (unless (eq v (gem-gc-font ,gem-gcontext))
+	 (setf (gem-gc-font ,gem-gcontext)
+	       (if v			; do not set to NIL
 		 (setf (xlib:gcontext-font ,xlib-gcontext) v))))))
     (:fill-style
      `(let ((v ,value))
@@ -264,9 +346,9 @@
 	       (setf (xlib:gcontext-fill-rule ,xlib-gcontext) v)))))
     (:stipple
      `(let ((v ,value))
-       (unless (eq v (opal::opal-gc-stipple ,gem-gcontext))
-	 (setf (opal::opal-gc-stipple ,gem-gcontext)
-	       (if v;; do not set to NIL
+       (unless (eq v (gem-gc-stipple ,gem-gcontext))
+	 (setf (gem-gc-stipple ,gem-gcontext)
+	       (if v			; do not set to NIL
 		 (setf (xlib:gcontext-stipple ,xlib-gcontext) v))))))
     (:clip-mask
      `(let* ((v ,value)
@@ -295,12 +377,11 @@
 
 
 
-(defun set-line-style (line-style opal-gc xlib-gc root-window x-draw-fn)
-  (declare (optimize (speed 3) (safety 0)))
+(defun set-line-style (line-style gem-gc xlib-gc root-window x-draw-fn)
+  (declare (optimize (speed 3) (safety 1)))
   (when line-style
-    (let ((draw-fn-changed? (set-gc opal-gc xlib-gc
-					  :function x-draw-fn)))
-      (unless (eq x-draw-fn opal::boole-2)
+    (let ((draw-fn-changed? (set-gc gem-gc xlib-gc :function x-draw-fn)))
+      (unless (eq x-draw-fn boole-2)
 	(let ((x-stipple (get-x-stipple line-style root-window))
 	      x-dash-pattern)
 
@@ -319,31 +400,30 @@
 		     x-draw-fn
 		     (g-value line-style :background-color :colormap-index))))
 
-	  (unless (eq line-style (opal::opal-gc-opal-style opal-gc))
-	    (setf (opal::opal-gc-opal-style opal-gc) line-style)
-	    (set-gc opal-gc xlib-gc :line-width
-			  (g-value line-style :line-thickness))
-	    (set-gc opal-gc xlib-gc :line-style
+	  (unless (eq line-style (gem-gc-opal-style gem-gc))
+	    (setf (gem-gc-opal-style gem-gc) line-style)
+	    (set-gc gem-gc xlib-gc :line-width
+		    (g-value line-style :line-thickness))
+	    (set-gc gem-gc xlib-gc :line-style
 		    (g-value line-style :line-style))
 	    (set-gc gem-gc xlib-gc :cap-style
 		    (g-value line-style :cap-style))
 	    (set-gc gem-gc xlib-gc :join-style
 		    (g-value line-style :join-style))
 	    (if (setq x-dash-pattern (g-value line-style :dash-pattern))
-	      (set-gc opal-gc xlib-gc :dashes x-dash-pattern)))
+		(set-gc gem-gc xlib-gc :dashes x-dash-pattern)))
 
 	  ;; This can't be in the "unless" since the same
 	  ;; line-style can have different x-stipples
 	  (if x-stipple
-	    (progn
-	      (set-gc opal-gc xlib-gc :fill-style :opaque-stippled)
-	      (set-gc opal-gc xlib-gc :stipple x-stipple))
-	    (set-gc opal-gc xlib-gc :fill-style :solid)))))))
+	      (progn
+		(set-gc gem-gc xlib-gc :fill-style :opaque-stippled)
+		(set-gc gem-gc xlib-gc :stipple x-stipple))
+	      (set-gc gem-gc xlib-gc :fill-style :solid)))))))
 
 
-
-(defun set-filling-style (filling-style opal-gc xlib-gc root-window x-draw-fn)
-  (declare (optimize (speed 3) (safety 0)))
+(defun set-filling-style (filling-style gem-gc xlib-gc root-window x-draw-fn)
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 2)))
   (when filling-style
     (unless (eq x-draw-fn boole-2)
       (let ((x-stipple (get-x-stipple filling-style root-window)))
@@ -374,10 +454,9 @@
 ;;; -------------------------------------------------- X Windows Handling
 
 
-;; Do-All-Progeny is used to iterate over all CLX windows.  Clean-Up calls
-;; this function with the root CLX window.
-;;
 (defun do-all-garnet-windows (clx-window)
+  "Iterates over all CLX windows.  Clean-Up calls
+this function with the root CLX window."
   (let ((windows (if (member :garnet (xlib:drawable-plist clx-window))
 		   (list clx-window))))
     (dolist (w (xlib:query-tree clx-window))
@@ -385,14 +464,11 @@
     windows))
 
 
-;;; RETURNS:
-;;; a list of all the X windows that were created by Garnet.  These are
-;;; raw windows, NOT Opal windows!
-;;;
 (defun x-all-garnet-windows (root-window)
+  "Returns a list of all the X windows that were created by Garnet.  
+These are raw windows, NOT Opal windows!"
   (declare (ignore root-window))
   (do-all-garnet-windows *default-x-root*))
-
 
 
 (defun x-beep (root-window)
@@ -409,12 +485,10 @@
 		  s-x s-y width height destination d-x d-y))
 
 
-
-;;; Returns: the black and white pixel for the screen of the <window>, as
-;;; multiple values.
-;;;
 (defun x-black-white-pixel (window)
-  (let ((screen (opal::display-info-screen (g-value window :display-info))))
+  "Returns: the black and white pixel for the screen of the <window>, as
+multiple values."
+  (let ((screen (display-info-screen (g-value window :display-info))))
     (values (xlib:screen-black-pixel screen)
 	    (xlib:screen-white-pixel screen))))
 
@@ -427,37 +501,35 @@
 ;; speed up getting the :copy gc op. It's only used in this file.
 (defvar *copy*)
 
-;;; Clears the visible area associated with a window.  If <clear-buffer-p>,
-;;; operate on the window's buffer instead.
-;;;
 (defun x-clear-area (window &optional (x 0) (y 0) width height clear-buffer-p)
+  "Clears the visible area associated with a window.  If <clear-buffer-p>,
+operate on the window's buffer instead."
   (if clear-buffer-p
-    ;; Clear the window's buffer
-    (let* ((gc (g-value window :buffer-gcontext))
-	   (buffer (g-value window :buffer))
-	   (background (xlib:gcontext-background gc)))
-      (xlib:with-gcontext (gc :function opal::*copy* :foreground background)
-	(if x
-	  ;; clear only a region
-	  (xlib:draw-rectangle buffer gc x y width height t)
-	  ;; clear the entire buffer
-	  (xlib:draw-rectangle buffer gc 0 0
-			       (xlib:drawable-width buffer)
-			       (xlib:drawable-height buffer) t))))
-    ;; Clear the window itself
-    (xlib:clear-area (the-drawable window)
-		     :x x :y y :width width :height height
-		     :exposures-p NIL)))
+      ;; Clear the window's buffer
+      (let* ((gc (g-value window :buffer-gcontext))
+	     (buffer (g-value window :buffer))
+	     (background (xlib:gcontext-background gc)))
+	(xlib:with-gcontext (gc :function *copy* :foreground background)
+	  (if x
+	      ;; clear only a region
+	      (xlib:draw-rectangle buffer gc x y width height t)
+	      ;; clear the entire buffer
+	      (xlib:draw-rectangle buffer gc 0 0
+				   (xlib:drawable-width buffer)
+				   (xlib:drawable-height buffer) t))))
+      ;; Clear the window itself
+      (xlib:clear-area (the-drawable window)
+		       :x x :y y :width width :height height
+		       :exposures-p NIL)))
 
 
 
-;;; RETURNS: various things, depending on which <property> is requested:
-;;; :COLOR-LOOKUP -- looks up <a> (a color name) and returns
-;;;   three values, the R-G-B values in the color lookup table.
-;;; :MAKE-COLOR   -- creates and returns a color whose three RGB components
-;;;   are given by <a, b, c>
-;;;
 (defun x-colormap-property (root-window property &optional a b c)
+  "Returns various things, depending on which <property> is requested:
+:COLOR-LOOKUP -- looks up <a> (a color name) and returns three values,
+                 the R-G-B values in the color lookup table.
+:MAKE-COLOR   -- creates and returns a color whose three RGB components
+                 are given by <a, b, c>"
   (declare (ignore root-window))
   (case property
     (:ALLOC-COLOR
@@ -493,11 +565,10 @@
 
 
 
-;;; Copy the cursor or bitmap in <from> to the pixmap <to>.  The operation
-;;; affects an area of <width> by <height>.
-;;;
 (defun x-copy-to-pixmap (root-window to from width height)
-  (let* ((screen (opal::display-info-screen
+  "Copy the cursor or bitmap in <from> to the pixmap <to>.  The operation
+affects an area of <width> by <height>."
+  (let* ((screen (display-info-screen
 		  (g-value root-window :display-info)))
 	 (gc (xlib:create-gcontext
 	      :drawable to :function boole-1
@@ -508,30 +579,29 @@
 
 
 
-;;; If <from-font-p> is true, the <source> is a font; otherwise, it is
-;;; a pixmap.  Same for the <mask>.  <x> and <y> are a position when the
-;;; source is a pixmap; otherwise, they are the cursor-char and the mask-char
-;;; for the two fonts.
-;;;
-(defun x-create-cursor (root-window source mask foreground background
-				    from-font-p x y)
+(defun x-create-cursor (root-window source mask
+			foreground background
+			from-font-p x y)
+  "If <from-font-p> is true, the <source> is a font; otherwise, it is
+a pixmap.  Same for the <mask>.  <x> and <y> are a position when the
+source is a pixmap; otherwise, they are the cursor-char and the mask-char
+for the two fonts."
   (declare (ignore root-window))
   (if from-font-p
-    (xlib:create-glyph-cursor :source-font source :mask-font mask
-			      :source-char x
-			      :mask-char y
-			      :foreground foreground
-			      :background background)
-    (xlib:create-cursor :source source :mask mask
-			:x x :y y
-			:foreground (g-value opal:black :xcolor)
-			:background (g-value opal:white :xcolor))))
+      (xlib:create-glyph-cursor :source-font source :mask-font mask
+				:source-char x
+				:mask-char y
+				:foreground foreground
+				:background background)
+      (xlib:create-cursor :source source :mask mask
+			  :x x :y y
+			  :foreground (g-value opal::black :xcolor)
+			  :background (g-value opal::white :xcolor))))
   
 
-;;;
-;;; The following deals with cases where the display provides pixmaps
-;;; with depths different from bits-per-pixel.
-;;;
+;; The following deals with cases where the display provides pixmaps
+;; with depths different from bits-per-pixel.
+;;
 (defun get-pixmap-formats ()
   "Return valid pixmap formats for this display."
   (xlib:display-pixmap-formats *default-x-display*))
@@ -555,12 +625,12 @@ pixmap format in the list of valid formats."
 
 
 
-;;; <color-or-data> is used as a color (if <from-data-p> is nil) or as
-;;; actual data
-;;;
+;; <color-or-data> is used as a color (if <from-data-p> is nil) or as
+;; actual data
+;;
 (defun x-create-image (root-window width height depth from-data-p
-				   &optional color-or-data properties
-				   bits-per-pixel left-pad data-array)
+		       &optional color-or-data properties
+			 bits-per-pixel left-pad data-array)
   (declare (ignore root-window data-array))
   (unless bits-per-pixel
     (setf bits-per-pixel (depth-to-bits-per-pixel depth)))
@@ -595,12 +665,12 @@ pixmap format in the list of valid formats."
 		  depth)
 		 'xlib::pixarray-8-element-type)))
 	     (data-array (make-array (list height width)
-					    :element-type element-type
+				     :element-type element-type
 					    
-					    :initial-element
-					    (if color-or-data
-						(g-value color-or-data :colormap-index)
-						opal::*white*))))
+				     :initial-element
+				     (if color-or-data
+					 (g-value color-or-data :colormap-index)
+					 *white*))))
 	(xlib:create-image
 	 :depth depth
 	 :bits-per-pixel bits-per-pixel
@@ -610,11 +680,9 @@ pixmap format in the list of valid formats."
 	 :data data-array ))))
   
 
-
-;;; Create an array that's suitable for an X image.  <depth> should be
-;;; 1 for a bitmap and the depth of the display for a pixmap
-;;;
 (defun x-create-image-array (root-window width height depth)
+  "Create an array that's suitable for an X image.  <depth> should be
+1 for a bitmap and the depth of the display for a pixmap."
   (declare (ignore root-window))
   (make-array (list height width)
 	      :element-type
@@ -664,7 +732,7 @@ pixmap format in the list of valid formats."
 			:x 0 :y 0 :width width :height height
 			:bitmap-p bitmap-p)
 	(xlib:free-gcontext gc)
-	(xlib:set-standard-properties drawable :icon-pixmap pixmap)))
+	(xlib:set-wm-properties drawable :icon-pixmap pixmap)))
     pixmap))
 
 ;; I guess this is some kind of convenience function....
@@ -711,12 +779,6 @@ pixmap format in the list of valid formats."
 	   :user-specified-position-p user-specified-position-p
 	   :user-specified-size-p user-specified-size-p))
 
-    ;; this is marked as "obsolete" in the sources I have... [2005/12/18:rpg]
-    #|
-    (xlib:set-standard-properties drawable
-				  :name title
-				  :icon-name icon-name)
-    |#
     (xlib:set-wm-properties drawable
 ;;;			    :client-machine
 ;;;			    (or 
@@ -736,12 +798,9 @@ pixmap format in the list of valid formats."
     ;;; :TRANSFORM #'xlib:char->card8. I guess it is related to missing error
     ;;; error checking in other implementations than clisp and lispworks.
     ;;; B. Haible 20.9.1993
-    #-lispworks
     (xlib:change-property drawable
-			  :WM_CLIENT_MACHINE #-clisp (short-site-name)
-			                     #+clisp ""
-			  :STRING 8
-			  #+clisp :TRANSFORM #+clisp #'xlib:char->card8)
+			  :WM_CLIENT_MACHINE (short-site-name)
+			  :STRING 8)
     
     (xlib:change-property drawable :WM_PROTOCOLS
 			  (list (xlib:intern-atom
@@ -783,7 +842,7 @@ pixmap format in the list of valid formats."
 (defun x-discard-mouse-moved-events (root-window)
   (declare (ignore root-window))
   (let (current-x current-y current-win)
-    #+CMU
+    #-allegro
     (loop
      (unless
 	 (xlib:event-case (*default-x-display*
@@ -796,12 +855,11 @@ pixmap format in the list of valid formats."
 					  (if *mouse-debug* 
 					    (incf *mouse-throw-aways*))
 					  t)
-			  (t () nil));; any other event, return nil (causes
-       ;; event-case to terminate), which causes
-       ;; loop to terminate
+			  (t () nil))	; any other event, return nil (causes
+					; event-case to terminate), which causes
+					; loop to terminate
        (return)))
-    ;; Having trouble getting Lucid 2.1 to throw away unnecessary events
-    #+(or ALLEGRO LUCID EXPLORER)
+    #+ALLEGRO
     (block throw-away
       (xlib:event-case (*default-x-display*
 			:discard-p t :timeout 0)
@@ -817,9 +875,6 @@ pixmap format in the list of valid formats."
     (values current-x current-y
 	    (if current-win
 	      (getf (xlib:drawable-plist current-win) :garnet)))))
-
-
-
 
 #-(and cmu mp)
 (defun x-discard-pending-events (root-window &optional (timeout 1))
@@ -1144,7 +1199,6 @@ pixmap format in the list of valid formats."
   (getf (xlib:drawable-plist drawable) :garnet))
 
 
-
 ;;; From windows.lisp (eliminate the obsolete deleting-window-drop-events)
 ;;;
 (defun destroy-notify-window (event-window)
@@ -1180,6 +1234,9 @@ pixmap format in the list of valid formats."
 
 ;;; Used, for example, by the MouseLine.
 ;;;
+
+;;; NB Retained across rebase/merge onto 3.3-devel. [FIXME] Needs linting [spchamp]
+
 (defun do-client-message (event-window type data format display)
   (cond ((and (eq format 32)
 	      (eq type :WM_PROTOCOLS)
@@ -1203,18 +1260,12 @@ pixmap format in the list of valid formats."
 ;;; Returns list of drawable, parent, grandparent, ... , root.
 ;;;
 (defun lineage-of-drawable (drawable)
-  ;; Certain versions of Allegro CL/CLX give an error when you
-  ;; call xlib:query-tree.  These versions seem to be
-  ;; characterised by the feature :clx-cl-error.
-  #-clx-cl-error
   (multiple-value-bind (children parent root)
       (xlib:query-tree drawable)
     (declare (ignore children))
     (if (xlib:drawable-equal parent root)
       (list drawable root)
-      (cons drawable (lineage-of-drawable parent))))
-  #+clx-cl-error
-  (list drawable opal::*default-x-root*))
+      (cons drawable (lineage-of-drawable parent)))))
 
 
 #-debug-event-handler
@@ -1226,7 +1277,12 @@ pixmap format in the list of valid formats."
 (defmacro event-handler-debug (message &rest args)
   `(format t "event-handler ~S   ~S~%" ,message ',args))
 
+;; Forward reference.
+(declaim (special interactors::*garnet-break-key*))
 
+(declaim (inline get-atom-id))
+(defun get-atom-id (data)
+  (aref (the (simple-array (unsigned-byte 32) (5)) data) 0))
 
 ;;; Input event handling
 ;;;
@@ -1238,7 +1294,7 @@ pixmap format in the list of valid formats."
      (:CLIENT-MESSAGE
       (event-window type data format)
       (event-handler-debug :CLIENT-MESSAGE event-window type data format)
-      (interactors::do-client-message event-window type data format display))
+      (interactors::do-client-message event-window type (get-atom-id data) format display))
      (:MAP-NOTIFY
       (event-window)
       (event-handler-debug :MAP-NOTIFY)
@@ -1529,7 +1585,8 @@ pixmap format in the list of valid formats."
 	       adjusted-face-part
 	       "-*-*-*-" 
 	       size-part
-	       "-*-*-*-*-iso8859-1"))))))
+	       "-*-*-*-*-iso8859-1"
+#-(and)	       "-*-*-*-*-iso10646-1"))))))
 
 
 
@@ -1565,8 +1622,7 @@ pixmap format in the list of valid formats."
   (let ((dx-plist (g-value font-from-file :display-xfont-plist))
 	(display (the-display root-window)))
     (or (getf dx-plist display)
-	(let ((font-path (fix-font-path
-			  (g-value font-from-file :font-path)))
+	(let ((font-path (g-value font-from-file :font-path))
 	      (font-name (g-value font-from-file :font-name)))
 	  (when font-path
 	    (let ((xfont-path (mapcar #'remove-null-char
@@ -1845,9 +1901,9 @@ pixmap format in the list of valid formats."
     (set-four-borders window (xlib:drawable-border-width drawable))
     (let ((lineage (g-value window :lineage)))
       (case (length lineage)
-	(2		;;; UWM or window without title
+	(2				; UWM or window without title
 	 (set-four-borders window (xlib:drawable-border-width drawable)))
-	(3		;;; TWM
+	(3				; TWM
 	 (let ((border-width (xlib:drawable-border-width (second lineage))))
 	   (set-four-borders
 	    window
@@ -1861,7 +1917,7 @@ pixmap format in the list of valid formats."
 	       (xlib:drawable-height (first lineage))
 	       (xlib:drawable-y (first lineage))
 	       (- border-width)))))
-	((4 6)	;;; MWM and DECWindows, or possibly TVTWM
+	((4 6)				; MWM and DECWindows, or possibly TVTWM
 	 ;; if it is TVTWM, i.e. 3rd window is virtual root
 	 (if (xlib:get-property (third lineage) :__SWM_VROOT)
 	   (let* ((parent (second lineage))
@@ -1881,7 +1937,7 @@ pixmap format in the list of valid formats."
 	   (let* ((parent (second lineage))
 		  (grandparent (third lineage))
 		  (left-border-width
-		   (MAX (xlib:drawable-x parent) ; MWM
+		   (MAX (xlib:drawable-x parent)	      ; MWM
 			(xlib:drawable-border-width parent))) ; DECwindows
 		  (top-border-width (xlib:drawable-y parent)))
 	     (set-four-borders window
@@ -1905,8 +1961,6 @@ pixmap format in the list of valid formats."
 		     :data (list index))))
 
 
-
-
 (defparameter *update-lock*
   #+ALLEGRO (mp:make-process-lock :name "UPDATE-LOCK")
   #+(and cmu mp) (mp:make-lock "UPDATE-LOCK")
@@ -1922,22 +1976,26 @@ pixmap format in the list of valid formats."
 #+allegro
 (defun x-map-and-wait (a-window drawable)
   (let ((display (the-display a-window)))
-    #+(or lucid allegro lispworks cmu)
     (when (eq (xlib:window-map-state drawable) :unmapped)
       (mp:with-process-lock (*update-lock*)
 	(xlib:map-window drawable)
 	(xlib:display-force-output display)
-	(xlib:event-case (display :discard-p nil :peek-p t :timeout 5)
-			 (:map-notify (event-window)
-				      (eq event-window drawable)))
-	(when suspend-process
-	  (opal::launch-main-event-loop-process))))
-    #-(or lucid allegro lispworks cmu)
-    (progn
-      (xlib:map-window drawable)
-      (xlib:display-force-output display))))
+	(loop
+	   (if (eq (xlib:window-map-state drawable) :unmapped)
+	       (sleep .1)
+	       (return t)))))))
 
-
+#+ccl
+(defun x-map-and-wait (a-window drawable)
+  (let ((display (the-display a-window)))
+    (when (eq (xlib:window-map-state drawable) :unmapped)
+      (ccl:with-lock-grabbed (*update-lock*)
+	(xlib:map-window drawable)
+	(xlib:display-force-output display))
+      (loop
+	 (if (eq (xlib:window-map-state drawable) :unmapped)
+	     (sleep .1)
+	     (return t))))))
 
 #+cmu
 (defun x-map-and-wait (a-window drawable)
@@ -2012,6 +2070,8 @@ pixmap format in the list of valid formats."
   (xlib:read-bitmap-file pathname))
 
 
+;; Forward references.
+(declaim (special opal::window opal::device-info))
 
 ;;; Reparent a window.
 ;;;
@@ -2090,9 +2150,8 @@ returns the HOST name, stripping off the display number."
 
 (defun x-set-device-variables (root-window full-display-name
 			       &aux auth-name auth-data)
-;;  (declare (ignore root-window)
-;;	   (ignore auth-name auth-data)
-;;	   )
+  (declare (ignore root-window)
+	   (ignore auth-name auth-data))
   (setf *default-x-display-number* 
         (if full-display-name 
             (get-display-number full-display-name)
@@ -2166,7 +2225,7 @@ returns the HOST name, stripping off the display number."
   "Create Alist since CLX likes to get the draw function in the form of an
 integer.  We want to specify nice keywords instead of those silly
  numbers."
-  (gem:set-draw-function-alist root-window)
+  (set-draw-function-alist root-window)
   (dolist (fn-pair *function-alist*)
     (setf (get (car fn-pair) :x-draw-function) (cdr fn-pair))))
 
@@ -2174,9 +2233,9 @@ integer.  We want to specify nice keywords instead of those silly
 
 (defun x-set-draw-function-alist (root-window)
   (declare (ignore root-window))
-  (setq opal::*function-alist*
-	(cond ((zerop opal::*white*);; Sparc
-	       `((:clear . ,boole-clr);; (color, opal::*white* = 0)
+  (setq *function-alist*
+	(cond ((zerop *white*)		; Sparc (actually b&w I guess)
+	       `((:clear . ,boole-clr)	; (color, *white* = 0)
 		 (:set . ,boole-set)
 		 (:copy . ,boole-1)
 		 (:no-op . ,boole-2)
@@ -2192,8 +2251,8 @@ integer.  We want to specify nice keywords instead of those silly
 		 (:and-reverse . ,boole-andc2)
 		 (:or-inverted . ,boole-orc1)
 		 (:or-reverse . ,boole-orc2)))
-	      (opal::*is-this-a-color-screen?*;; HP
-	       `((:clear . ,boole-set);; (color, opal::*white* = 1)
+	      (*color-screen-p*		; HP
+	       `((:clear . ,boole-set)	; (color, *white* = 1)
 		 (:set . ,boole-clr)
 		 (:copy . ,boole-1)
 		 (:no-op . ,boole-2)
@@ -2209,8 +2268,8 @@ integer.  We want to specify nice keywords instead of those silly
 		 (:and-reverse . ,boole-orc2)
 		 (:or-inverted . ,boole-andc1)
 		 (:or-reverse . ,boole-andc2)))
-	      (t;; IBM-RT (black-and-white)
-	       `((:clear . ,boole-set);; (black-and-white, opal::*white* = 1)
+	      (t			; IBM-RT (black-and-white)
+	       `((:clear . ,boole-set)	; (black-and-white, *white* = 1)
 		 (:set . ,boole-clr)
 		 (:copy . ,boole-1)
 		 (:no-op . ,boole-2)
@@ -2230,13 +2289,12 @@ integer.  We want to specify nice keywords instead of those silly
   (setq *copy* (cdr (assoc :copy *function-alist*))))
 
 
-;;; RETURNS:
-;;; normally NIL; returns T if:
-;;; - the property is :WIDTH or :HEIGHT and a new buffer is required because
-;;;   the old one was too small; or
-;;; - the property is :VISIBLE and the window needs to be mapped.
-;;;
 (defun x-set-window-property (window property value)
+  "RETURNS:
+     normally NIL; returns T if:
+     - the property is :WIDTH or :HEIGHT and a new buffer is 
+       required because the old one was too small; or
+     - the property is :VISIBLE and the window needs to be mapped."
   (case property
     (:BACKGROUND-COLOR
      (let* ((gc (g-value window :buffer-gcontext))
@@ -2297,18 +2355,9 @@ integer.  We want to specify nice keywords instead of those silly
 	   (y (second value)))
        ;; Use the length of the lineage to determine what window manager.
        (case (length lineage)
-	 #-clx-cl-error
 	 (2				; UWM or window without label.
 	  (s-value window :left x)
 	  (s-value window :top y))
-	 #+clx-cl-error
-	 (2				; xlib:query-tree does not work, so
-	  ;; true values of left and top may be unobtainable.
-	  ;; In fact, x and y will be 0 if you have just
-	  ;; resized the window.
-	  (unless (and (zerop x) (zerop y))
-	    (s-value window :left x)
-	    (s-value window :top y)))
 	 (3				; TWM
 	  (s-value window :left (xlib:drawable-x (second lineage)))
 	  (s-value window :top (xlib:drawable-y (second lineage))))
@@ -2325,12 +2374,16 @@ integer.  We want to specify nice keywords instead of those silly
      (let ((old-buffer (g-value window :buffer)))
        (setf (xlib:drawable-height (g-value window :drawable))
 	     (max 0 value))
+       #+allegro
+       (opal::set-win-update-info-height (g-value window :win-update-info) value)
+       #-allegro
        (setf (opal::win-update-info-height (g-value window :win-update-info))
 	     value)
        ;; Does the buffer need to be recreated?
        (and old-buffer (> value (xlib:drawable-height old-buffer)))))
     (:ICON-TITLE
-     (xlib:set-standard-properties (g-value window :drawable) :icon-name value)
+     (xlib:set-wm-properties (g-value window :drawable) :icon-name value)
+;;;     (xlib:set-standard-properties (g-value window :drawable) :icon-name value)
      nil)
     (:LEFT
      (let* ((drawable (g-value window :drawable))
@@ -2371,9 +2424,10 @@ integer.  We want to specify nice keywords instead of those silly
 	       (display-info-filling-style-gc display-info)))
 	     value)))
     (:TITLE
-     (let ((drawable (g-value window :drawable)))
-       (setf (xlib:wm-name drawable) value)
-       (xlib:set-standard-properties drawable :name value))
+;;;     (let ((drawable (g-value window :drawable)))
+;;;       (setf (xlib:wm-name drawable) value)
+;;;       (xlib:set-standard-properties drawable :name value))
+     (xlib:set-wm-properties (g-value window :drawable) :name value)
      nil)
     (:TOP
      (let* ((drawable (g-value window :drawable))
@@ -2389,25 +2443,24 @@ integer.  We want to specify nice keywords instead of those silly
        (cond ((eq vis t)
 	      (setf map-window t))
 	     ((eq vis :iconified)
-	      #+clx-mit-r4
-	      (xlib:iconify-window drawable opal::*default-x-screen*))
+	      (xlib:iconify-window drawable *default-x-screen*))
 	     ((eq vis nil)
-	      #+clx-mit-r4
-	      (xlib:withdraw-window drawable opal::*default-x-screen*)
-	      #-clx-mit-r4
-	      (xlib:unmap-window drawable)))
+	      (xlib:withdraw-window drawable *default-x-screen*)))
        ;; Does the window need to be mapped?
        map-window))
     (:WIDTH
      (let ((old-buffer (g-value window :buffer)))
        (setf (xlib:drawable-width (g-value window :drawable))
 	     (max 0 value))
+       #+allegro
+       (opal::set-win-update-info-width (g-value window :win-update-info) value)
+       #-allegro
        (setf (opal::win-update-info-width (g-value window :win-update-info))
 	     value)
        ;; Does the buffer need to be recreated?
        (and old-buffer (> value (xlib:drawable-width old-buffer)))))
     (T
-     (format t "Unknown property ~S in gem:x-set-window-property.~%"
+     (format t "Unknown property ~S in gem::x-set-window-property.~%"
 	     property))))
 
 
@@ -2423,94 +2476,84 @@ integer.  We want to specify nice keywords instead of those silly
 
 
 
-;;; RETURNS: multiple values:
-;;; width
-;;; ascent
-;;; descent
-;;; left-bearing
-;;; right-bearing
-;;; plus other information we do not use.
-;;;
 (defun x-text-extents (root-window font string)
+  "RETURNS: multiple values:
+    width
+    ascent
+    descent
+    left-bearing
+    right-bearing
+plus other information we do not use."
   (declare (ignore root-window))
   (xlib:text-extents (g-value font :xfont) string))
 
 
-
-;;; Returns the width of the <string> in the given font.
-;;;
-(defun x-text-width (root-window opal-font string)
+(defun x-text-width (root-window font string)
+  "Returns the width of the <string> in the given font."
   (declare (ignore root-window))
-  (xlib:text-width (g-value opal-font :xfont) string))
+  (xlib:text-width (g-value font :xfont) string))
 
 
-;;; Translates a keyboard scan
 (defun x-translate-code (window scan-code shiftp)
+  "Translates a keyboard scan"
   (xlib:keycode->keysym
    (display-info-display
     (the DISPLAY-INFO (g-value window :display-info)))
    scan-code (if shiftp 1 0)))
 
 
-
-;;; RETURNS: the coordinates of point <x,y> in the <window> relative to
-;;; the <window2>, or to the screen's origin if <window2> is not specified.
-;;; Returns multiple values.
-;;;
 (defun x-translate-coordinates (root-window window1 x y &optional window2)
+  "RETURNS: the coordinates of point <x,y> in the <window> relative to
+the <window2>, or to the screen's origin if <window2> is not specified.
+Returns multiple values."
   (declare (ignore root-window))
-  (let ((draw1 (if window1 (g-value window1 :drawable)))
-	(draw2 (if window2 (g-value window2 :drawable))))
-    #-clx-cl-error
-    (if (and draw1 (null window2))
+  (let ((draw1 (when window1 (g-value window1 :drawable)))
+	(draw2 (when window2 (g-value window2 :drawable))))
+    (when (and draw1 (null window2))
       (setf draw2 (xlib:drawable-root draw1)))
-    #-clx-cl-error
     (when (and draw2 (null window1))
       (setq draw1 (xlib:drawable-root draw2)))
-    (if (and draw1 draw2)
+    (when (and draw1 draw2)
       (xlib:translate-coordinates draw1 x y draw2))))
 
 
-;;; RETURNS: a human-readable representation for the drawable associated
-;;; with the <window>.
-;;;
 (defun x-window-debug-id (window)
+  "RETURNS: a human-readable representation for the 
+drawable associated with the <window>."
   (xlib:window-id (g-value window :drawable)))
 
 
-
-;;; RETURNS: the depth in bits of the drawable associated with the window.
-;;;
 (defun x-window-depth (window)
+  "RETURNS: the depth in bits of the drawable 
+associated with the window."
   (xlib:drawable-depth (g-value window :drawable)))
 
-;; Given an X drawable, returns the associated Opal window.
-;;
-;; The documented way to get this function is through opal:drawable-to-window,
-;; which only takes one parameter: the X drawable.
 (defun x-window-from-drawable (root-window x-window)
+  "Given an X drawable, returns the associated Opal window.
+
+The documented way to get this functionality is through 
+opal:drawable-to-window, which only takes one parameter: 
+the X drawable."
   (declare (ignore root-window))
   (getf (xlib:drawable-plist x-window) :garnet))
 
 
-;;; RETURNS: true if the <window>'s old buffer was smaller (in at least one
-;;; dimension) than the new <width> and <height>
-;;;
+
 (defun x-window-has-grown (window width height)
+  "RETURNS: true if the <window>'s old buffer was smaller
+(in at least one dimension) than the new <width> and <height>."
   (let ((old-buffer (g-value window :buffer)))
     (and old-buffer
 	 (or (> height (xlib:drawable-height old-buffer))
 	     (> width  (xlib:drawable-width old-buffer))))))
 
 
-;;; Create an image from (a piece of) a window.
-;;;
 (defun x-window-to-image (window left top width height)
+  "Create an image from (a piece of) a window."
   (let ((drawable (g-value window :drawable)))
     (if drawable
       (xlib:get-image drawable :format :z-pixmap :x left :y top
 		      :width width :height height))))
-
 
 
 (defun x-write-an-image (root-window pathname image)
@@ -2520,8 +2563,6 @@ integer.  We want to specify nice keywords instead of those silly
 
 
 ;;; --------------------------------------------------
-
-
 
 (defun attach-X-methods (x-device)
 
@@ -2635,7 +2676,6 @@ integer.  We want to specify nice keywords instead of those silly
   (attach-X-methods X-DEVICE)
 
   (opal::initialize-device-values
-   ;; ^ NB: This is defined in opal defs.lisp in Garnet 3.3
    (or display-name (get-full-display-name))
    *root-window*)
 

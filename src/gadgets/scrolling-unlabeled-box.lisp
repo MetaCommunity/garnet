@@ -76,28 +76,27 @@ Change log:
 ;;(common-lisp-user::garnet-load "gadgets:scrolling-labeled-box-loader")
 
 (in-package "GARNET-GADGETS")
- 
-(export '(Scrolling-Unlabeled-Box
-	  Scrolling-Unlabeled-Box-Go Scrolling-Unlabeled-Box-Stop
-	  Scrolling-Unlabeled-Box-Obj))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(Scrolling-Unlabeled-Box))
+  #+garnet-test
+  (export '(Scrolling-Unlabeled-Box-Go Scrolling-Unlabeled-Box-Stop
+	    Scrolling-Unlabeled-Box-Obj)))
 
 
 (kr:create-instance 'Scrolling-Unlabeled-Box opal:aggregadget
-   #-garnet-v2.2
-   (:maybe-constant '(:left :top :width :field-offset :field-font
-		      :visible)) 
-   #+garnet-v2.2 :declare
-   #+garnet-v2.2 ((:parameters :left :top :width :field-offset
-			       :field-font :value :visible)
-		  (:output :height :value)
-		  (:type (Integer :field-offset :field-height
-				  :field-width :frame-height
-				  :frame-left :frame-width
-				  :field-left)
-			 (Font :field-font)
-			 (String :value))
-		  (:maybe-constant :left :top :width :field-offset
-				   :field-font :visible))
+  :declare
+  ((:parameters :left :top :width :field-offset
+		:field-font :value :visible)
+   (:output :height :value)
+   (:type (Fixnum :field-offset :field-height
+		   :field-width :frame-height
+		   :frame-left :frame-width
+		   :field-left)
+	  (Font :field-font)
+	  (String :value))
+   (:maybe-constant :left :top :width :field-offset
+		    :field-font :visible))
    #+kr-doc
    (:documentation "A field for inputing text surrounded by a frame
 with no label.")
@@ -110,15 +109,15 @@ with no label.")
 	      :field-font "Font for entering text; must be fixed width"
 	      :value "Text returned (or default value)."
 	      :visible "Draw this item?")
-   ; Customizable slots
+   ;; Customizable slots
    (:left 0) (:top 0)
    (:width 130)
    (:field-offset 2)
    (:value "Field")
    (:selection-function NIL)
-   (:field-font opal:default-font) ;;**Must be fixed width**
+   (:field-font opal:default-font)	; **Must be fixed width**
 
-   ; Generally non-customizable slots
+   ;; Generally non-customizable slots
 
    ;; For field-height assume field-font is fixed-height, so any string
    ;; will do (don't use (gvl value) since it will change a lot and this
@@ -153,19 +152,18 @@ with no label.")
 			    (kr-send top-obj :selection-function top-obj
 				     final-value))))))))
 
-;;;
+
 ;;;  DEMO FUNCTION
-;;;
+;;
 
-
-#+:garnet-debug
+#+:garnet-test
 (defparameter Scrolling-Unlabeled-Box-win NIL)
-#+:garnet-debug
+#+:garnet-test
 (defparameter Scrolling-Unlabeled-Box-top-agg NIL)
-#+:garnet-debug
+#+:garnet-test
 (defparameter Scrolling-Unlabeled-Box-Obj NIL)
 
-#+:garnet-debug
+#+:garnet-test
 (defun Scrolling-Unlabeled-Box-Go ()
 
   (create-instance 'Scrolling-Unlabeled-Box-win inter:interactor-window
@@ -183,8 +181,7 @@ with no label.")
 
   (opal:update Scrolling-Unlabeled-Box-win))
 
-#+:garnet-debug
+#+:garnet-test
 (defun Scrolling-Unlabeled-Box-Stop ()
   (opal:destroy Scrolling-Unlabeled-Box-win))
-
 

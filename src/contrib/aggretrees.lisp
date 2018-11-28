@@ -1,7 +1,64 @@
-;;
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
+
+;;;
 ;; AggreTrees from Pedro Szekely.  These will probably be eventually
 ;; combined with aggregraphs.
+;;                     
+;;  Author:  Pedro Szekely, USC/Information Sciences Institute
+;;  Date: 3/14/91
+;;
+;;  Report bugs and comments to szekely@isi.edu
 
+
+;;;----------------------------------------------------------------------------
+;;
+;; This file contains aggregates to display trees.
+;; Currently the following kinds of tree display are supported:
+;; 
+;; AggreTree-1
+;; 
+;; Slots:
+;; 
+;; :tree - the tree object to be displayed
+;; :node-prototype - The widget to display each of the nodes.  The sub-tree headed
+;;                   by that node is stored in the :tree slot of the node.
+;; :h-spacing - the horizontal spacing between nodes/sub-trees.
+;; :v-spacing - the vertical spacing between levels of the tree.
+;; :line-style - an opal:line-style to draw the lines.
+;; :children-function - a function of to extract the next level of sub-nodes of a tree.
+;; :expansion-level - the number of levels that each node should be expanded.  Can
+;;                    be set in any node to arbitrarily control the expansion of the
+;;                    sub-tree rooted at that node.  See aggretree-demo example.
+;; :cache-nodes-p - whether to cache the nodes when sub-trees are closed.  The cache
+;;                  is stored in the aggretree, so it is local to a specific aggretree.  
+;;
+;; AggreTree-2
+;; 
+;; Slots:
+;; 
+;; :lines-p - whether to show lines connecting the nodes.  Can't be changed after
+;;            the aggretree is created.
+;; :node-indent - length of the horizontal lines.
+;; :sub-tree-indent - indentation of the vertical line.
+;; 
+;; The following slots have the same meaning as in AggreTree-1:
+;; :line-style :v-spacing :children-function :tree :node-prototype
+;; :expansion-level :cache-nodes-p
+;; 
+;; Functions:
+;; 
+;; revert-aggretree - redisplays the tree from scratch.
+;; revert-aggretree-node - redisplays the tree starting at a specific node.
+;; 
+;; ----------------------------------------------------------------------------
+;; Known bugs and planned enhancements:
+;; 
+;; Planned enhancements:
+;; - Define formulas for :width and :height that don't depend on :left and :top.
+;;   This is needed to be able to center trees inside other aggregates.
+;; ----------------------------------------------------------------------------
+
+
 (in-package :garnet-gadgets)
 
 (export '(AggreTree-1
@@ -9,62 +66,6 @@
 	  revert-aggretree
 	  revert-aggretree-node
 	  ))
-
-
-#|----------------------------------------------------------------------------
-
-Author:  Pedro Szekely, USC/Information Sciences Institute
-Date: 3/14/91
-
-Report bugs and comments to szekely@isi.edu
-
-----------------------------------------------------------------------------
-
-This file contains aggregates to display trees.
-Currently the following kinds of tree display are supported:
-
-AggreTree-1
-
-Slots:
-
-:tree - the tree object to be displayed
-:node-prototype - The widget to display each of the nodes.  The sub-tree headed
-  by that node is stored in the :tree slot of the node.
-:h-spacing - the horizontal spacing between nodes/sub-trees.
-:v-spacing - the vertical spacing between levels of the tree.
-:line-style - an opal:line-style to draw the lines.
-:children-function - a function of to extract the next level of sub-nodes of a tree.
-:expansion-level - the number of levels that each node should be expanded.  Can
-  be set in any node to arbitrarily control the expansion of the sub-tree rooted
-  at that node.  See aggretree-demo example.
-:cache-nodes-p - whether to cache the nodes when sub-trees are closed.  The cache
-  is stored in the aggretree, so it is local to a specific aggretree.  
-
-AggreTree-2
-
-Slots:
-
-:lines-p - whether to show lines connecting the nodes.  Can't be changed after
-  the aggretree is created.
-:node-indent - length of the horizontal lines.
-:sub-tree-indent - indentation of the vertical line.
-
-The following slots have the same meaning as in AggreTree-1:
-:line-style :v-spacing :children-function :tree :node-prototype
-:expansion-level :cache-nodes-p
-
-Functions:
-
-revert-aggretree - redisplays the tree from scratch.
-revert-aggretree-node - redisplays the tree starting at a specific node.
-
-----------------------------------------------------------------------------
-Known bugs and planned enhancements:
-
-Planned enhancements:
-- Define formulas for :width and :height that don't depend on :left and :top.
-  This is needed to be able to center trees inside other aggregates.
-----------------------------------------------------------------------------|#
 
 
 (create-instance 'Tree-Node-Prototype opal:text
@@ -154,11 +155,9 @@ Planned enhancements:
   (create-aggretree (g-value agg :tree) agg))
 
 
-#|----------------------------------------------------------------------------
+;;; Layout computation functions.
+;;
 
-Layout computation functions.
-
-----------------------------------------------------------------------------|#
 
 (defun compute-aggretree-1-width ()
   (let ((sub-nodes (gvl :sub-nodes)))
@@ -190,11 +189,8 @@ Layout computation functions.
 
 
 
-#|----------------------------------------------------------------------------
-
-Prototypes for Lines.
-
-----------------------------------------------------------------------------|#
+;;; Prototypes for Lines.
+;;
     
 (create-instance 'AggreTree-1-Horizontal-Line opal:line
   (:line-style (o-formula (gvl :parent :parent :line-style)))
@@ -224,11 +220,9 @@ Prototypes for Lines.
 
 
 
-#|----------------------------------------------------------------------------
+;;; Functions to create and delete lines
+;;
 
-Functions to create and delete lines
-
-----------------------------------------------------------------------------|#
 
 (defun create-aggretree-1-lines (agg node-widget)
   (let ((sub-nodes (g-value node-widget :sub-nodes)))
@@ -273,11 +267,8 @@ Functions to create and delete lines
 	(opal:destroy top-line)))))
 
 
-#|----------------------------------------------------------------------------
-
-The aggregadget
-
-----------------------------------------------------------------------------|#
+;;; The aggregadget
+;;
 
 (create-instance 'AggreTree-1 opal:aggregadget
   (:expansion-level 999)
@@ -321,11 +312,9 @@ The aggregadget
 
 
 
-#|----------------------------------------------------------------------------
+;;; Aggretree-2
+;;
 
-Aggretree-2
-
-----------------------------------------------------------------------------|#
 (defun compute-aggretree-2-height ()
   (let ((sub-nodes (gvl :sub-nodes)))
     (+ (gvl :height)
@@ -358,11 +347,9 @@ Aggretree-2
 
 
 
-#|----------------------------------------------------------------------------
+;;; Prototypes for Lines.
+;;
 
-Prototypes for Lines.
-
-----------------------------------------------------------------------------|#
 
 (create-instance 'Aggretree-2-Vertical-Line opal:line
   (:line-style (o-formula (gvl :parent :parent :line-style)))
@@ -379,11 +366,9 @@ Prototypes for Lines.
   (:y2 (o-formula (gvl :y1))))
 
 
-#|----------------------------------------------------------------------------
+;;; Functions to create and delete lines
+;;
 
-Functions to create and delete lines
-
-----------------------------------------------------------------------------|#
 
 (defparameter *at2-vertical-line-free* nil)
 (defparameter *at2-horizontal-line-free* nil)
@@ -429,11 +414,9 @@ Functions to create and delete lines
 	))))
 
 
-#|----------------------------------------------------------------------------
-
-The aggregadget
-
-----------------------------------------------------------------------------|#
+;;; The aggregadget
+;;
+;
 
 (create-instance 'Aggretree-2 opal:aggregadget
   (:expansion-level 999)
@@ -481,11 +464,9 @@ The aggregadget
 
 
 
-#|----------------------------------------------------------------------------
+;;; Demos.
+;;
 
-Demos.
-
-----------------------------------------------------------------------------|#
 
 (defun aggretree-go (&optional (kind AggreTree-1))
   (defun tree-children (tree)
@@ -555,7 +536,7 @@ Demos.
 *** Start (inter:main-event-loop) if you need to.
 *** Click left on nodes to expand/shrink them."))
 
-#|----------------------------------------------------------------------------
+#||----------------------------------------------------------------------------
 
 Test
 
@@ -615,4 +596,4 @@ Test
 (s-value KR-DEBUG:MY-TREE-NODE-12915 :dont-expand-children nil)
 (s-value KR-DEBUG:MY-TREE-NODE-11581 :tree tree1)
 (revert-aggretree-node agg KR-DEBUG:MY-TREE-NODE-12915)
-----------------------------------------------------------------------------|#
+----------------------------------------------------------------------------||#

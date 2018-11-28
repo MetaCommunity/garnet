@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -29,9 +30,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :gauge)
   (format t "Loading Gauge...~%")
-  (load (garnet-pathnames "gauge"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "gauge" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done Gauge.~%"))
 

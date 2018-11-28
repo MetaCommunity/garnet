@@ -39,7 +39,7 @@ Change log:
 
 (unless (get :garnet-modules :gesture)
   (dolist (file Garnet-Gesture-Files)
-    (load (garnet-pathnames file Garnet-Gesture-PathName)
+    (load (merge-pathnames file Garnet-Gesture-PathName)
 	  :verbose T)))
 
 (defpackage :AGATE (:use :KR :INTER :COMMON-LISP)

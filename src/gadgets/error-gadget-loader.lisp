@@ -34,9 +34,7 @@ Change log:
 		  (:error-gadget-utils "error-gadget-utils")
 		  (:error-gadget "error-gadget")))
     (unless (get :garnet-modules (car pair))
-      (load (garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Error-Gadget.~%"))
 

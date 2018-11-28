@@ -77,11 +77,9 @@ Change log:
 ;;; Load the constraint gadget
 
 (defvar Garnet-Constraint-Gadget-Pathname
-  (garnet-pathnames #-apple "lapidary/" #+apple "lapidary:"
-                    Garnet-Binary-Pathname))
+  (merge-pathnames "lapidary/" Garnet-Binary-Pathname))
 (defvar Garnet-Constraint-Gadget-Src
-  (garnet-pathnames #-apple "lapidary/" #+apple "lapidary:"
-                    Garnet-Src-Pathname))
+  (merge-pathnames "lapidary/" Garnet-Src-Pathname))
 
 ;;; If at cmu, then set up the search lists
 #+cmu
@@ -93,7 +91,7 @@ Change log:
 
 
 (defparameter Garnet-Constraint-Gadget-Loader
-  (garnet-pathnames "constraint-gadget-loader"
+  (merge-pathnames "constraint-gadget-loader"
 		    Garnet-Constraint-Gadget-PathName))
 
 (load Garnet-Constraint-Gadget-Loader)

@@ -1,85 +1,90 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id$
+;;
+
+
 ;;;  Vertical slider
-;;;
-;;;  Features and operation of the vertical slider:
-;;;     1)  Drag the indicator with the left mouse button
-;;;     2)  Click the left mouse button on the slider shaft to cause the
-;;;         indicator to jump to mouse location
-;;;     3)  Click the left mouse button in the trill boxes to move the
-;;;         indicator by :scr-incr and :page-incr increments
-;;;     4)  Text above the slider shaft changes to reflect new indicator
-;;;         position.  This text may be edited after pressing on it with
-;;;         the left mouse button.
-;;;     5)  The top level :value slot is the position of the indicator.
-;;;         This slot may be set directly and formulae may depend on it.
-;;;     6)  The function specified in :selection-function will be executed
-;;;         whenever the value in :value changes.
-;;;
-;;;  Customizable slots:
-;;;     1)  Left, top, height
-;;;     2)  Shaft-width
-;;;     3)  Scr-trill-p  --  Whether to have trills that incr by :scr-incr
-;;;     4)  Page-trill-p --  Whether to have trills that incr by :page-incr
-;;;     5)  Scr-Incr, Page-incr  --  Values to increment postion by in single
-;;;                                    and double arrow boxes, respectively
-;;;     6)  Val-1, Val-2  --  Range of values the indicator spans.
-;;;                           Val-1 corresponds to the top of the slider.
-;;;     7)  Value -- The value currently selected by the user.
-;;;     8)  Selection-function -- Function to be executed when :value changes.
-;;;     9)  Tic-marks-p -- Whether to put tic marks on the shaft
-;;;    10)  Enumerate-p -- Whether to enumerate the tic marks
-;;;    11)  Num-marks  --  The number of tic marks (including top and bottom)
-;;;    12)  Value-feedback-p  --  Whether to report indicator position above
-;;;                               the shaft
-;;;    13)  Scroll-p -- Whether to allow movement of indicator
-;;;    14)  Value-feedback-font -- Font to report indicator position with
-;;;    15)  Enum-font --  Font to enumerate tic marks with
-;;;    16)  Format-string -- Formatting string of indicator value
-;;;    17)  Enum-format-string -- Formatting string of enumeration
-;;;
-;;;  NOTE:  This module requires schemata defined in GAD-scroll-parts,
-;;;         GAD-slider-parts, GAD-v-arrows, and GAD-v-boxes.
-;;;
-;;;  Vertical slider demo:
-;;;     This module contains a function which creates a window and a slider
-;;;     in the window.  To run it, enter (GARNET-GADGETS:v-slider-go).
-;;;     To stop, enter (GARNET-GADGETS:v-slider-stop).
-;;;
-;;;  Designed by Brad Myers
-;;;  Written by Andrew Mickish
+;; 
+;;   Features and operation of the vertical slider:
+;;      1)  Drag the indicator with the left mouse button
+;;      2)  Click the left mouse button on the slider shaft to cause the
+;;          indicator to jump to mouse location
+;;      3)  Click the left mouse button in the trill boxes to move the
+;;          indicator by :scr-incr and :page-incr increments
+;;      4)  Text above the slider shaft changes to reflect new indicator
+;;          position.  This text may be edited after pressing on it with
+;;          the left mouse button.
+;;      5)  The top level :value slot is the position of the indicator.
+;;          This slot may be set directly and formulae may depend on it.
+;;      6)  The function specified in :selection-function will be executed
+;;          whenever the value in :value changes.
+;; 
+;;   Customizable slots:
+;;      1)  Left, top, height
+;;      2)  Shaft-width
+;;      3)  Scr-trill-p  --  Whether to have trills that incr by :scr-incr
+;;      4)  Page-trill-p --  Whether to have trills that incr by :page-incr
+;;      5)  Scr-Incr, Page-incr  --  Values to increment postion by in single
+;;                                     and double arrow boxes, respectively
+;;      6)  Val-1, Val-2  --  Range of values the indicator spans.
+;;                            Val-1 corresponds to the top of the slider.
+;;      7)  Value -- The value currently selected by the user.
+;;      8)  Selection-function -- Function to be executed when :value changes.
+;;      9)  Tic-marks-p -- Whether to put tic marks on the shaft
+;;     10)  Enumerate-p -- Whether to enumerate the tic marks
+;;     11)  Num-marks  --  The number of tic marks (including top and bottom)
+;;     12)  Value-feedback-p  --  Whether to report indicator position above
+;;                                the shaft
+;;     13)  Scroll-p -- Whether to allow movement of indicator
+;;     14)  Value-feedback-font -- Font to report indicator position with
+;;     15)  Enum-font --  Font to enumerate tic marks with
+;;     16)  Format-string -- Formatting string of indicator value
+;;     17)  Enum-format-string -- Formatting string of enumeration
+;; 
+;;   NOTE:  This module requires schemata defined in GAD-scroll-parts,
+;;          GAD-slider-parts, GAD-v-arrows, and GAD-v-boxes.
+;; 
+;;   Vertical slider demo:
+;;      This module contains a function which creates a window and a slider
+;;      in the window.  To run it, enter (GARNET-GADGETS:v-slider-go).
+;;      To stop, enter (GARNET-GADGETS:v-slider-stop).
+;; 
+;;   Designed by Brad Myers
+;;   Written by Andrew Mickish
 
+
 ;;;  CHANGE LOG:
-;;;  05/30/94  Marty Geier - changed window position in demo
-;;;  12/01/93 Andrew Mickish - Referenced parents' :visible slots in formulas
-;;;  05/26/93  Andrew Mickish - Fixed constant declarations for new aggrelists
-;;;  12/14/92  Andrew Mickish - Added type and parameter declarations
-;;;  09/17/92  Andrew Mickish - Added :left, :width, and :height values to
-;;;            V-SLIDER-INDICATOR to reduce reevaluations of top-level :width
-;;;  09/08/92  Mickish/Duchier - Rewrote :enum-width formula to look at every
-;;;            tic mark value.
-;;;  04/29/92  Andrew Mickish - Got enum-font from get-standard-font
-;;;  02/07/92  Andrew Mickish - Added :maybe-constant slots
-;;;  02/15/91  Andrew Mickish - Changed :string slot of TIC-MARKS's
-;;;  11/30/90  Pavan Reddy - made appropriate modifications so :format-string
-;;;            and :enum-format-string are used to format numbers in order to
-;;;            use of floats.
-;;;  11/21/90  Andrew Mickish - Moved indicator to be on top of tic marks
-;;;  06/18/90  Andrew Mickish - Moved "v-slider-parts.lisp" into this file
-;;;  01/18/90  Andrew Mickish - Added :scroll-p to V-SLIDER
-;;;            :item-prototype to eliminate round-off error.
+;;   05/30/94  Marty Geier - changed window position in demo
+;;   12/01/93 Andrew Mickish - Referenced parents' :visible slots in formulas
+;;   05/26/93  Andrew Mickish - Fixed constant declarations for new aggrelists
+;;   12/14/92  Andrew Mickish - Added type and parameter declarations
+;;   09/17/92  Andrew Mickish - Added :left, :width, and :height values to
+;;             V-SLIDER-INDICATOR to reduce reevaluations of top-level :width
+;;   09/08/92  Mickish/Duchier - Rewrote :enum-width formula to look at every
+;;             tic mark value.
+;;   04/29/92  Andrew Mickish - Got enum-font from get-standard-font
+;;   02/07/92  Andrew Mickish - Added :maybe-constant slots
+;;   02/15/91  Andrew Mickish - Changed :string slot of TIC-MARKS's
+;;   11/30/90  Pavan Reddy - made appropriate modifications so :format-string
+;;             and :enum-format-string are used to format numbers in order to
+;;             use of floats.
+;;   11/21/90  Andrew Mickish - Moved indicator to be on top of tic marks
+;;   06/18/90  Andrew Mickish - Moved "v-slider-parts.lisp" into this file
+;;   01/18/90  Andrew Mickish - Added :scroll-p to V-SLIDER
+;;             :item-prototype to eliminate round-off error.
 
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(V-Slider))
   #+garnet-test
   (export '(V-Slider-Go V-Slider-Stop
@@ -287,13 +292,13 @@
 	  (bnd (gvl :val-2))
 	  (inc (gvl :hash-inc)))
 	 ((> num bnd) width))))
-;   (:enum-width
-;    (o-formula (max (opal:string-width (gvl :enum-font)
-;				       (format NIL (gvl :enum-format-string)
-;					       (gvl :val-1)))
-;		    (opal:string-width (gvl :enum-font)
-;				       (format NIL (gvl :enum-format-string)
-;					       (gvl :val-2))))))
+;;;	(:enum-width
+;;;	 (o-formula (max (opal:string-width (gvl :enum-font)
+;;;					    (format NIL (gvl :enum-format-string)
+;;;						    (gvl :val-1)))
+;;;			 (opal:string-width (gvl :enum-font)
+;;;					    (format NIL (gvl :enum-format-string)
+;;;						    (gvl :val-2))))))
    (:enum-offset (o-formula (if (gvl :enumerate-p)
 				(+ 5 (gvl :enum-width))
 				0)))
@@ -362,14 +367,17 @@
       `((:SLIDE ,slide-inter                ; Indicator follows mouse
 		(:attach-point :n))
 	(:JUMP ,jump-inter                  ; Indicator jumps to mouse position
-	       (:attach-point :n)))))
+	       (:attach-point :n))
+	(:WHEEL-UP ,wheel-up-inter)
+	(:WHEEL-DOWN ,wheel-down-inter
+		     (:extra-function ,#'val-2-WHEEL-fn)))))
 
 
-;(s-value V-SLIDER :notice-items-changed #'opal:tic-marks-changed)
+;;;    (s-value V-SLIDER :notice-items-changed #'opal:tic-marks-changed)
 
-;;;
+
 ;;;  DEMO FUNCTION
-;;;
+;;
 
 #+garnet-test (defparameter v-slider-win NIL)
 #+garnet-test (defparameter v-slider-top-agg NIL)

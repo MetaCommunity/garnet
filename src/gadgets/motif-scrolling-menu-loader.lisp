@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -32,9 +33,7 @@ Change log:
   (format t "Loading Motif-Scrolling-Menu...~%")
   (dolist (file '("motif-v-scroll-loader"
 		  "motif-scrolling-menu"))
-    (load (common-lisp-user::garnet-pathnames file
-			   #+cmu "gadgets:"
-			   #+(not cmu) Garnet-Gadgets-PathName)
+    (load (merge-pathnames file Garnet-Gadgets-PathName)
 	  :verbose T))
   (format t "...Done Motif-Scrolling-Menu.~%"))
 

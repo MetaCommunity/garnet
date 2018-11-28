@@ -106,7 +106,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Text-Button Text-Button-Panel))
   #+garnet-test
   (export '(Text-Buttons-Go Text-Buttons-Stop Text-Button-Obj

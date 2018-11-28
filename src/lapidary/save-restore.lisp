@@ -22,8 +22,7 @@
 
 ;;; This function loads the bitmap specified from the Gilt directory
 (defun Get-Gilt-Bitmap (bitmapname)
-  (opal:read-image (common-lisp-user::garnet-pathnames bitmapname
-				     common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
+  (opal:read-image (merge-pathnames bitmapname common-lisp-user::Garnet-Gilt-Bitmap-PathName)))
 
 (defparameter HourGlassCursor
   ;; FIXME: This us duplicate code. See Also: custom.lisp
@@ -230,8 +229,7 @@ are used."
   (Format T "(setf common-lisp-user::*Used-Garnet-Version* ~s)~%~%" Common-Lisp-User::Garnet-Version-Number)
   (format t ";;;~%")
   (format t ";;;     Functions needed from Lapidary~%")
-  (format t "(load (common-lisp-user::garnet-pathnames \"lapidary-functions-loader\"
-			 common-lisp-user::Garnet-Lapidary-PathName))~%"))
+  (format t "(load (merge-pathnames \"lapidary-functions-loader\" common-lisp-user::Garnet-Lapidary-PathName))~%"))
 
 
 ;;; This is called by the Save-file dialog box when OK is hit.  Values is a
@@ -424,66 +422,56 @@ one that appears on a window's title-bar or on a window's icon"
   ;;; copy cursor
   (create-instance 'copy-cursor-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-copy.cursor"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-copy.cursor"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (create-instance 'copy-mask-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-copy.mask"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-copy.mask"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (setf copy-cursor-pair (cons copy-cursor-bitmap copy-mask-bitmap))
 
   ;;; instance cursor
   (create-instance 'instance-cursor-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-instance.cursor"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-instance.cursor"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (create-instance 'instance-mask-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-instance.mask"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-instance.mask"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (setf instance-cursor-pair (cons instance-cursor-bitmap instance-mask-bitmap))
 
   ;;; load cursor
   (create-instance 'load-cursor-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-load.cursor"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-load.cursor"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (create-instance 'load-mask-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-load.mask"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-load.mask"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (setf load-cursor-pair (cons load-cursor-bitmap load-mask-bitmap))
 
   ;;; move cursor
   (create-instance 'move-cursor-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-move.cursor"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-move.cursor"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (create-instance 'move-mask-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-move.mask"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-move.mask"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (setf move-cursor-pair (cons move-cursor-bitmap move-mask-bitmap))
 
   ;;; delete cursor
   (create-instance 'delete-cursor-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-delete.cursor"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-delete.cursor"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (create-instance 'delete-mask-bitmap opal:bitmap
 		   (:image (opal:read-image
-			    (common-lisp-user::garnet-pathnames
-			     "lapidary-delete.mask"
-			     Common-Lisp-User::Garnet-Bitmap-Pathname))))
+			    (merge-pathnames "lapidary-delete.mask"
+					     Common-Lisp-User::Garnet-Bitmap-Pathname))))
   (setf delete-cursor-pair (cons delete-cursor-bitmap delete-mask-bitmap)))
 
 (defun save-restore-do-go ()

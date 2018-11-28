@@ -1,44 +1,43 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base:
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;-------------------------------------------------------------------;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;                                                                   ;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;-------------------------------------------------------------------;;
 
+;;; $Id$
 
+
 ;;; This file contains the commands to allow the text interactor's keyboard
-;;; bindings to be changed.
-;;; This should be loaded before Textinter.
-;;;
-;;; Designed and implemented by Brad A. Myers
+;;  bindings to be changed.
+;;  This should be loaded before Textinter.
+;; 
+;;  Designed and implemented by Brad A. Myers
 
-#|
-============================================================
-Change log:
-         6/15/93 Brad Myers - safe-functionp
-         5/26/93 Mickish/Goldberg - Fixed get-or-make-local-key-table to copy
-                   both standard and lisp translation tables
-         3/19/93 Brad Myers - added ^k and ^o
-        12/24/92 Brad Myers - allow binding of mouse events
-	 3/20/92 Ed Pervin - Changed all control characters to keywords,
-				got rid of those :num-pad keywords.
-         1/21/92 Ed Pervin - adjusted for CMUCL on Sparc
-	 3/27/91 Greg Sylvain - adjusted for kcl
-	 8/22/90 Brad Myers - remove #+cmu #\leftarrow kinds of things
-	 4/9/90 Pervin/Cook - changed eq to eql
-         4/9/90 Brad Myers - New functions: Unbind-All-Keys, Insert-Text-Into-String
-         3/14/90 Brad Myers - Created.
-============================================================
-|#
+
+;;; Change log:
+;;         6/15/93 Brad Myers - safe-functionp
+;;         5/26/93 Mickish/Goldberg - Fixed get-or-make-local-key-table to copy
+;;                   both standard and lisp translation tables
+;;         3/19/93 Brad Myers - added ^k and ^o
+;;        12/24/92 Brad Myers - allow binding of mouse events
+;;	 3/20/92 Ed Pervin - Changed all control characters to keywords,
+;;				got rid of those :num-pad keywords.
+;;         1/21/92 Ed Pervin - adjusted for CMUCL on Sparc
+;;	 3/27/91 Greg Sylvain - adjusted for kcl
+;;	 8/22/90 Brad Myers - remove #+cmu #\leftarrow kinds of things
+;;	 4/9/90 Pervin/Cook - changed eq to eql
+;;         4/9/90 Brad Myers - New functions: Unbind-All-Keys, Insert-Text-Into-String
+;;         3/14/90 Brad Myers - Created.
 
+
 (in-package "INTERACTORS")
 
-;;;============================================================
+
 ;;; Helper functions
-;;;============================================================
+;;
 
 (defun bind-key-internal (key function-operation-or-char hash-table)
   (setf (gethash key hash-table) function-operation-or-char))
@@ -55,7 +54,7 @@ Change log:
 	     old-table)
     new))
 
-;;If the hash table is not local to the interactor, copy its prototype's
+;; If the hash table is not local to the interactor, copy its prototype's
 ;; table.  This is done because next the local one will be edited.
 (defun get-or-make-local-key-table (an-interactor)
   (let ((ht (get-local-value an-interactor :key-translation-table)))
@@ -86,9 +85,9 @@ Change log:
 
 
 
-;;;============================================================
+
 ;;; Exported functions
-;;;============================================================
+;;
 
 (defun Insert-Text-Into-String (string-obj new-text
 					   &optional (move-back-cursor 0))
@@ -144,84 +143,7 @@ interactor."
       ; else re-initialize ht
       (clrhash ht))))
 
-(defun Set-Default-Key-Translations (an-interactor)
-"Initializes the hash table of an-interactor with the standard
-translations.  If there is no table in an-interactor, creates one.
-Otherwise, removes any translations that are there before adding the new ones."
-  (let ((ht (get-local-value an-interactor :key-translation-table)))
-    (if (not (hash-table-p ht))
-      (s-value an-interactor :key-translation-table (setq ht (make-hash-table)))
-      ; else re-initialize ht
-      (clrhash ht))
-      (bind-key-internal :leftarrow   :prev-char ht)
-      (bind-key-internal :control-b   :prev-char ht)
-      (bind-key-internal :control-\b  :prev-char ht)
-    
-      (bind-key-internal :rightarrow  :next-char ht)
-      (bind-key-internal :control-f   :next-char ht)
-      (bind-key-internal :control-\f  :next-char ht)
-    
-      (bind-key-internal :uparrow     :up-line ht)
-      (bind-key-internal :control-p   :up-line ht)
-      (bind-key-internal :control-\p  :up-line ht)
-    
-      (bind-key-internal :downarrow   :down-line ht)
-      (bind-key-internal :control-n   :down-line ht)
-      (bind-key-internal :control-\n  :down-line ht)
-    
-#+kcl (bind-key-internal #\rubout     :delete-prev-char ht)
-#-kcl (bind-key-internal #\delete     :delete-prev-char ht)
-      (bind-key-internal #\backspace  :delete-prev-char ht)
-      (bind-key-internal :control-h   :delete-prev-char ht)
-      (bind-key-internal :control-\h  :delete-prev-char ht)
-    
-#+kcl (bind-key-internal #\\377       :delete-prev-word ht)
-      (bind-key-internal :control-backspace :delete-prev-word ht)
-      (bind-key-internal :control-delete    :delete-prev-word ht)
-      (bind-key-internal :control-w   :delete-prev-word ht)
-      (bind-key-internal :control-\w  :delete-prev-word ht)
-    
-      (bind-key-internal :control-d   :delete-next-char ht)
-      (bind-key-internal :control-\d  :delete-next-char ht)
-    
-      (bind-key-internal :control-u   :delete-string ht)
-      (bind-key-internal :control-\u  :delete-string ht)
 
-      (bind-key-internal :control-o   :insert-lf-after ht)
-      (bind-key-internal :control-\o  :insert-lf-after ht)
-
-      (bind-key-internal :control-k   :kill-line ht)
-      (bind-key-internal :control-\k  :kill-line ht)
-
-      (bind-key-internal :home        :beginning-of-string ht)
-      (bind-key-internal :control-\,  :beginning-of-string ht)
-      (bind-key-internal :control-<   :beginning-of-string ht)
-    
-      (bind-key-internal :control-a   :beginning-of-line ht)
-      (bind-key-internal :control-\a  :beginning-of-line ht)
-    
-      (bind-key-internal :end         :end-of-string ht) 
-      (bind-key-internal :control-.   :end-of-string ht)
-      (bind-key-internal :control->   :end-of-string ht)
-    
-      (bind-key-internal :control-e   :end-of-line ht)
-      (bind-key-internal :control-\e  :end-of-line ht)
-    
-      (bind-key-internal :control-c   :copy-to-X-cut-buffer ht)
-      (bind-key-internal :control-\c  :copy-to-X-cut-buffer ht)
-    
-      (bind-key-internal :insert      :copy-from-X-cut-buffer ht)
-      (bind-key-internal :insert-line :copy-from-X-cut-buffer ht)
-#+(or vax dec3100 dec5000)
-      (bind-key-internal :insert-here :copy-from-X-cut-buffer ht)
-      (bind-key-internal :control-y   :copy-from-X-cut-buffer ht)
-      (bind-key-internal :control-\y  :copy-from-X-cut-buffer ht)
-    
-      (bind-key-internal #\return     #\Newline ht)
-      (bind-key-internal :control-j   #\Newline ht)
-      (bind-key-internal :control-\j  #\Newline ht)
-    
-    ))
 
 ;;Look up in translation table and either return value there or the
 ;; original key

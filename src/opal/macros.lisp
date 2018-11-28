@@ -72,7 +72,10 @@
 
 (in-package "OPAL")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;; General Use ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; General Use
+;;
+;; FMG Change to inline functions wherever possible.
+;;
 
 (defmacro add-component (schema &rest args)
   `(let ((the-schema ,schema))
@@ -170,137 +173,122 @@
         (go ,tagname))))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;; For "objects.lisp" ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; For "objects.lisp"
+;;
 
 
-
-;;; The HP has a non-traditional assignment of black=0 and white=1, but to
-;;; get XOR to work correctly, we have to draw black objects as 1 and white
-;;; objects as 0.  This macro checks whether the display is an HP, and then
-;;; flips the black and white indices for XOR.
-;;;
-(defmacro HP-XOR-hack (x-draw-function index)
-  `(if *HP-display-type?*
-    (if (eq ,x-draw-function ,boole-xor)
-      (if (eql *black* ,index)
-	*white*
-	(if (eql *white* ,index)
-	  *black*
-	  ,index))
-      ,index)
-    ,index))
-#|
-;;; Unfortunately, you cannot assume that the display is on an HP just
-;;; because lisp is running on an HP.  Therefore, the #+pa switches are
-;;; insufficient.
-(defmacro HP-XOR-hack (x-draw-function index)
-  #-pa (declare (ignore x-draw-function))
-  #-pa index
-  #+pa
- `(let ((.index. ,index))
-    (if (eq ,x-draw-function ,boole-xor)
-	(case .index.
-	    (*black* *white*)
-	    (*white* *black*)
-	    (t .index.))
-        .index.)))
-|#
-	   
-(defmacro get-thickness (gob)
-  `(let* ((line-style (g-value ,gob :line-style))
-	  (thickness  (and line-style (g-value line-style :line-thickness))))
-     (if thickness (max thickness 1)
-		   0)))
+(declaim (inline get-thickness))	   
+(defun get-thickness (gob)
+  (let* ((line-style (g-value gob :line-style))
+	 (thickness  (and line-style (g-value line-style :line-thickness))))
+    (if thickness (max thickness 1) 0)))
 
 ;; This version of get-thickness aref's the update-vals array for the
 ;; line thickness, rather than g-valuing the :line-style slot.  Thus, we get
 ;; the "old" line thickness.
-(defmacro get-old-thickness (gob line-style-index update-vals)
+(declaim (inline get-old-thickness))
+(defun get-old-thickness (gob line-style-index update-vals)
   (declare (ignore gob))
-  `(let* ((line-style (aref ,update-vals ,line-style-index))
-          (thickness  (and line-style (g-value line-style :line-thickness))))
-     (if thickness (max thickness 1) 0)))
+  (let* ((line-style (aref update-vals line-style-index))
+	 (thickness  (and line-style (g-value line-style :line-thickness))))
+    (if thickness (max thickness 1) 0)))
 
-(defmacro point-in-rectangle (x y left top right bottom)
-  `(and (<= ,left ,x ,right)
-       (<= ,top ,y ,bottom)))
+(declaim (inline point-in-rectangle))
+(defun point-in-rectangle (x y left top right bottom)
+  (and (<= left x right)
+       (<= top y bottom)))
 
 ;;;  TEXT MACROS
 
+(declaim (inline the-width))
+(defun the-width (text-extents)
+  (first text-extents))
 
-(defmacro the-width (text-extents)
-  `(first ,text-extents))
+(declaim (inline the-actual-ascent))
+(defun the-actual-ascent (text-extents)
+  (second text-extents))
 
-(defmacro the-actual-ascent (text-extents)
-  `(second ,text-extents))
+(declaim (inline the-actual-descent))
+(defun the-actual-descent (text-extents)
+  (third text-extents))
 
-(defmacro the-actual-descent (text-extents)
-  `(third ,text-extents))
+(declaim (inline the-left-bearing))
+(defun the-left-bearing (text-extents)
+  (fourth text-extents))
 
-(defmacro the-left-bearing (text-extents)
-  `(fourth ,text-extents))
+(declaim (inline the-right-bearing))
+(defun the-right-bearing (text-extents)
+  (fifth text-extents))
 
-(defmacro the-right-bearing (text-extents)
-  `(fifth ,text-extents))
+(declaim (inline the-font-ascent))
+(defun the-font-ascent (text-extents)
+  (sixth text-extents))
 
-(defmacro the-font-ascent (text-extents)
-  `(sixth ,text-extents))
-
-(defmacro the-font-descent (text-extents)
-  `(seventh ,text-extents))
+(declaim (inline the-font-descent))
+(defun the-font-descent (text-extents)
+  (seventh text-extents))
 
 ;;;   IMAGE MACROS
+(declaim (inline read-image))
+(defun read-image (pathname &optional root-window)
+  (gem:read-an-image (or root-window
+			 (g-value device-info :current-root))
+		     pathname))
 
-(defmacro read-image (pathname &optional root-window)
-  `(gem:read-an-image (or ,root-window
-		          (g-value device-info :current-root))
-                      ,pathname))
+(declaim (inline write-image))
+(defun write-image (pathname image &optional root-window)
+  (gem:write-an-image (or root-window
+			  (g-value device-info :current-root))
+		      pathname image))
 
 
-(defmacro write-image (pathname image &optional root-window)
-  `(gem:write-an-image (or ,root-window
-			   (g-value device-info :current-root))
-                       ,pathname ,image))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;; For "basics.lisp" ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; For "basics.lisp"
 
 ;;; The accessors for the sides of the gob adjust both the dimensions, and
-;;; position of the gob based on the given value.
+;;  position of the gob based on the given value.
 
-(defmacro left-side (gob)
-  `(g-value ,gob :left))
+(declaim (inline left-side))
+(defun left-side (gob)
+  (g-value gob :left))
 
-(defmacro right-side (gob)
-  `(right ,gob))
+(declaim (inline right-side))
+(defun right-side (gob)
+  (right gob))
 
-(defmacro top-side (gob)
-  `(g-value ,gob :top))
+(declaim (inline top-side))
+(defun top-side (gob)
+  (g-value gob :top))
 
-(defmacro bottom-side (gob)
-  `(bottom ,gob))
+(declaim (inline bottom-side))
+(defun bottom-side (gob)
+  (bottom gob))
 
-;;;;;;;;;;;;;;;;;;;;;;; For "text-fonts.lisp" ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; For "text-fonts.lisp"
 
-;;; Font-From-File
+;; Font-From-File
 
-(defmacro extract-dir (font-name)
-  `(subseq ,font-name 0 (1+ (position #\/ ,font-name :from-end t))))
+(declaim (inline extract-dir))
+(defun extract-dir (font-name)
+  (subseq font-name 0 (1+ (position #\/ font-name :from-end t))))
 
-(defmacro extract-font-name (font-name)
-  `(subseq  ,font-name
-            (1+ (position #\/ ,font-name :from-end t))
-            (position #\. ,font-name :from-end t)))
+(declaim (inline extract-font-name))
+(defun extract-font-name (font-name)
+  (subseq  font-name
+	   (1+ (position #\/ font-name :from-end t))
+	   (position #\. font-name :from-end t)))
 
-;;;;;;;;;;;;;;;;;;;;;;; For "windows.lisp" ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; For "windows.lisp"
 
-(defmacro get-parent-win (a-window display-info)
-  `(let ((win-parent (g-value ,a-window :parent)))
-     (if win-parent
-	 (g-value win-parent :drawable)
-         (display-info-root-window ,display-info))))
+(declaim (inline get-parent-win))
+(defun get-parent-win (a-window display-info)
+  (let ((win-parent (g-value a-window :parent)))
+    (if win-parent
+	(g-value win-parent :drawable)
+	(display-info-root-window display-info))))
 
-;;;;;;;;;;;;;;;;;;;;;;; For "clean-up.lisp" ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; For "clean-up.lisp"
 
 (defmacro opal-window (window-pair)
   `(cdr ,window-pair))
@@ -309,7 +297,7 @@
   `(car ,window-pair))
 
 
-;;;;;;;;;;;;;;;;;;;;;;; For aggregadgets, aggrelists, etc. ;;;;;;;;;;;;;;;;;;
+;; For aggregadgets, aggrelists, etc.
 
 (defmacro add-item (schema &rest args)
  `(let ((the-schema ,schema))

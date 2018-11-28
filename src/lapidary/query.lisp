@@ -9,14 +9,12 @@
 ;;;     MULTIFONT-TEXT from package OPAL
 (dolist (gadget '("text-buttons-loader"
 		  ))
-  (load (common-lisp-user::garnet-pathnames gadget
-			  common-lisp-user::Garnet-Gadgets-PathName)))
+  (load (merge-pathnames gadget common-lisp-user::Garnet-Gadgets-PathName)))
 ;;;
 ;;;     Functions needed from Gilt
 (dolist (file '("gilt-functions-loader"
 		"filter-functions-loader"))
-  (load (common-lisp-user::garnet-pathnames file
-			  common-lisp-user::Garnet-Gilt-PathName)))
+  (load (merge-pathnames file common-lisp-user::Garnet-Gilt-PathName)))
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -24,7 +22,7 @@
 
 (defparameter common-lisp-user::*Used-Gilt-Version* "V3.0")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(INTER-AGG-QUERY)))
 
 (defparameter common-lisp-user::*Garnet-Object-Just-Created* 

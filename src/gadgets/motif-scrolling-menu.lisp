@@ -136,7 +136,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Motif-Scrolling-Menu))
   #+garnet-test
   (export '(Motif-Scrolling-Menu-Go Motif-Scrolling-Menu-Stop

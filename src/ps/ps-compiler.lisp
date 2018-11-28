@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; CHANGE LOG:
 ;;; 10/2/03 RGA --- New compile/load protocol
 ;;;    7/28/96 RGA --- changed to use garnet-compile/load
@@ -17,13 +19,23 @@
 
 (in-package "COMMON-LISP-USER")
 
+(defvar *debug-ps-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-ps-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
 ;; Only loads this file when not compiling all of Garnet.
 (unless (get :garnet-modules :multifont)
-  (load (garnet-pathnames "multifont-loader"
-			 #+cmu "opal:"
-			 #+(not cmu) Garnet-Opal-PathName)))
+  (load (merge-pathnames "multifont-loader" Garnet-Opal-PathName)))
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-ps-Pathname))
 
 (Defparameter Garnet-PS-Files
@@ -32,10 +44,11 @@
     "ps-multifont"
     ))
 
-(dolist (file Garnet-PS-Files)
-  (let ((gfile (concatenate 'string "ps:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
+(with-compilation-unit ()
+  (dolist (file Garnet-PS-Files)
+    (let ((gfile (concatenate 'string "ps:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Ps-Src Garnet-Ps-Pathname
 		   '("ps-loader.lisp"))

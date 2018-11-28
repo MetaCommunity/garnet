@@ -41,7 +41,7 @@
 	       )
   :components
   ((:file "package")
-   ;; referncing ./aggregadgets-loader.lisp
+   ;; referencing ./aggregadgets-loader.lisp
    (:file "agg-macros")
    (:file "agg-utils")
    (:file "aggregadgets")

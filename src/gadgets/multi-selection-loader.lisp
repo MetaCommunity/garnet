@@ -26,9 +26,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :multi-selection)
   (format t "Loading Multi-Selection...~%")
-  (load (common-lisp-user::garnet-pathnames "multi-selection"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "multi-selection" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done Multi-Selection.~%"))
 

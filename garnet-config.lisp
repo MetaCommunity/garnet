@@ -8,7 +8,7 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; This file basically moves all of the moving parts of garnet-loader
 ;;;into one place, it also establishes a few other options which may
 ;;;be useful when working in Garnet.   As the corresponding constants

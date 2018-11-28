@@ -84,13 +84,13 @@
 #|
 (create-instance 'agg-sel-feedback-circle opal:aggregadget
   (:left 0) (:top 0)
-  (:width *agg-sel-circle-size*) (:height *agg-sel-circle-size*)
+  (:width +agg-sel-circle-size+) (:height +agg-sel-circle-size+)
   (:filling-style opal:black-fill)
   (:parts `((:circle ,opal:circle
 	       (:left ,(o-formula (gvl :parent :left)))
 	       (:top ,(o-formula (gvl :parent :top)))
-	       (:width ,*agg-sel-circle-size*)
-	       (:height ,*agg-sel-circle-size*)
+	       (:width ,+agg-sel-circle-size+)
+	       (:height ,+agg-sel-circle-size+)
 ;	       (:fast-feedback-p t)
 ;	       (:draw-function :xor)
 	       (:filling-style ,(o-formula (gvl :parent :filling-style)))

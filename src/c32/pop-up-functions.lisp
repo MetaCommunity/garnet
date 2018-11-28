@@ -3,6 +3,8 @@
 ;;; This file created by GILT V0.4: The Garnet Interface Builder
 ;;; on Apr 11, 1991, 4:37 PM
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; $Id::                                                     $
 
 ;;; This file uses the following objects:
 ;;;     SCROLLING-MENU from package GARNET-GADGETS
@@ -12,7 +14,7 @@
 ;;; 09/01/92 Andrew Mickish - Removed extra Gilt variables that caused
 ;;;            compiler warnings.
 
-#|
+#||
 
 (dolist (gadget '("scrolling-menu-loader"
 		  ))
@@ -23,7 +25,7 @@
 (load (common-lisp-user::garnet-pathnames "gilt-functions-loader"
 			 common-lisp-user::Garnet-Gilt-PathName))
 ;;;
-|#
+||#
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

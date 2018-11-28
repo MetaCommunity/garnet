@@ -1,150 +1,153 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: C32; Base: 10 -*-
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id::                                                             $
+;;
+
+
 ;;; C32 is a spreadsheet interface for Garnet constraints
-;;;
-;;; Designed and implemented by Brad Myers
+;;
+;;  Designed and implemented by Brad Myers
 
-#|
-============================================================
-Change log:
- 2/11/93 Dario Giuse - added code to coerce string name (such as "left")
-		       into keyword (such as :LEFT) when reading a new slot
-		       name.
-12/16/92 Giuse/Mickish - Careful-Read-From-String --> C32-Careful-String-Eval
- 9/01/92 Andrew Mickish - Commented out declaration of aggrel in HIDESLOT
-           because its use is commented out; ignore objects(pl.) in Create-New-
-           Panel-Object; commented out start-event-loop-p in do-go for CMUCL;
-           moved defparameter of *c32-package* here from c32formula.lisp;
-           locally bound panels in ShowAllSlots
+
 
- 7/23/92 Dario Giuse - Catching all kinds of errors when a value is being
-		       entered.
- 7/23/92 Dario Giuse - Turned off automatic insertion into the formula window
-		       of the reference from the spreadsheet window when
-		       the secondary selection is set (with MiddleDown).
- 7/20/92 Dario Giuse - Made parameters to DO-GO into &key parameters; added
-		       the new parameter start-event-loop-p (default T) to
-		       determine whether the main event loop should be started.
-		       Moved the three commands "Insert Function",
-		       "Insert From Spread", and "Insert From Mouse" from the
-		       main menu to individual Formula Windows.  This makes
-		       it possible to tell which formula they will affect.
-		       Changed the "Function:" menu so that clicking on an
-		       item selects it, but does nothing.  Then, the command
-		       "Insert Function" from a formula window can be used
-		       to insert the selected function.
- 7/17/92 Dario Giuse - Eliminated the "new panel" string object.  Its function
-		       is now served by an empty panel, whose title reads
-		       "name".  Editing the title creates a
-		       new panel for the named object, and moves the empty
-		       panel to the right.
-		       Editing the title of a panel and specifying a non-
-		       existent object name causes C32 to prompt the user.  If
-		       the user says OK, the schema is created.  Otherwise,
-		       nothing happens.
- 6/23/92 Dario Giuse - Eliminated :raw-value, which was a dangerous idea
-		       that could lead to the same formula being installed
-		       on two separate objects.
- 6/22/92 Dario Giuse - Changed DO-GO so all extra stuff is done by optional
-		       parameters.  With the default setting, no test window
-		       is created and the panel window starts out empty.
- 6/15/92 Dario Giuse - Converted formula windows to use multifont objects.
- 6/12/92 Dario Giuse - Using gg:error-gadget for all error messages.
-		       It is now possible to create new objects, by typing
-		       their name in the "new-panel" string.  This creates
-		       objects that are initially empty.
- 6/11/92 Dario Giuse - Added a string that allows new panels to be created;
-		       the string is to the right of the rightmost panel.
-		       Eliminated all scrolling-text interactors; there is
-		       now only one per panel.
- 6/10/92 Dario Giuse - It is now possible to type "<slot> <value>" on the last
-		       (empty) slot of a panel, thus specifying both a slot
-		       name and a value.
- 6/08/92 Dario Giuse - Moved empty name for adding new slots to the left.
-		       "Add Slot" inherits a value, if any; if not, uses NIL.
-		       The secondary selection can now be toggled.
-		       Selection bars are kept inside objects when editing
-		       the header to switch to another object.
-		       Made subwindow wide enough to show right vert. line.
-		       Using Update type checking before installing formulas.
- 6/02/92 Dario Giuse - Added a new "Hide Slot" command.
- 6/01/92 Dario Giuse - Changed "Delete Slot" to actually eliminate the slot,
-		       rather than inheriting a value.
-		       Fixed the code so you can type a value which
-		       is a list without any extra quotes.  This allows the
-		       user to type (:BLUE :GREEN) as a value, for example,
-		       rather than (list :BLUE :GREEN) or '(:BLUE :GREEN).
-		       Fixed Careful-Read-From-String to detect incorrect
-		       formulas (without actually installing them) and give
-		       an error message.
-		       Setting the package to "C32" when reading from strings
-		       for formulas.  At least, this eliminates the need to
-		       type things like "kr:gvl".  Is there a better solution,
-		       such as setting some package in C32 for later use?
- 5/29/92 Dario Giuse - Added new mechanism to create new slots in objects:
-		       editing the text in the last (empty) slot of a browser
-		       shows the slot (if present), or creates it with a
-		       NIL value if not present.
-		       Improved error messages by using the error structure
-		       returned by ignore-errors (in Allegro).
- 5/27/92 Dario Giuse - Fixed Careful-Get-Obj to work with lowercase names.
-		       Fixed problem with careful-get-value.
-		       Values are always printed without #k<...>
- 5/18/92 Dario Giuse - Converted to Garnet 2.0
- 3/29/91 Brad Myers  - Put on a user interface
- 9/11/90 Brad Myers  - Started
-============================================================
-|#
+;;; Change log:
+;;  2/11/93 Dario Giuse - added code to coerce string name (such as "left")
+;; 		       into keyword (such as :LEFT) when reading a new slot
+;; 		       name.
+;; 12/16/92 Giuse/Mickish - Careful-Read-From-String --> C32-Careful-String-Eval
+;;  9/01/92 Andrew Mickish - Commented out declaration of aggrel in HIDESLOT
+;;            because its use is commented out; ignore objects(pl.) in Create-New-
+;;            Panel-Object; commented out start-event-loop-p in do-go for CMUCL;
+;;            moved defparameter of *c32-package* here from c32formula.lisp;
+;;            locally bound panels in ShowAllSlots
+;; 
+;;  7/23/92 Dario Giuse - Catching all kinds of errors when a value is being
+;; 		       entered.
+;;  7/23/92 Dario Giuse - Turned off automatic insertion into the formula window
+;; 		       of the reference from the spreadsheet window when
+;; 		       the secondary selection is set (with MiddleDown).
+;;  7/20/92 Dario Giuse - Made parameters to DO-GO into &key parameters; added
+;; 		       the new parameter start-event-loop-p (default T) to
+;; 		       determine whether the main event loop should be started.
+;; 		       Moved the three commands "Insert Function",
+;; 		       "Insert From Spread", and "Insert From Mouse" from the
+;; 		       main menu to individual Formula Windows.  This makes
+;; 		       it possible to tell which formula they will affect.
+;; 		       Changed the "Function:" menu so that clicking on an
+;; 		       item selects it, but does nothing.  Then, the command
+;; 		       "Insert Function" from a formula window can be used
+;; 		       to insert the selected function.
+;;  7/17/92 Dario Giuse - Eliminated the "new panel" string object.  Its function
+;; 		       is now served by an empty panel, whose title reads
+;; 		       "name".  Editing the title creates a
+;; 		       new panel for the named object, and moves the empty
+;; 		       panel to the right.
+;; 		       Editing the title of a panel and specifying a non-
+;; 		       existent object name causes C32 to prompt the user.  If
+;; 		       the user says OK, the schema is created.  Otherwise,
+;; 		       nothing happens.
+;;  6/23/92 Dario Giuse - Eliminated :raw-value, which was a dangerous idea
+;; 		       that could lead to the same formula being installed
+;; 		       on two separate objects.
+;;  6/22/92 Dario Giuse - Changed DO-GO so all extra stuff is done by optional
+;; 		       parameters.  With the default setting, no test window
+;; 		       is created and the panel window starts out empty.
+;;  6/15/92 Dario Giuse - Converted formula windows to use multifont objects.
+;;  6/12/92 Dario Giuse - Using gg:error-gadget for all error messages.
+;; 		       It is now possible to create new objects, by typing
+;; 		       their name in the "new-panel" string.  This creates
+;; 		       objects that are initially empty.
+;;  6/11/92 Dario Giuse - Added a string that allows new panels to be created;
+;; 		       the string is to the right of the rightmost panel.
+;; 		       Eliminated all scrolling-text interactors; there is
+;; 		       now only one per panel.
+;;  6/10/92 Dario Giuse - It is now possible to type "<slot> <value>" on the last
+;; 		       (empty) slot of a panel, thus specifying both a slot
+;; 		       name and a value.
+;;  6/08/92 Dario Giuse - Moved empty name for adding new slots to the left.
+;; 		       "Add Slot" inherits a value, if any; if not, uses NIL.
+;; 		       The secondary selection can now be toggled.
+;; 		       Selection bars are kept inside objects when editing
+;; 		       the header to switch to another object.
+;; 		       Made subwindow wide enough to show right vert. line.
+;; 		       Using Update type checking before installing formulas.
+;;  6/02/92 Dario Giuse - Added a new "Hide Slot" command.
+;;  6/01/92 Dario Giuse - Changed "Delete Slot" to actually eliminate the slot,
+;; 		       rather than inheriting a value.
+;; 		       Fixed the code so you can type a value which
+;; 		       is a list without any extra quotes.  This allows the
+;; 		       user to type (:BLUE :GREEN) as a value, for example,
+;; 		       rather than (list :BLUE :GREEN) or '(:BLUE :GREEN).
+;; 		       Fixed Careful-Read-From-String to detect incorrect
+;; 		       formulas (without actually installing them) and give
+;; 		       an error message.
+;; 		       Setting the package to "C32" when reading from strings
+;; 		       for formulas.  At least, this eliminates the need to
+;; 		       type things like "kr:gvl".  Is there a better solution,
+;; 		       such as setting some package in C32 for later use?
+;;  5/29/92 Dario Giuse - Added new mechanism to create new slots in objects:
+;; 		       editing the text in the last (empty) slot of a browser
+;; 		       shows the slot (if present), or creates it with a
+;; 		       NIL value if not present.
+;; 		       Improved error messages by using the error structure
+;; 		       returned by ignore-errors (in Allegro).
+;;  5/27/92 Dario Giuse - Fixed Careful-Get-Obj to work with lowercase names.
+;; 		       Fixed problem with careful-get-value.
+;; 		       Values are always printed without #k<...>
+;;  5/18/92 Dario Giuse - Converted to Garnet 2.0
+;;  3/29/91 Brad Myers  - Put on a user interface
+;;  9/11/90 Brad Myers  - Started
 
+
+
 ;;; * BUGS
-;;;  - arrows don't move when panel scrolls (so then point to wrong slot)
-;;;  - arrows should be under mainsel and other feedback objects
-;;;  - too slow
-;;;  - when copy a formula, and then generalize, should replace
-;;;     original with new formula also.
-;;;  - If a slot or object used a parameter to a function, should
-;;;     notice it for copy and generalize
-;;;  - Point-to-mouse object should take into account
-;;;     *current-formula-win* so the guessed slot changes if change
-;;;     windows.
-;;;  - *current-formula-win* should be a queue, so if window deleted when
-;;;     another is around, second is used
+;;   - arrows don't move when panel scrolls (so then point to wrong slot)
+;;   - arrows should be under mainsel and other feedback objects
+;;   - too slow
+;;   - when copy a formula, and then generalize, should replace
+;;      original with new formula also.
+;;   - If a slot or object used a parameter to a function, should
+;;      notice it for copy and generalize
+;;   - Point-to-mouse object should take into account
+;;      *current-formula-win* so the guessed slot changes if change
+;;      windows.
+;;   - *current-formula-win* should be a queue, so if window deleted when
+;;      another is around, second is used
 
+
+
 (in-package "C32")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Do-Go Do-Stop)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defparameter *Current-Selection-Feedback* NIL) ; holds the feeback
-						; obj for the cur selection
+;;;*******************************************************************
+(defparameter *Current-Selection-Feedback* NIL)	    ; holds the feeback
+					            ; obj for the cur selection
 (defparameter *Current-Sec-Selection-Feedback* NIL) ; holds the feeback
-			; obj for the sec (middle button) selection
-(defparameter *All-Windows* NIL) ; list of all windows, for Quit
-(defparameter *Current-Panel-Set* NIL) ; the current main panel-set
+					            ; obj for the sec (middle button) selection
+(defparameter *All-Windows* NIL)		    ; list of all windows, for Quit
+(defparameter *Current-Panel-Set* NIL)		    ; the current main panel-set
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;********************************************************************
 
 (defparameter *C32-package* (find-package "COMMON-LISP-USER")
   "This package is used for all READ operations.  It allows the user to
   type values and object names without a package prefix.")
 
-;;; List of slots that require confirmation for dangerous operations (such
-;;; as Delete Slot).
-;;;
+;; List of slots that require confirmation for dangerous operations (such
+;; as Delete Slot).
+;;
 (defparameter *dangerous-slots*
   '(:is-a :is-a-inv :components :parent))
-
-
 
 ;; loading gadgets is in c32loader
 
@@ -153,12 +156,12 @@ Change log:
 (create-instance 'reg-font opal:font)
 
 (create-instance 'form-icon opal:bitmap
-  (:image (opal:read-image (common-lisp-user::garnet-pathnames
+  (:image (opal:read-image (merge-pathnames
 			    "formula-icon.bm"
 			    common-lisp-user::Garnet-C32-Bitmap-PathName))))
 
 (create-instance 'inherited-icon opal:bitmap
-  (:image (opal:read-image (common-lisp-user::garnet-pathnames
+  (:image (opal:read-image (merge-pathnames
 			    "inherited-icon.bm"
 			    common-lisp-user::Garnet-C32-Bitmap-Pathname))))
 
@@ -186,7 +189,7 @@ Change log:
 
 (defun Mk-String (val)
   (let ((kr::*print-as-structure* NIL)	;; turn off #k<...> notation
-	#+COMMENT
+	#-(and)
 	(*package* *c32-package*)  ; enable this to suppress package names
 	)
     (format NIL "~s" val)))
@@ -246,7 +249,7 @@ Change log:
 			   (<= index max-val)))))
   (:value (o-formula (let ((obj (gvl :obj))
 			   (slot (gvl :slot)))
-		       (if slot (gv obj slot)))))
+		       (when slot (gv obj slot)))))
   (:formula-p (o-formula (let ((obj (gvl :obj))
 			       (slot (gvl :slot)))
 			   (when slot
@@ -390,14 +393,14 @@ Change log:
 (defun Create-Panel-For-Obj (obj left top agg)
   (let ((panel (Pop Extra-C32-Panels)))
     (if (schema-p panel)
-      (progn
-	(s-value panel :left left)
-	(s-value panel :top top))
-      ;; else create a new one
-      (setf panel (create-instance NIL c32-panel
-		    ;; (:constant T)
-		    (:left left) (:top top))))
-    (if (null obj)
+	(progn
+	  (s-value panel :left left)
+	  (s-value panel :top top))
+	;; else create a new one
+	(setf panel (create-instance NIL c32-panel
+		      ;; (:constant T)
+		      (:left left) (:top top))))
+    (unless obj
       (s-value (g-value panel :header) :value "name"))
     (opal:add-component agg panel)
     (New-Obj-For-Panel obj panel)	; sets all the items
@@ -414,7 +417,7 @@ Change log:
 	 (count (car count-and-method)))
     (when (plusp count)
       (setf (car count-and-method) (decf count))
-      (if (zerop count)
+      (when (zerop count)
 	;; Count is down to 0, so last panel for this objects was removed.
 	;; Restore the original method.
 	(s-value object :destroy-me (cdr count-and-method))))))
@@ -436,14 +439,14 @@ Change log:
 (defun Get-C32-item (obj slot)
   (let ((item (pop Extra-C32-Items)))
     (if item
-      (progn
-	(s-value item :obj obj)
-	(s-value item :slot slot)
-	item)
-      ;; else, create a new one
-      (create-instance NIL c32-item
-	(:obj obj)
-	(:slot slot)))))
+	(progn
+	  (s-value item :obj obj)
+	  (s-value item :slot slot)
+	  item)
+	;; else, create a new one
+	(create-instance NIL c32-item
+	  (:obj obj)
+	  (:slot slot)))))
 
   
 ;; This method encapsulates objects' original :destroy-me method.  First, it
@@ -451,7 +454,7 @@ Change log:
 ;; calls the original :destroy-me method.
 ;;
 (defun c32-destroy-method (object &optional other)
-  (if (schema-p *current-panel-set*)
+  (when (schema-p *current-panel-set*)
     (dolist (panel (g-value *current-panel-set* :c32-panels))
       (when (and (schema-p panel)
 		 (eq (g-value panel :obj) object))
@@ -460,7 +463,7 @@ Change log:
 	(return))))
   ;; Now invoke the original destroy-me method
   (let ((method (cdr (g-local-value object :c32-count))))
-    (if method
+    (when method
       (funcall method object other))))
 
 
@@ -477,12 +480,12 @@ Change log:
       ;; use up the old items, then use any extra items, then create a new one.
       (setq item (pop old-items))
       (if item 
-	(progn
-	  (s-value item :obj obj)
-	  (s-value item :slot slot))
-	(progn
-	  (setq item (Get-C32-item obj slot))
-	  (opal:add-component aggrel item)))
+	  (progn
+	    (s-value item :obj obj)
+	    (s-value item :slot slot))
+	  (progn
+	    (setq item (Get-C32-item obj slot))
+	    (opal:add-component aggrel item)))
       (push item items))
     (when old-items			; some left over
       (dolist (o old-items)
@@ -496,7 +499,7 @@ Change log:
     ;; Now install a modified destroy method on the object.  This ensures
     ;; that external changes to the object (i.e., calling Destroy from the
     ;; Lisp listener) will be reflected in the panel.
-    (if obj
+    (when obj
       (let ((count-and-method (g-local-value obj :c32-count)))
 	(unless count-and-method
 	  ;; store counter and original destroy method
@@ -517,7 +520,7 @@ Change log:
     (s-value panel :c32-items (append items (list item)))
     ;; Restore the scroll bar, to avoid unwanted jumps.  However, make sure
     ;; the empty slot at the bottom remains visible.
-    (if (>= (- length value) 12)
+    (when (>= (- length value) 12)
       (setf value (- length 11)))
     (s-value scroll-bar :value value)))
 
@@ -531,10 +534,10 @@ Change log:
     (when (symbolp val)
       (unless (boundp val)
 	(if (c32-query (format nil "Object ~S does not exist - create?" val))
-	  (create-schema val)
-	  (return-from careful-get-obj NIL)))
+	    (create-schema val)
+	    (return-from careful-get-obj NIL)))
       (setq val (eval val))
-      (if (schema-p val)
+      (when (schema-p val)
 	val))))
 
 
@@ -543,20 +546,20 @@ Change log:
 	 (slot (g-value c32-item :slot))
 	 (obj (g-value c32-item :obj)))
     (if (null slot)
-      (AddSlotAction gadget obj newvalue) ; add a slot
-      (when obj				; edit a value
-	(if (kr::slot-constant-p obj slot)
-	  ;; Constant.
-	  (progn
-	    (recompute-formula (g-value gadget :string :parent) :value)
-	    (c32error "Slot is constant - not set."))
-	  ;; OK.
-	  (multiple-value-bind (value success)
-	      (C32-Careful-String-Eval newvalue nil nil)
-	    (if success
-	      (s-value obj slot value)
-	      ;; Revert to the original string.
-	      (recompute-formula gadget :value))))))))
+	(AddSlotAction gadget obj newvalue) ; add a slot
+	(when obj			    ; edit a value
+	  (if (kr::slot-constant-p obj slot)
+	      ;; Constant.
+	      (progn
+		(recompute-formula (g-value gadget :string :parent) :value)
+		(c32error "Slot is constant - not set."))
+	      ;; OK.
+	      (multiple-value-bind (value success)
+		  (C32-Careful-String-Eval newvalue nil nil)
+		(if success
+		    (s-value obj slot value)
+		    ;; Revert to the original string.
+		    (recompute-formula gadget :value))))))))
 
 
 ;; The title of a panel was edited.  Switch to a new object, create a new
@@ -566,26 +569,26 @@ Change log:
   (let ((panel (g-value gadget :parent))
 	new-obj)
     (if (string= newvalue "")
-      (Remove-Panel panel)
-      (progn
-	(setq New-Obj (Careful-Get-Obj newvalue))
-	(if New-Obj
-	  ;; Valid object.
-	  (progn
-	    (unless (g-value panel :obj)
-	      ;; This is the empty panel on the right
-	      (create-new-panel-object nil))
-	    ;; Show a new object.
-	    (s-value panel :obj new-obj)
-	    (New-Obj-For-Panel new-obj panel)
-	    ;; Turn off selections.
-	    (turn-selections-off))
-	  ;; bad object
-	  (let ((obj (g-value gadget :parent :obj)))
-	    (if obj
-	      (s-value gadget :value (format nil "~S" obj)) ; show old value
-	      (s-value gadget :value "name")) ; empty panel
-	    (inter:beep)))))))
+	(Remove-Panel panel)
+	(progn
+	  (setq New-Obj (Careful-Get-Obj newvalue))
+	  (if New-Obj
+	      ;; Valid object.
+	      (progn
+		(unless (g-value panel :obj)
+		  ;; This is the empty panel on the right
+		  (create-new-panel-object nil))
+		;; Show a new object.
+		(s-value panel :obj new-obj)
+		(New-Obj-For-Panel new-obj panel)
+		;; Turn off selections.
+		(turn-selections-off))
+	      ;; bad object
+	      (let ((obj (g-value gadget :parent :obj)))
+		(if obj
+		    (s-value gadget :value (format nil "~S" obj)) ; show old value
+		    (s-value gadget :value "name"))		  ; empty panel
+		(inter:beep)))))))
 
 
 (defparameter Panel-Set-Height (+ 2 Scroll-Panel-Height Header-height))
@@ -595,14 +598,14 @@ Change log:
 					   Scroll-Panel-left-Offset))
 
 
-;;; The scroll-gadget is the panel-set
-;;;
+;; The scroll-gadget is the panel-set
+;;
 (defun Create-Panel-Set (obj-list maxwidth left top)
   (setf obj-list (append obj-list (list NIL))) ; add empty panel for new objs
   (let* ((num (length obj-list))
 	 (scroll-gadget (create-instance NIL
 			    garnet-gadgets:scrolling-window-with-bars
-			  ; (:constant T)
+;;;			  (:constant T)
 			  (:left left) (:top top)
 			  (:title "C32")
 			  (:v-scroll-bar-p NIL)
@@ -618,7 +621,7 @@ Change log:
     (declare-constant (g-value scroll-gadget :outer-window) :scroll-win-gadget)
     (setf agg (g-value scroll-gadget :inner-aggregate))
     (setq aggrel (create-instance NIL opal:aggrelist
-		   ;; (:constant T)
+;;;		   (:constant T)
 		   (:left 2)(:top 2)
 		   (:direction :horizontal)
 		   (:h-spacing Scroll-Panel-left-Offset)))
@@ -687,7 +690,7 @@ Change log:
 	 (obj (g-value c32-item :obj))
 	 (outer-win (g-value c32-item
 			     :window :scroll-win-gadget :outer-window)))
-    (if (and obj slot outer-win)
+    (when (and obj slot outer-win)
       (let ((left (g-value outer-win :left))
 	    (top (+ 3 (opal:bottom outer-win))))
 	(Assign-formula-win obj slot left top c32-item)))))
@@ -698,7 +701,7 @@ Change log:
 	 (agg (g-value panel-set :inner-aggregate))
 	 (textinter (create-instance 'a-panel-inter
 			garnet-gadgets::scrolling-input-text-edit
-		      ; (:constant T)
+;;;		      (:constant T)
 		      (:start-where (list
 				     :leaf-element-of agg
 				     :type Value-Scrolling-String))
@@ -708,7 +711,7 @@ Change log:
 		      (:waiting-priority inter:high-priority-level)))
 	 (feedback (create-instance NIL form-sel-feedback))
 	 (mainfeedback (create-instance NIL form-sel-feedback
-			 ; (:constant T)
+;;;			 (:constant T)
 			 (:left (o-formula (+ 1(gvl :obj-over :parent :left))))
 			 (:top (o-formula (- (gvl :obj-over :parent :top) 1)))
 			 (:width (o-formula
@@ -837,10 +840,9 @@ Change log:
   case, several functions in the user interface are somewhat different.")
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;  USER INTERFACE
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 
 (defvar error-gadget-object nil) 
 
@@ -864,40 +866,40 @@ Change log:
 
 
     
-;;; Returns the c32-item that is selected, or NIL if none.
-;;;
+;; Returns the c32-item that is selected, or NIL if none.
+;;
 (defun Get-Selected-Item ()
   (let ((label (g-value *Current-Selection-Feedback* :obj-over)))
     (when label (g-value label :parent))))
 
 	  
-;;; Returns the c32-item that is secondary (middle button) selected,
-;;; or NIL if none.
+;; Returns the c32-item that is secondary (middle button) selected,
+;; or NIL if none.
 (defun Get-Sec-Selected-Item ()
   (let ((label (g-value *Current-Sec-Selection-Feedback* :obj-over)))
     label))
 
 
 ;; Called by "Point To Object..."
-;;;
+;;
 (defun NewColumnForObj (obj)
   (if *Current-Panel-Set*
-    (let ((panel (car (last (g-value
-			     (car (g-value *Current-Panel-Set*
-					   :inner-window :aggregate
-					   :components)) :components)))))
-      ;; This is the empty panel on the right
-      (create-new-panel-object nil)
-      ;; Show the new object.
-      (s-value panel :obj obj)
-      (New-Obj-For-Panel obj panel)
-      (s-value (g-value panel :header) :value (mk-string obj))
-      ;; Turn off selections.
-      (turn-selections-off))
-    ;; else create a new one
-    (progn 
-      (setq *Current-Panel-Set* (Create-Panel-Set (list obj) 700 2 2))
-      (pushnew (g-value *Current-Panel-Set* :outer-window) *All-windows*))))
+      (let ((panel (car (last (g-value
+			       (car (g-value *Current-Panel-Set*
+					     :inner-window :aggregate
+					     :components)) :components)))))
+	;; This is the empty panel on the right
+	(create-new-panel-object nil)
+	;; Show the new object.
+	(s-value panel :obj obj)
+	(New-Obj-For-Panel obj panel)
+	(s-value (g-value panel :header) :value (mk-string obj))
+	;; Turn off selections.
+	(turn-selections-off))
+      ;; else create a new one
+      (progn 
+	(setq *Current-Panel-Set* (Create-Panel-Set (list obj) 700 2 2))
+	(pushnew (g-value *Current-Panel-Set* :outer-window) *All-windows*))))
 
 
 (defun PointToObject (gadget sel)
@@ -934,7 +936,6 @@ Change log:
 
 (declaim (special pop-up-functions)) ; object name for functions
 
-
 (defun DeleteSlot (gadget sel)
   (declare (ignore gadget sel))
   (let ((item (get-selected-item)))
@@ -947,7 +948,7 @@ Change log:
 			  nil
 			  "Do you really want to delete the ~A slot?"
 			  slot))))
-	    (return-from DeleteSlot nil))
+	      (return-from DeleteSlot nil))
 	  (Destroy-constraint obj slot)
 	  (Destroy-slot obj slot)
 	  (setf (g-value obj :slots-to-show)
@@ -961,48 +962,43 @@ Change log:
   (declare (ignore gadget sel))
   (let ((item (get-selected-item)))
     (if item
-      (let ((obj (g-value item :obj))
-	    (slot (g-value item :slot))
-	    #+COMMENT
-	    (aggrel (g-value item :parent)))
-	(when slot
-	  (setf (g-value obj :slots-to-show)
-		(delete slot (g-value obj :slots-to-show)))
-	  ;; Move the selection to the next item in the panel.
-	  #+COMMENT
-	  (let ((next-item (second (member item
-					   (g-value aggrel :components))))
-		(panel (g-value aggrel :parent)))
-	    (opal:remove-component aggrel item)
-	    (opal:update (g-value next-item :window))
-	    (s-value *Current-Selection-Feedback* :obj-over
-		     (g-value next-item :label))
-	    (s-value panel :c32-items (delete item (g-value panel :c32-items)))
-	    (s-value item :visible nil)
-	    (pushnew item Extra-C32-Items))
-	  #-COMMENT
-	  (New-Obj-For-Panel obj (g-value item :parent :parent))))
-      (C32Error "No slot selected for Hide Slot"))))
+	(let ((obj (g-value item :obj))
+	      (slot (g-value item :slot))
+;;;	      (aggrel (g-value item :parent))
+	      )
+	  (when slot
+	    (setf (g-value obj :slots-to-show)
+		  (delete slot (g-value obj :slots-to-show)))
+	    ;; Move the selection to the next item in the panel.
+;;;	    (let ((next-item (second (member item
+;;;					     (g-value aggrel :components))))
+;;;		  (panel (g-value aggrel :parent)))
+;;;	      (opal:remove-component aggrel item)
+;;;	      (opal:update (g-value next-item :window))
+;;;	      (s-value *Current-Selection-Feedback* :obj-over
+;;;		       (g-value next-item :label))
+;;;	      (s-value panel :c32-items (delete item (g-value panel :c32-items)))
+;;;	      (s-value item :visible nil)
+;;;	      (pushnew item Extra-C32-Items))
+	    (New-Obj-For-Panel obj (g-value item :parent :parent))))
+	(C32Error "No slot selected for Hide Slot"))))
 
 
-
-;;; Returns: a list of all the slots in the <object>, both local and
-;;; inherited.
-;;;
+;; Returns: a list of all the slots in the <object>, both local and
+;; inherited.
+;;
 (defun all-slots (object)
   (let ((slots nil))
     (doslots (slot object T)
       (push slot slots))
     (nreverse slots)))
 
-
-
-;;; Make ALL the slots of an object visible.
-;;;
+;; Make ALL the slots of an object visible.
+;;
 (defun ShowAllSlots (gadget sel)
   (declare (ignore gadget sel))
   (let ((item (get-selected-item)))
-    (if (null item)
+    (unless item
       (let ((panel nil)
 	    (found 0))
 	(dolist (p (g-value *current-panel-set* :c32-panels))
@@ -1010,33 +1006,33 @@ Change log:
 	    (setf panel p)
 	    (incf found)))
 	(if (= found 1)
-	  ;; Only one active panel, so we can use this.
-	  (setf item (car (g-value panel :c32-items)))
-	  (let ((panels NIL))
-	    ;; There is no single panel.  Try with panels that currently show
-	    ;; no items.
-	    (dolist (p (g-value *current-panel-set* :c32-panels))
-	      (if (and (g-value p :parent) (null (cdr (g-value p :c32-items))))
-		(pushnew p panels)))
-	    (if (= 1 (length panels))
-	      (setf item (car (g-value (car panels) :c32-items))))))))
+	    ;; Only one active panel, so we can use this.
+	    (setf item (car (g-value panel :c32-items)))
+	    (let ((panels NIL))
+	      ;; There is no single panel.  Try with panels that currently show
+	      ;; no items.
+	      (dolist (p (g-value *current-panel-set* :c32-panels))
+		(when (and (g-value p :parent) (null (cdr (g-value p :c32-items))))
+		  (pushnew p panels)))
+	      (when (= 1 (length panels))
+		(setf item (car (g-value (car panels) :c32-items))))))))
     (if item
-      (let* ((obj (g-value item :obj))
-	     (slots (all-slots obj)))
-	;; Eliminate internal C32 slots, which we don't want to see.
-	(if (member :slots-to-show slots)
-	  (setf slots (delete :slots-to-show slots)))
-	(if (member :C32-count slots)
-	  (setf slots (delete :C32-count slots)))
-	(setf (g-value obj :slots-to-show) slots)
-	(New-Obj-For-Panel obj (g-value item :parent :parent)))
-      (C32Error "No item selected for Show All Slots"))))
+	(let* ((obj (g-value item :obj))
+	       (slots (all-slots obj)))
+	  ;; Eliminate internal C32 slots, which we don't want to see.
+	  (if (member :slots-to-show slots)
+	      (setf slots (delete :slots-to-show slots)))
+	  (if (member :C32-count slots)
+	      (setf slots (delete :C32-count slots)))
+	  (setf (g-value obj :slots-to-show) slots)
+	  (New-Obj-For-Panel obj (g-value item :parent :parent)))
+	(C32Error "No item selected for Show All Slots"))))
 
 
 
-;;; Add a new slot.  If slot is already in the C32 panel, error.  Otherwise,
-;;; add (if not already present in the object), and display.
-;;;
+;; Add a new slot.  If slot is already in the C32 panel, error.  Otherwise,
+;; add (if not already present in the object), and display.
+;;
 (defun AddSlotAction (gadget obj string)
   (multiple-value-bind (slot no-error value)
       (C32-Careful-String-Eval string NIL T)
@@ -1063,7 +1059,7 @@ Change log:
 		  (s-value obj slot NIL))))))
 	;; Add an item to the panel
 	(add-new-row panel slot)
-	#+COMMENT (New-Obj-For-Panel obj panel)
+;;;	(New-Obj-For-Panel obj panel)
 	(opal:update (g-value panel :window)))
       (C32Error "Please type a symbol or keyword to create a new slot."))))
     
@@ -1140,7 +1136,7 @@ Change log:
        (:left 10) (:top 170) (:width 270)
        (:label-string "Current package:") (:value "COMMON-LISP-USER")
        (:selection-function 'set-current-package)
-       ; (:constant T)
+;;;    (:constant T)
        ))
     (opal:Update win)
     win))
@@ -1162,7 +1158,7 @@ Change log:
     (when test-p
       ;; Create a test window
       (create-instance 'w inter:interactor-window
-	#-apple (:left 850) #+apple (:left 10)
+	(:left 850)
         (:top 45) (:width 150) (:height 150)
 	(:aggregate (setq agg (create-instance 'demo-agg opal:aggregate))))
       (create-instance 'r opal:rectangle
@@ -1201,5 +1197,5 @@ Change log:
     (opal:update c32win)
     (push c32win *all-windows*))
   #-CMU
-  (if start-event-loop-p
+  (when start-event-loop-p
     (inter:main-event-loop)))

@@ -19,7 +19,7 @@
 
 (in-package "LAPIDARY")
 
-#|
+#||
 ;;;*****************************
 ;;; Definition of a single card
 ;;;*****************************
@@ -42,11 +42,11 @@
       (:contents ,event
 		 (:left ,(o-formula (+ (gvl :parent :left) 10)))
 		 (:top ,(o-formula (+ (gvl :parent :top) 10)))))))
-
+||#
 ;;;**********************************************************
 ;;; Definition a card deck (Be sure to set the :queue slot!)
 ;;;**********************************************************
-
+#||
 (create-instance 'deck opal:aggregadget
    (:left 5)
    (:top 5)
@@ -69,7 +69,7 @@
 	   (:final-function ,#'(lambda (inter card)
 			      (opal:move-component
 			       (g-value inter :operates-on) card)))))))
-|#
+||#
 
 ;;; translate a modifier string to individual modifier bits; the lists
 ;;; are kept in alphabetical order because bits-to-mod-string uses rassoc

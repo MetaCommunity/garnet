@@ -30,9 +30,7 @@ Change log:
 		  (:prop-value "prop-value-loader")
 		  (:prop-sheet "prop-sheet")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
             :verbose T)))
   (format t "...Done Prop-Sheet.~%"))
 

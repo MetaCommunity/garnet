@@ -25,7 +25,7 @@
 
 (in-package "GILT")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Make-Path)))
 
 ;;; indicates whether an object has been marked

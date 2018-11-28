@@ -19,6 +19,18 @@
 
 (in-package "COMMON-LISP-USER")
 
+(defvar *debug-lapidary-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-lapidary-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
 ;; Only loads this file when not compiling all of Garnet.
 (unless (get :garnet-modules :multifont)
   (garnet-load "opal:multifont-loader"))
@@ -50,7 +62,7 @@
   (load garnet-c32-loader))
 
 ;;; Create the Lapidary Directory
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-Lapidary-Pathname))
 
 
@@ -68,7 +80,7 @@
 	(list (namestring Garnet-Constraint-Gadget-Src))))
 
 (defparameter Garnet-Constraint-Gadget-Compiler
-  (garnet-pathnames "constraint-gadget-compiler" 
+  (merge-pathnames "constraint-gadget-compiler" 
 		    Garnet-Constraint-Gadget-PathName))
 
 (garnet-load "lapidary-src:constraint-gadget-compiler")

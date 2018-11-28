@@ -35,34 +35,26 @@ Change log:
 
 (unless (get :garnet-modules :multifont)
    (format t "Loading Multifont...~%")
-   (load (garnet-pathnames "multifont"
-               #+cmu "opal:"
-               #+(not cmu) Garnet-Opal-PathName)
+   (load (merge-pathnames "multifont" Garnet-Opal-PathName)
          :verbose T)
    
    (dolist (file (list "lispkeyhandling"
 		       "multifont-textinter"
 		       "focus-multifont-textinter"
 		       "selection-interactor"))
-     (load (garnet-pathnames file
-			    #+cmu "inter:"
-			    #+(not cmu) Garnet-Inter-PathName)
+     (load (merge-pathnames file Garnet-Inter-PathName)
 	   :verbose T))
    
    ; Load special printing functions for multifont if PS module already loaded
    ; (otherwise they will be loaded by the PS loader when needed).
    (if (get :garnet-modules :ps)
-       (load (garnet-pathnames "ps-multifont"
-		   #+cmu "ps:"
-		   #+(not cmu) Garnet-PS-Pathname)
+       (load (merge-pathnames "ps-multifont" Garnet-PS-Pathname)
 	     :verbose T))
 
    ; Load special scrolling functions for multifont if PS module already loaded
    ; (otherwise they will be loaded by the PS loader when needed).
    (if (get :garnet-modules :scrolling-window)
-       (load (garnet-pathnames "scrolling-window-multifont"
-		   #+cmu "gadgets:"
-		   #+(not cmu) Garnet-Gadgets-Pathname)
+       (load (merge-pathnames "scrolling-window-multifont" Garnet-Gadgets-Pathname)
 	     :verbose T))
    
    (format t "...Done Multifont.~%")

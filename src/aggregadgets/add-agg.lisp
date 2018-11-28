@@ -11,6 +11,9 @@
 ;;; Add a component to an aggregadget and its instances.
 ;;; 
 ;;; Roger B. Dannenberg, 1990
+;;;
+;;; $Id::                                                             $
+
 
 #|
 ======================================================================
@@ -82,7 +85,7 @@ affected aggrelist.
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(gadget-add-item gadget-remove-item)))
 
 

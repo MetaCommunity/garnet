@@ -1,32 +1,32 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: DEMO-GRAPH; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id$
+;;
+
 ;;;  DEMO-GRAPH
-;;;
-;;;  Designed and written by Andrew Mickish and Bryan Loyall
-
-#|
-     CHANGE LOG:
-     05/29/94 Geier/Mickish - Fixed main window position; load to garnet-load
-                in demo-graph-init;  Changed color of nodes instead of XOR
-     06/01/93 Andrew Mickish - Removed Verify-Binding and called Careful-Eval
-                instead;  fixed problem with setting new root caused by
-                kr-send being an unsafe macro; made error-gadget window be
-                top-level
-     03/25/92 Andrew Mickish - Get-Values ---> G-Value
-     03/14/91 Andrew Mickish - Created
-|#
+;;
+;;  Designed and written by Andrew Mickish and Bryan Loyall
 
 
+;;; CHANGE LOG:
+;;   05/29/94 Geier/Mickish - Fixed main window position; load to garnet-load
+;;              in demo-graph-init;  Changed color of nodes instead of XOR
+;;   06/01/93 Andrew Mickish - Removed Verify-Binding and called Careful-Eval
+;;              instead;  fixed problem with setting new root caused by
+;;              kr-send being an unsafe macro; made error-gadget window be
+;;              top-level
+;;   03/25/92 Andrew Mickish - Get-Values ---> G-Value
+;;   03/14/91 Andrew Mickish - Created
+
+
 (in-package :DEMO-GRAPH)
-
 
 ;; Load necessary files
 ;;
@@ -137,7 +137,7 @@
 					     opal:white-fill)))
              (:fast-redraw :rectangle)
              (:fast-redraw-filling-style ,opal:white-fill)
-	     ;(:draw-function :xor) (:fast-redraw-p T)
+;;;	     (:draw-function :xor) (:fast-redraw-p T)
              )
 	    (:text-al :modify
              (:fast-redraw :rectangle)
@@ -152,7 +152,7 @@
       `((:press ,inter:menu-interactor
 	 (:window ,(o-formula (gv-local :self :operates-on :window)))
 	 (:start-where ,(o-formula (list :element-of (gvl :operates-on :nodes))))
-	 (:start-event (:leftdown :rightdown))
+	 (:start-event (:leftdown :middledown :rightdown))
 	 (:final-function
 	  ;;; Mnemonics:
 	  ;;;     "Source" is a node in the original graph that we are modeling
@@ -179,6 +179,9 @@
 			(kr-send graph :add-node
 				 graph new-child (list node) NIL))))
 
+		   (:middledown
+		    (garnet-debug:inspector source))
+		   
 		   ;; Delete the current node and all its children
 		   (:rightdown
 		    ; Don't delete the root
@@ -261,6 +264,8 @@
       Press on a node with the left mouse button to display
    another child of the node (if possible).  Nodes that can be
    expanded further appear in bold font.
+      Press on a node with the middle mouse button to bring up
+   the inspector on that node.
       Press on a node with the right mouse button to delete the
    node and all its children.
       Pushing the relayout button will reorganize the graph neatly.

@@ -79,7 +79,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(BROWSER-GADGET
 	    BROWSER-MENU-FN PUSH-FIRST-ITEM PROMOTE-ITEM
 	    SET-FIRST-ITEM BROWSER-MENU-SCROLL-FN BROWSER-SCROLL-FN)))

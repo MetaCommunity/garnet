@@ -14,7 +14,8 @@
 ;;; Designed and implemented by Ed Pervin
 
 ;; Change Log
-;; 
+;;
+;; 05-21-2013 Fred Gilham - Add scroll wheel support.
 ;; 05-22-94 Marty Geier - Changed top of window so its on screen and grabbable
 
 
@@ -35,6 +36,7 @@
 (defparameter clock-window NIL)
 (defparameter adjust-clock NIL)
 (defconstant pi/6 (/ pi 6))
+(defconstant pi/30 (/ pi 30))		; One minute intervals.
 (defvar i)
 
 (defun Do-Go (&key dont-enter-main-event-loop double-buffered-p)
@@ -200,12 +202,28 @@
 			(declare (ignore an-interactor final-obj-over))
 			(s-value minute-hand :angle 
 				 (- (g-value minute-hand :angle) pi/6)))))
+
+  (create-instance NIL inter:button-interactor
+    (:window clock-window)
+    (:continuous nil)
+    (:start-where t)
+    (:start-event (list :downscrollup :upscrollup))
+    (:stop-action
+     #'(lambda (an-interactor final-obj-over)
+	 (declare (ignore final-obj-over))
+	 (s-value minute-hand :angle
+		  (if (eq (inter:event-char inter:*current-event*)
+			  (first (g-value an-interactor :start-event)))
+		      (+ (g-value minute-hand :angle) pi/30)
+		      (- (g-value minute-hand :angle) pi/30))))))
+    
   (opal:update clock-window)
   ;;; print instructions
   (Format T "~%Demo-Clock:
   Press inside clock with left-button to move the entire clock.  Press with right
   button and move in a circle to change time (the minute hand will follow
-  the mouse.  Type space to advance clock by 5 minutes.~%")
+  the mouse. If you have a scroll wheel you can adjust the clock by rolling the
+  scroll wheel back and forth. Type space to advance clock by 5 minutes.~%")
   (unless dont-enter-main-event-loop #-cmu (inter:main-event-loop))
   )
 

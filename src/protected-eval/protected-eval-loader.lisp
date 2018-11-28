@@ -1,37 +1,91 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER; Base: 10 -*-
+;;; -*- Mode: COMMON-LISP; Package: COMMON-LISP-USER; Base: 10 -*-   ;;
+;;-------------------------------------------------------------------;;
+;;            Copyright 1993 Russell G. Almond                       ;;
+;;-------------------------------------------------------------------;;
+;; This code is in the Public Domain.  Anyone who can get some use   ;;
+;; from it is welcome.                                               ;;
+;; This code comes with no warranty.                                 ;;
+;;-------------------------------------------------------------------;;
 
-;;; 10/2/03 RGA --- Moved to new home.
-;;; Created 6/25/92 RGA
+;;; $Id$
 
+;;; Garnet 3.3 --- FMG Sorted out code in this directory, integrated
+;;                 into Garnet build system.
+;;  10/2/03 RGA --- Moved to new home.
+;;  Created 6/25/92 RGA
+
+
+;;; protected-eval exports the following interfaces:
+;;
+;; (Described in prompter.doc)
+;;
+;; Protected-Eval-Error-Gadget 
+;; Garnet-Error-Handler Garnet-User-Error-Handler
+;; With-Garnet-Error-Handling With-Garnet-User-Error-Handling
+;; With-Abort
+;; Garnet-Protected-Eval Garnet-Protected-Read-From-String
+;;
+;; Other exported symbols:
+;;
+;; Error-Prompter-Gadget
+;; Garnet-Protected-Read Do-Prompt
+;; With-Normal-Cursor *normal-cursor-pair*
+;; Prompting-Error-Handler
+;; Do-Abort
+;; *user-type*
+;;
+;; In prompter.lisp:
+;;
+;; Prompter-Gadget
+;; Display-Prompt Display-Prompt-And-Wait
+;;
+;; In abstract-errors.lisp / garnet-errors.lisp:
+;;
+;; prompting-protected-eval 
+;; prompting-protected-read prompting-protected-read-from-string 
+;; prompter
+;; protect-errors with-protected-errors 
+;; protected-eval
+;; protected-read protected-read-from-string
+;; call-prompter
+;; displayer call-displayer 
+;; selector call-selector
+;; *application-long-name *application-short-name*
+;; *user-type*
+
+
+
 ;;; Loader for protected eval stuff.
 
 (in-package "COMMON-LISP-USER")
 
 ;; check first to see if place is set
-(unless (boundp 'Garnet-Contrib-PathName)
-  (error "Load 'Garnet-Loader' first to set Garnet-Contrib-PathName
-before loading Contributed Gadgets."))
+(unless (boundp 'Garnet-Protected-Eval-PathName)
+  (error "Load 'Garnet-Loader' first to set Garnet-Protected-Eval-PathName
+before loading Protected-Eval."))
+
+(defvar protected-eval-load-files
+  '(;; Load these from the gadgets directory.
+    "gadgets:motif-error-gadget-loader"
+    "gadgets:motif-scrolling-labeled-box-loader"
+    ;; Load these from the protected-eval directory.
+    "protected-eval:error"
+    "protected-eval:prompter"
+    "protected-eval:protected-eval"
+    "protected-eval:protected-process"
+    "protected-eval:abstract-errors"
+    "protected-eval:garnet-errors"))
 
 
-(unless (get :garnet-modules :new-protected-eval)
-  (format t "Loading New Protected-eval~%")
+(unless (get :garnet-modules :protected-eval)
+  (format t "Loading Protected-eval~%")
   
-  (dolist (pair '((:error-gadget "error-gadget-loader")))
-    (unless (get :garnet-modules (car pair))
-      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
-	    :verbose T)))
+  (dolist (file protected-eval-load-files)
+    (garnet-load file))
   
-  (dolist (pair '((:protected-eval "protected-eval:base-protected-eval-loader")
-		  (:scrolling-unlabeled-box "gadgets:scrolling-unlabeled-box-loader")
-		  (:prompter "protected-eval:prompter-loader")
-		  (:new-protected-eval "protected-eval:new-protected-eval")
-		  ))
-    (unless (get :garnet-modules (car pair))
-      (garnet-load (cadr pair))))
-  
-  (format t "...Done New Protected Eval.~%"))
+  (format t "...Done Protected-Eval.~%")
 
-(setf (get :garnet-modules :new-protected-eval) t)
+  (setf (get :garnet-modules :protected-eval) t))
 
 
 

@@ -1,92 +1,97 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-GADGETS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;  please contact garnet@cs.cmu.edu to be put on the mailing list.  ;;
+;;*******************************************************************;;
+
+;;; $Id$
+;;
+
+
 ;;;  Vertical scroll bar
-;;;
-;;;  Features and operation of the vertical scroll bar:
-;;;     1)  Drag the indicator with the left mouse button
-;;;     2)  Click the left mouse button in the scroll bar background to cause
-;;;         the indicator to jump to mouse location
-;;;     3)  Click the left mouse button in the trill boxes to move the
-;;;         indicator by :scr-incr and :page-incr increments
-;;;     4)  Text centered in the indicator changes to reflect new indicator
-;;;         position
-;;;     5)  The top level :value slot is the position of the indicator.
-;;;         This slot may be set directly and formulae may depend on it.
-;;;     6)  The function specified in :selection-function will be executed
-;;;         when the :values slot changes.
-;;;
-;;;  Customizable slots:
-;;;     1)  Left, top, height
-;;;     2)  Min-width --  Will be overridden by the value calculated in
-;;;                       :indicator-width if the width of the text in the
-;;;                       indicator exceeds this width
-;;;     3)  Scr-trill-p  --  Whether to have single arrow trill boxes that
-;;;                          increment by :scr-incr
-;;;     4)  Page-trill-p --  Whether to have double arrow trill boxes that
-;;;                          increment by :page-incr
-;;;     5)  Indicator-text-p -- Whether to report indicator position
-;;;                             numerically inside the indicator
-;;;     6)  Int-feedback-p  --  Whether to follow mouse with thick outline box
-;;;                             instead of with indicator directly
-;;;     7)  Val-1, Val-2  --  Range of values the indicator spans.
-;;;                           Val-1 corresponds to the top of the scroll bar.
-;;;     8)  Scr-Incr  --  Value to increment position by in single arrow box
-;;;     9)  Page-incr  --  Value to increment postion by in double arrow box
-;;;    10)  Value -- The current value chosen by the user
-;;;    11)  Scroll-p -- Whether to allow scrolling
-;;;    12)  Selection-function -- Function executed whenever :value changes
-;;;    13)  Indicator-font -- Font to report indicator position with
-;;;    14)  Format-string -- formatting string of indicator value
-;;;
-;;;  NOTE:  This module requires schemata defined in GAD-scroll-parts,
-;;;         GAD-v-arrows, and GAD-v-boxes.
-;;;
-;;;  Vertical scroll bar demo:
-;;;     This module contains a function which creates a window and a scroll bar
-;;;     in the window.  To run it, enter (GARNET-GADGETS:v-scroll-go).
-;;;     To stop, enter (GARNET-GADGETS:v-scroll-stop).
-;;;
-;;;  Designed by Brad Myers
-;;;  Written by Andrew Mickish
+;; 
+;;   Features and operation of the vertical scroll bar:
+;;      1)  Drag the indicator with the left mouse button
+;;      2)  Click the left mouse button in the scroll bar background to cause
+;;          the indicator to jump to mouse location
+;;      3)  Click the left mouse button in the trill boxes to move the
+;;          indicator by :scr-incr and :page-incr increments
+;;      4)  Text centered in the indicator changes to reflect new indicator
+;;          position
+;;      5)  The top level :value slot is the position of the indicator.
+;;          This slot may be set directly and formulae may depend on it.
+;;      6)  The function specified in :selection-function will be executed
+;;          when the :values slot changes.
+;; 
+;;   Customizable slots:
+;;      1)  Left, top, height
+;;      2)  Min-width --  Will be overridden by the value calculated in
+;;                        :indicator-width if the width of the text in the
+;;                        indicator exceeds this width
+;;      3)  Scr-trill-p  --  Whether to have single arrow trill boxes that
+;;                           increment by :scr-incr
+;;      4)  Page-trill-p --  Whether to have double arrow trill boxes that
+;;                           increment by :page-incr
+;;      5)  Indicator-text-p -- Whether to report indicator position
+;;                              numerically inside the indicator
+;;      6)  Int-feedback-p  --  Whether to follow mouse with thick outline box
+;;                              instead of with indicator directly
+;;      7)  Val-1, Val-2  --  Range of values the indicator spans.
+;;                            Val-1 corresponds to the top of the scroll bar.
+;;      8)  Scr-Incr  --  Value to increment position by in single arrow box
+;;      9)  Page-incr  --  Value to increment postion by in double arrow box
+;;     10)  Value -- The current value chosen by the user
+;;     11)  Scroll-p -- Whether to allow scrolling
+;;     12)  Selection-function -- Function executed whenever :value changes
+;;     13)  Indicator-font -- Font to report indicator position with
+;;     14)  Format-string -- formatting string of indicator value
+;; 
+;;   NOTE:  This module requires schemata defined in GAD-scroll-parts,
+;;          GAD-v-arrows, and GAD-v-boxes.
+;; 
+;;   Vertical scroll bar demo:
+;;      This module contains a function which creates a window and a scroll bar
+;;      in the window.  To run it, enter (GARNET-GADGETS:v-scroll-go).
+;;      To stop, enter (GARNET-GADGETS:v-scroll-stop).
+;; 
+;;   Designed by Brad Myers
+;;   Written by Andrew Mickish
 
+
 ;;;  CHANGE LOG:
-;;;  12/14/92  Andrew Mickish - Added type and parameter declarations
-;;;  04/30/92  Andrew Mickish - Called get-standard-font for small font
-;;;  02/07/92  Andrew Mickish - Added :maybe-constant slots
-;;;  11/30/90  Pavan Reddy - Added use of :format-string slot so floats work.
-;;;  08/01/90  Pavan Reddy - Fixed divide-by-zero error that occurs when
-;;;     :val-1 and :val-2 slots of V-SCROLL-BAR are equal.  Fix contributed
-;;;     by Rod Williams.
-;;;  07/01/90  Andrew Mickish - Removed :box from V-INDICATOR-BOX and placed
-;;;     distinct values in each instance instead.  Changed :visible slot of
-;;;     :INT-FEEDBACK to depend on local :obj-over.
-;;;  01/18/90  Andrew Mickish - Changed :box of V-INDICATOR-BOX to '(0 0 0 0),
-;;;     Added :scroll-p slot to V-SCROLL-BAR, changed :filling-style in
-;;;     BOUNDING-AREA component of V-SCROLL-BAR, added :visible slot to
-;;;     V-INDICATOR-BOX.
-;;;  
+;;   12/14/92  Andrew Mickish - Added type and parameter declarations
+;;   04/30/92  Andrew Mickish - Called get-standard-font for small font
+;;   02/07/92  Andrew Mickish - Added :maybe-constant slots
+;;   11/30/90  Pavan Reddy - Added use of :format-string slot so floats work.
+;;   08/01/90  Pavan Reddy - Fixed divide-by-zero error that occurs when
+;;      :val-1 and :val-2 slots of V-SCROLL-BAR are equal.  Fix contributed
+;;      by Rod Williams.
+;;   07/01/90  Andrew Mickish - Removed :box from V-INDICATOR-BOX and placed
+;;      distinct values in each instance instead.  Changed :visible slot of
+;;      :INT-FEEDBACK to depend on local :obj-over.
+;;   01/18/90  Andrew Mickish - Changed :box of V-INDICATOR-BOX to '(0 0 0 0),
+;;      Added :scroll-p slot to V-SCROLL-BAR, changed :filling-style in
+;;      BOUNDING-AREA component of V-SCROLL-BAR, added :visible slot to
+;;      V-INDICATOR-BOX.
 
+
+
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(V-Scroll-Bar))
   #+garnet-test
   (export '(V-Scroll-Go V-Scroll-Stop
 	    V-Scroll-Obj V-Scroll-Win V-Scroll-Top-Agg)))
 
 
-;;;
-;;; VERTICAL INDICATOR BOX
-;;;
 
+;; VERTICAL INDICATOR BOX
+;;
 (create-instance 'V-INDICATOR-BOX opal:rectangle
    (:top (o-formula (let ((p (kr-path 0 :parent)))
 		      (if (/= (gv p :val-1) (gv p :val-2))
@@ -104,10 +109,9 @@
 			  (and (gv p :scroll-p)
 			       (/= (gv p :val-1) (gv p :val-2)))))))
 
-;;;
-;;; TOP LEVEL AGGREGADGET
-;;;
 
+;; TOP LEVEL AGGREGADGET
+;;
 (create-instance 'V-SCROLL-BAR opal:aggregadget
    :declare ((:parameters :left :top :height :min-width :val-1 :val-2
 			  :scr-incr :page-incr :scr-trill-p :page-trill-p
@@ -213,12 +217,15 @@
    (:interactors
     `((:SLIDE ,slide-inter
 	      (:attach-point :where-hit))
-      (:JUMP ,jump-inter))))
+      (:JUMP ,jump-inter)
+      (:WHEEL-UP ,wheel-up-inter)
+      (:WHEEL-DOWN ,wheel-down-inter
+		   (:extra-function ,#'val-2-WHEEL-fn)))))
 
 
-;;;
+
 ;;;  DEMO FUNCTION
-;;;
+;;
 
 #+garnet-test (defparameter v-scroll-win NIL)
 #+garnet-test (defparameter v-scroll-top-agg NIL)

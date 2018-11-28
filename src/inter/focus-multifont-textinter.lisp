@@ -1,53 +1,50 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
+
+;;; $Id$
+;;
+
+
 ;;; This file contains the keyboard interactors to input a multifont
-;;; text line using a noncontinuous mode.
-;;; It should be loaded after multifont-textinter
-;;;
+;;  text line using a noncontinuous mode.
+;;  It should be loaded after multifont-textinter
 
-#|
-============================================================
-Change log:
-         13-Jul-93 Matt Goldberg - Added conditional call to
-                        inter:delete-lisp-region in Cut-Selection.
-         26-May-93 Mickish/Goldberg - Added lisp mode
-         21-may-93 Brad Myers - new (better) key bindings, and more keywords.
-                        most are in the file multifont-textinter.lisp
-         19-Mar-93 Brad Myers - :after-cursor-moves-func called whenever
-                        anything to the left of the cursor changes
-         3/10/93 Andrew Mickish - When checking whether to kr-send the
-                  :final-function, call Compare-And-Get-Possible-Stop-Event
-         2/01/93 Andrew Mickish - opal:Set-Strings ---> opal:Set-Text
-         8/20/92 Andrew Mickish - Added kr-send of :final-function
-	 5/13/92 Rich McDaniel - Made SET-FOCUS using NIL as the multifont
-                        parameter turn off the focus.
-	 4/6/92  Ed Pervin - Renamed opal:copy-selection to
-			opal:copy-selected-text	so as not conflict
-			with inter:copy-selection.
- 	 2/11/92 Rich McDaniel - started
+;;; Change log:
+;;   13-Jul-93 Matt Goldberg    - Added conditional call to
+;;                                inter:delete-lisp-region in Cut-Selection.
+;;   26-May-93 Mickish/Goldberg - Added lisp mode
+;;   21-may-93 Brad Myers       - new (better) key bindings, and more keywords.
+;;                                most are in the file multifont-textinter.lisp
+;;   19-Mar-93 Brad Myers       - :after-cursor-moves-func called whenever
+;;                                anything to the left of the cursor changes
+;;    3/10/93 Andrew Mickish    - When checking whether to kr-send the
+;;                                :final-function, call Compare-And-Get-Possible-Stop-Event
+;;    2/01/93 Andrew Mickish    - opal:Set-Strings ---> opal:Set-Text
+;;    8/20/92 Andrew Mickish    - Added kr-send of :final-function
+;;    5/13/92 Rich McDaniel     - Made SET-FOCUS using NIL as the multifont
+;;                                parameter turn off the focus.
+;;    4/6/92  Ed Pervin         - Renamed opal:copy-selection to
+;; 			          opal:copy-selected-text so as not conflict
+;;			          with inter:copy-selection.
+;;    2/11/92 Rich McDaniel     - started
 
-============================================================
-|#
 
+
 (in-package "INTERACTORS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export
    '(FOCUS-MULTIFONT-TEXTINTER
      SET-FOCUS
      CUT-SELECTION
      COPY-SELECTION
-     PASTE-SELECTION
-     )
-   ))
+     PASTE-SELECTION)))
 
 
 (declaim (special Focus-Multifont-Textinter))
@@ -60,25 +57,19 @@ Change log:
    (Check-Required-Slots new-Text-schema)
    (Set-Up-Defaults new-Text-schema)
    (when (g-value new-Text-schema :obj-to-change)
-      (set-focus new-Text-schema (g-value new-Text-schema :obj-to-change))
-   )
-)
+      (set-focus new-Text-schema (g-value new-Text-schema :obj-to-change))))
 
 
-;; Default procedure
- 
-;; Go procedure utilities
+
+;;; Go procedure utilities
 
 (defun Focus-Do-Start (an-interactor obj-over event)
-   (if-debug an-interactor (format T "Text starting over ~s~%" obj-over))
-   ;; if obj-to-change supplied, then use that, otherwise use whatever was
-   ;; under the mouse when started
-   (let ((obj (g-value an-interactor :obj-to-change)))
-      (when obj
-         (kr-send an-interactor :stop-action an-interactor obj event)
-      )
-   )
-)
+  (if-debug an-interactor (format T "Text starting over ~s~%" obj-over))
+  ;; if obj-to-change supplied, then use that, otherwise use whatever was
+  ;; under the mouse when started
+  (let ((obj (g-value an-interactor :obj-to-change)))
+    (when obj
+      (kr-send an-interactor :stop-action an-interactor obj event))))
 
 
 (defun Focus-Error (an-interactor &rest args)
@@ -87,11 +78,11 @@ Change log:
 Only the Do-Start procedure state is allowed to be used in this
 interactor.  Somehow the interactor was pulled out of the start state.
 The offending interactor was ~S." an-interactor)
-) 
+)
 
 
-;; Change focus of interactor from one multifont-text to another.
 (defun SET-FOCUS (interactor multifont)
+  "Change focus of interactor from one multifont-text to another."
   (if (or (null multifont) (is-a-p multifont opal:multifont-text))
       (let ((obj (g-value interactor :obj-to-change)))
 	(when obj
@@ -121,13 +112,9 @@ The offending interactor was ~S." an-interactor)
 
 (defun COPY-SELECTION (interactor)
    (let ((string-object (g-value interactor :obj-to-change)))
-      (when string-object
-         (let ((copied-stuff (opal:copy-selected-text string-object)))
-            (s-value interactor :cut-buffer copied-stuff)
-         )
-      )
-   )
-)
+     (when string-object
+       (let ((copied-stuff (opal:copy-selected-text string-object)))
+	 (s-value interactor :cut-buffer copied-stuff)))))
 
 
 (defun PASTE-SELECTION (interactor)
@@ -149,8 +136,9 @@ The offending interactor was ~S." an-interactor)
 	       (inter:event-x event) (inter:event-y event))
       ;; otherwise, edit char into string
       (obj-or-feedback-edit an-interactor obj-over
-			(g-value an-interactor :feedback-obj) event)))
+			    (g-value an-interactor :feedback-obj) event)))
 
+
 ;;; Focus-Multifont-Textinter schema
 (Create-Schema 'inter:focus-multifont-textinter
    (:is-a inter:interactor)
@@ -162,21 +150,21 @@ The offending interactor was ~S." an-interactor)
    (:match-parens-p NIL)
    (:match-obj NIL)
    (:start-event '(:any-keyboard))
-   (:obj-to-change NIL)  ; Must supply.  Determines which multifont-text has
-                         ; the keyboard focus.
+   (:obj-to-change NIL)			; Must supply.  Determines which multifont-text has
+					; the keyboard focus.
    (:cursor-where-press T)
    (:remembered-last-object NIL)
    (:key-translation-table (o-formula (if (gvl :lisp-mode-p)
 					  (gvl :lisp-translation-table)
 					  (gvl :standard-translation-table))))
-   (:standard-translation-table NIL) ;table of translations; set below
-   (:lisp-translation-table NIL) ;table of translations for lisp; set below
+   (:standard-translation-table NIL)	; table of translations; set below
+   (:lisp-translation-table NIL)	; table of translations for lisp; set below
    (:after-cursor-moves-func (o-formula (when (gvl :match-parens-p)
 					  #'check-parens)))
    (:kill-mode NIL)
-   (:edit-func 'Multifont-Edit-String) ; same as regular multifont-textinter
-   (:Go 'General-Go)  ; Proc executed when events happen.
-   (:Do-Start 'Focus-Do-Start) ; Proc executed when event handled.
+   (:edit-func 'Multifont-Edit-String)	; same as regular multifont-textinter
+   (:Go 'General-Go)			; Proc executed when events happen.
+   (:Do-Start 'Focus-Do-Start)		; Proc executed when event handled.
    (:Do-Running 'Focus-Error)
    (:Do-Explicit-Stop 'Focus-Error)
    (:Do-Stop 'Focus-Error)
@@ -188,9 +176,9 @@ The offending interactor was ~S." an-interactor)
 )
 
 
-
+
 ;;; The key translations are the same for the
-;;; focus-multifont-textinter and the multifont-textinter
+;; focus-multifont-textinter and the multifont-textinter
 
 (Set-MultiFont-Default-Key-Translations inter:focus-multifont-textinter)
 (Set-Lisp-Key-Translations inter:focus-multifont-textinter)

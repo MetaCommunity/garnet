@@ -1,26 +1,28 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  H-SCROLL-LOADER:  Loads the module "h-scroll-bar" and "parts"
-;;;                    modules if necessary
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    ;;
 
-#|
-==================================================================
-Change log:
-    03/22/90 Robert Cook - Define the package "GARNET-GADGETS"
-                           for the TI Explorer
-    01/30/89 Andrew Mickish - Added check before loading h-scroll-bar
-    10/19/89 Andrew Mickish - Created
-==================================================================
-|#
 
+;;; $Id::                                                             $
+;;
+;;  H-SCROLL-LOADER:  Loads the module "h-scroll-bar" and "parts"
+;;                    modules if necessary
+
+
+;;; ==================================================================
+;; Change log:
+;;     03/22/90 Robert Cook - Define the package "GARNET-GADGETS"
+;;                            for the TI Explorer
+;;     01/30/89 Andrew Mickish - Added check before loading h-scroll-bar
+;;     10/19/89 Andrew Mickish - Created
+;; ==================================================================
+
+
 (in-package "COMMON-LISP-USER")
 
 ;; check first to see if place is set
@@ -35,9 +37,7 @@ Change log:
 		  (:GAD-h-boxes "GAD-h-boxes")
 		  (:h-scroll-bar "h-scroll-bar")))
     (unless (get :garnet-modules (car pair))
-      (load (common-lisp-user::garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done H-Scroll-Bar.~%"))
 

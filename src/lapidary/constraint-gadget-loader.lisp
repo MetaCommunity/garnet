@@ -59,7 +59,7 @@ Change log:
   Garnet-Lapidary-Pathname)
 
 (dolist (file Garnet-Constraint-Gadget-Files)
-  (load (garnet-pathnames file Garnet-Constraint-Gadget-PathName)
+  (load (merge-pathnames file Garnet-Constraint-Gadget-PathName)
 	:verbose T))
 
 (setf (get :garnet-modules :constraint-gadget) t)

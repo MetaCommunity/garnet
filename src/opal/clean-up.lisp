@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; CHANGE LOG:
 ;;;  8-Jan-92 Mickish Added :in-progress quarantine slot
 ;;;  4-Jan-92 Mickish Rewrote clean-up for *garnet-windows* change
@@ -40,16 +42,6 @@
 You can get a list of all Garnet windows by referencing the variable
 opal::*garnet-windows*."))
 
-
-
-#+allegro-V3.1
-(defun clean-up (&optional (how-to :orphans-only))
-  (declare (ignore how-to))
-  (format t "
-  Sorry, opal:clean-up does not work in Allegro 3.1 due to a bug in
-  the implementation of xlib:query-tree."))
-
-#-allegro-V3.1
 (defun clean-up (&optional (how-to :orphans-only))
   "options are: 
   1) :opal => destroy all garnet windows by calling xlib:destroy-window on

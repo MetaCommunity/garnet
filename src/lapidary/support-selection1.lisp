@@ -89,13 +89,13 @@
 		   (< (sqrt 
 		       (+ (expt (- (g-value obj :y2) (g-value obj :y1)) 2)
 			  (expt (- (g-value obj :x2) (g-value obj :x1)) 2)))
-		      *min-leaf-size*))
+		      +min-leaf-size+))
 		  ((is-a-p obj opal:aggregate)
-		   (or (< (g-value obj :width) *min-agg-size*)
-		       (< (g-value obj :height) *min-agg-size*)))
+		   (or (< (g-value obj :width) +min-agg-size+)
+		       (< (g-value obj :height) +min-agg-size+)))
 		  (t
-		   (or (< (g-value obj :width) *min-leaf-size*)
-		       (< (g-value obj :height) *min-leaf-size*))))
+		   (or (< (g-value obj :width) +min-leaf-size+)
+		       (< (g-value obj :height) +min-leaf-size+))))
 	    (multiple-value-setq (feedback-obj *undersized-feedback-list*)
 				 (get-feedback-obj *undersized-feedback-list*
 						   undersized-feedback-obj)))
@@ -106,7 +106,7 @@
 	   ((is-a-p obj opal:aggregate)
 	    (multiple-value-setq (feedback-obj *agg-feedback-list*)
 	      (get-feedback-obj *agg-feedback-list* opal:circle 
-				filling-style :size *agg-sel-circle-size*)))
+				filling-style :size +agg-sel-circle-size+)))
 	   (t 
 	    (multiple-value-setq (feedback-obj *leaf-feedback-list*)
 	        (get-feedback-obj *leaf-feedback-list* opal:rectangle

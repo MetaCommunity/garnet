@@ -52,7 +52,7 @@
 ;;; don't need to do this after running this macro.
 ;;;
 (defun update-slots-values-changed (object first-changed obj-update-info)
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 1)))
   (let* ((update-slots-values (g-local-value object :update-slots-values))
 	 ;; dzg - changed from GET-LOCAL-VALUE to GET-VALUE
 	 (start-slot-list (get-value object :update-slots))
@@ -83,7 +83,7 @@
 ;;; changed when it is invalidated.
 ;;; If there is no update-slots-values entry, it just returns 0.
 (defun simple-update-slots-values-changed (object)
- (declare (optimize (speed 3) (safety 0)))
+ (declare (optimize (speed 3) (safety 1)))
  (let ((update-slots-values (g-local-value object :update-slots-values)))
   (if update-slots-values
 	;; ecp - changed from GET-LOCAL-VALUE to GET-VALUE
@@ -101,11 +101,11 @@
 ;;; Now makes the aggregate's :old-bbox valid at all times!!!
 ;;; DO NOT CALL THIS UNLESS THE AGGREGATE IS DEFINITELY VISIBLE!!!
 ;;;
-(define-method :update opal:aggregate (agg update-info
+(define-method :update aggregate (agg update-info
 					   line-style-gc filling-style-gc
 					   bbox-1 bbox-2
 					   &optional (total-p NIL))
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 1)))
   (let ((dirty-p (update-info-dirty-p update-info))
 	(agg-bbox (update-info-old-bbox update-info)))
     (when
@@ -122,7 +122,7 @@
 		    (update-info-old-bbox
 		     (setq child-update-info
 			   (g-local-value child :update-info))))
-	      (if (is-a-p child opal:aggregate)
+	      (if (is-a-p child aggregate)
 		(update child child-update-info
 			line-style-gc filling-style-gc bbox-1 bbox-2 total-p)
 		(update child child-update-info bbox-1 bbox-2 total-p))
@@ -140,10 +140,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; This will not be called unless the gob is already visible!!!
-(define-method :update opal:graphical-object (gob update-info
+(define-method :update graphical-object (gob update-info
 						  bbox-1 bbox-2
 						  &optional (total-p NIL))
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 1)))
   (let ((old-bbox (update-info-old-bbox update-info))
 	(a-window (g-value gob :window)))
     ;; Fix for changes from 2.2 to 3.0. ---fmg

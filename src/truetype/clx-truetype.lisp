@@ -18,10 +18,6 @@
 (defvar *Serif-Font-Family* "Times New Roman")
 (defvar *Sans-Serif-Font-Family* "Liberation Sans")
 
-
-(def-kr-type BOOLEAN ()
-  '(member t nil))
-
 (create-instance 'opal::truetype-font opal:graphic-quality
   :declare ((:type (string :family)
 		   (string :subfamily)

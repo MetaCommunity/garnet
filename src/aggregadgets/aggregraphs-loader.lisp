@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-DEBUG; Base: 10 -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER; Base: 10 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;         The Garnet User Interface Development Environment.      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 
 #|
 =========================================================================
@@ -40,7 +42,7 @@ Change log:
 ;;
 (unless (get :garnet-modules :aggregraphs)
   (dolist (file Garnet-Aggregraphs-Files)
-    (load (garnet-pathnames file Garnet-Aggregadgets-PathName)
+    (load (merge-pathnames file Garnet-Aggregadgets-PathName)
 	  :verbose T)))
 
 (setf (get :garnet-modules :aggregraphs)  t)

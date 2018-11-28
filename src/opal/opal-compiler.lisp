@@ -7,6 +7,9 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; $Id$
+;;;
 ;;; Changes:
 ;;; 10/2/03 RGA --- New compile/load protocol
 ;;;        7/28/96 RGA --- changed to use garnet-compile/load
@@ -30,7 +33,19 @@
 
 (in-package "COMMON-LISP-USER")
 
-(eval-when (eval load compile)
+(defvar *debug-opal-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-opal-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-opal-Pathname))
 
 (Defparameter Garnet-Opal-Files
@@ -63,26 +78,21 @@
         "virtual-aggregates"
 	"pixmaps"
         "open-and-close"
-        #-(and apple (not clx)) "x"
-        #+(and apple (not clx)) "mac"))
+;;;        "x"
+    ))
 
-#+(or ALLEGRO APPLE)
+#+ALLEGRO
 (proclaim '(optimize (debug 0)))
 
-(dolist (file Garnet-Opal-Files)
-  (let ((gfile (concatenate 'string "opal:" file)))
-    (garnet-compile gfile)
-    (garnet-load gfile)))
-
-(when *default-garnet-proclaim*
-  (proclaim *default-garnet-proclaim*))
+(with-compilation-unit ()
+  (dolist (file Garnet-Opal-Files)
+    (let ((gfile (concatenate 'string "opal:" file)))
+      (garnet-compile gfile)
+      (garnet-load gfile))))
 
 (garnet-copy-files Garnet-Opal-Src Garnet-Opal-Pathname
 		   '("opal-loader.lisp"
 		     "multifont-loader.lisp"))
 (setf (get :garnet-modules :opal) T)
 
-#+allegro-V3.1 (gc t)
-
-#-apple (gem:init-device :X NIL)
-#+apple (gem:init-device :MAC NIL)
+(gem:init-device :X NIL)

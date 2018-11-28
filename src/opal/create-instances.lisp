@@ -1,203 +1,192 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Opal:Create-Instances.Lisp
-;;;
-;;; This file contains all the calls to KR:Create-Instance which are in Opal.
-;;; They appear in the order in which they are listed in the overall Opal
-;;; hierarchy, which is listed first.  Please keep it that way!
-;;; NOTE:  the first entry of ":update-slots" MUST be :visible (unless the
-;;;   value is NIL), elsewise the update algorithm will break!
-;;;
-;;; Change Log:
-;;;     date     who    what
-;;;     ----     ---    ----
-;;;   12-Sep-95  goldman   Changed the way colormap entries are tracked in
-;;;                        from using a fixed-size array to using a hash-table.
-;;;   25-May-94  amickish  New :max-char-ascent/descent formulas for fonts
-;;;   19-Apr-94  amickish  Reset first-time in first-allocatable-colormap-index
-;;;    5-Mar-94  amickish  Used names for font slot type declarations
-;;;   17-Dec-93  amickish  Gem'ified :font-from-file formula
-;;;   15-Dec-93  amickish  :active-devices slot now contains ?-DEVICE objects
-;;;   23-Aug-93  amickish  Changed default hit-threshold to 0
-;;;   24-May-93  amickish  Changed :width and :height formulas of aggregate to
-;;;                        depend on aggregate's own :left and :top
-;;;    3-May-93  amickish  Added s-value's in :xcolor formula of opal:COLOR;
-;;;                        added :ps-font-name/size to opal::FONT-FROM-FILE
-;;;   19-Apr-93  amickish  Added formulas to opal::FONT-FROM-FILE; added
-;;;                        opal:CURSOR-FONT
-;;;    3-Mar-93  amickish  Added :visible type declaration to VIEW-OBJECT
-;;;   10-Feb-93  amickish  Added :known-as type declaration to VIEW-OBJECT
-;;;   13-Jan-93  amickish  Added :xfont, :max-char-ascent, :max-char-descent,
-;;;                        :font-height, and :char-width slots to opal:font;
-;;;                        added parameter declarations
-;;;   30-Dec-92  amickish  Set :standard-p in get-standard-font for save-agg
-;;;    3-Jun-92  amickish  Added opal:white-line
-;;;    7-Apr-92  amickish  Made Get-Standard-Font use default values if NIL
-;;;                        parameters were supplied and added error checking.
-;;;    2-Apr-92  rgm    new multifont
-;;;   25-Mar-92  amickish  Get-Values ---> G-Value
-;;;   26-Feb-92  ecp    An opal:color may have a :color-name slot with a
-;;;			string like "pink".
-;;;   21-Jan-92  amickish  Made opal:default-font an instance of opal:font,
-;;;                     added constant formula lists.
-;;;    6-Aug-91  dzg    Added extra error checking in formulas for :width
-;;;			and height of aggregate.
-;;;    6-Aug-91  amickish  Added :ps-font-name and :ps-font-size to opal:font
-;;;    5-Aug-91  ecp    Made opal:default-font be same as opal:font.
-;;;   26-Mar-91  ecp    Added :components to :local-only-slots slot of
-;;;			opal:aggregate.
-;;;    7-Mar-91  ecp    The question of whether the screen is color or
-;;;			black-and-white is now determined in defs.lisp.
-;;;   22-Feb-91  amickish  New exported motif colors and filling styles.
-;;;   14-Feb-91  ecp    Yet more changes to color so that colors are
-;;;                     deallocated when they are not used anymore.
-;;;    8-Feb-91  ecp    Added :color-p slot to opal:color to tell if
-;;;                     screen is black-and-white or color.
-;;;   10-Aug-90  loyall Made :width, :height of aggregate not depend
-;;;                     directly on :top, :left.
-;;;    1-Aug-90  dzg    New :local-only-slots slot in opal:view-object
-;;;   19-Jul-90  ecp    Made thickness of line-1 be 1.
-;;;   20-Jun-90  ecp    Temporarily made thickness of dotted-line be 1,
-;;;			due to new CLX bug.
-;;;    4-Jun-90  ecp    Removed inverse relation between :parent and :child
-;;;   16-Apr-90  ecp    Moved creation of default-font earlier.
-;;;   27-Mar-90  ecp    In build-pixmap, changed 0 and 1 to *black*
-;;;			and *white*.
-;;;   19-Mar-90  ecp    Got rid of Garnet-Font-Pathname.
-;;;			Changed :tile to :stipple
-;;;    1-Mar-90  ecp    In build-pixmap, changed the :bitmap-p argument
-;;;			to xlib:put-image from t to nil.
-;;;   13-Feb-90  ecp    Implemented color.
-;;;   25-Jan-90  ecp    Changes to fonts.
-;;;    5-Dec-89  ecp    Moved create-instance of FONT-FROM-FILE earlier.
-;;;     ******* SEE OPAL CHANGE.LOG ********
-;;;   15-Jun-89  koz	Placed Graphic-Quality hierarchy before View-Object
-;;;			to resolve forward references (instead of s-value).
-;;;			This should fix bug that made Cursor-Text not inherit
-;;;			the right slots at creation time.
-;;;   15-Jun-89  koz	Converted from kr:formula to kr:o-formula.
-;;;   15-Jun-89  koz	Extracted all forward references and placed them all
-;;;			in S-VALUEs at the end of this file, or in other files
-;;;			if they needed functions not yet defined...
-;;;   14-Jun-89  koz    Created.  Simply extracted all the calls to kr:create-
-;;;			instance from all the Opal files.  No modifications
-;;;			were made to them.
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id$
+;;
+
+
+;;; Opal:Create-Instances.Lisp
+;; 
+;;  This file contains all the calls to KR:Create-Instance which are in Opal.
+;;  They appear in the order in which they are listed in the overall Opal
+;;  hierarchy, which is listed first.  Please keep it that way!
+;;  NOTE:  the first entry of ":update-slots" MUST be :visible (unless the
+;;    value is NIL), elsewise the update algorithm will break!
+
+
+;;; Change Log:
+;;      date     who    what
+;;      ----     ---    ----
+;;    12-Sep-95  goldman   Changed the way colormap entries are tracked in
+;;                         from using a fixed-size array to using a hash-table.
+;;    25-May-94  amickish  New :max-char-ascent/descent formulas for fonts
+;;    19-Apr-94  amickish  Reset first-time in first-allocatable-colormap-index
+;;     5-Mar-94  amickish  Used names for font slot type declarations
+;;    17-Dec-93  amickish  Gem'ified :font-from-file formula
+;;    15-Dec-93  amickish  :active-devices slot now contains ?-DEVICE objects
+;;    23-Aug-93  amickish  Changed default hit-threshold to 0
+;;    24-May-93  amickish  Changed :width and :height formulas of aggregate to
+;;                         depend on aggregate's own :left and :top
+;;     3-May-93  amickish  Added s-value's in :xcolor formula of opal:COLOR;
+;;                         added :ps-font-name/size to opal::FONT-FROM-FILE
+;;    19-Apr-93  amickish  Added formulas to opal::FONT-FROM-FILE; added
+;;                         opal:CURSOR-FONT
+;;     3-Mar-93  amickish  Added :visible type declaration to VIEW-OBJECT
+;;    10-Feb-93  amickish  Added :known-as type declaration to VIEW-OBJECT
+;;    13-Jan-93  amickish  Added :xfont, :max-char-ascent, :max-char-descent,
+;;                         :font-height, and :char-width slots to opal:font;
+;;                         added parameter declarations
+;;    30-Dec-92  amickish  Set :standard-p in get-standard-font for save-agg
+;;     3-Jun-92  amickish  Added opal:white-line
+;;     7-Apr-92  amickish  Made Get-Standard-Font use default values if NIL
+;;                         parameters were supplied and added error checking.
+;;     2-Apr-92  rgm    new multifont
+;;    25-Mar-92  amickish  Get-Values ---> G-Value
+;;    26-Feb-92  ecp    An opal:color may have a :color-name slot with a
+;; 			string like "pink".
+;;    21-Jan-92  amickish  Made opal:default-font an instance of opal:font,
+;;                      added constant formula lists.
+;;     6-Aug-91  dzg    Added extra error checking in formulas for :width
+;; 			and height of aggregate.
+;;     6-Aug-91  amickish  Added :ps-font-name and :ps-font-size to opal:font
+;;     5-Aug-91  ecp    Made opal:default-font be same as opal:font.
+;;    26-Mar-91  ecp    Added :components to :local-only-slots slot of
+;; 			opal:aggregate.
+;;     7-Mar-91  ecp    The question of whether the screen is color or
+;; 			black-and-white is now determined in defs.lisp.
+;;    22-Feb-91  amickish  New exported motif colors and filling styles.
+;;    14-Feb-91  ecp    Yet more changes to color so that colors are
+;;                      deallocated when they are not used anymore.
+;;     8-Feb-91  ecp    Added :color-p slot to opal:color to tell if
+;;                      screen is black-and-white or color.
+;;    10-Aug-90  loyall Made :width, :height of aggregate not depend
+;;                      directly on :top, :left.
+;;     1-Aug-90  dzg    New :local-only-slots slot in opal:view-object
+;;    19-Jul-90  ecp    Made thickness of line-1 be 1.
+;;    20-Jun-90  ecp    Temporarily made thickness of dotted-line be 1,
+;; 			due to new CLX bug.
+;;     4-Jun-90  ecp    Removed inverse relation between :parent and :child
+;;    16-Apr-90  ecp    Moved creation of default-font earlier.
+;;    27-Mar-90  ecp    In build-pixmap, changed 0 and 1 to *black*
+;; 			and *white*.
+;;    19-Mar-90  ecp    Got rid of Garnet-Font-Pathname.
+;; 			Changed :tile to :stipple
+;;     1-Mar-90  ecp    In build-pixmap, changed the :bitmap-p argument
+;; 			to xlib:put-image from t to nil.
+;;    13-Feb-90  ecp    Implemented color.
+;;    25-Jan-90  ecp    Changes to fonts.
+;;     5-Dec-89  ecp    Moved create-instance of FONT-FROM-FILE earlier.
+;;      ******* SEE OPAL CHANGE.LOG ********
+;;    15-Jun-89  koz	Placed Graphic-Quality hierarchy before View-Object
+;; 			to resolve forward references (instead of s-value).
+;; 			This should fix bug that made Cursor-Text not inherit
+;; 			the right slots at creation time.
+;;    15-Jun-89  koz	Converted from kr:formula to kr:o-formula.
+;;    15-Jun-89  koz	Extracted all forward references and placed them all
+;; 			in S-VALUEs at the end of this file, or in other files
+;; 			if they needed functions not yet defined...
+;;    14-Jun-89  koz    Created.  Simply extracted all the calls to kr:create-
+;; 			instance from all the Opal files.  No modifications
+;; 			were made to them.
+
+;;; The Opal Hierarchy
+;;
+
+;; opal:GRAPHIC-QUALITY
+;; 	opal:FONT
+;; 		opal:DEFAULT-FONT
+;; 	opal:COLOR
+;; 		opal:WHITE
+;; 		opal:BLACK
+;; 		opal:RED
+;; 		opal:GREEN
+;; 		opal:BLUE
+;; 		opal:YELLOW
+;; 		opal:CYAN
+;; 		opal:ORANGE
+;; 		opal:PURPLE
+;; 		opal:MOTIF-GRAY
+;; 		opal:MOTIF-BLUE
+;; 		opal:MOTIF-ORANGE
+;; 		opal:MOTIF-GREEN
+;; 	opal:LINE-STYLE
+;; 		opal:DEFAULT-LINE-STYLE
+;; 		opal:THIN-LINE
+;; 		opal:LINE-0
+;; 		opal:LINE-1
+;; 		opal:LINE-2
+;; 		opal:LINE-4
+;; 		opal:LINE-8
+;; 		opal:DOTTED-LINE
+;; 		opal:DASHED-LINE
+;; 		opal:RED-LINE
+;; 		opal:GREEN-LINE
+;; 		opal:BLUE-LINE
+;; 		opal:YELLOW-LINE
+;; 		opal:ORANGE-LINE
+;; 		opal:CYAN-LINE
+;; 		opal:PURPLE-LINE
+;; 		opal:WHITE-LINE
+;; 	opal:FILLING-STYLE
+;; 		opal:DEFAULT-FILLING-STYLE
+;; 		opal:WHITE-FILL
+;; 		opal:LIGHT-GRAY-FILL
+;; 		opal:GRAY-FILL
+;; 		opal:DARK-GRAY-FILL
+;; 		opal:BLACK-FILL
+;; 		opal:RED-FILL
+;; 		opal:GREEN-FILL
+;; 		opal:BLUE-FILL
+;; 		opal:YELLOW-FILL
+;; 		opal:ORANGE-FILL
+;; 		opal:CYAN-FILL
+;; 		opal:PURPLE-FILL
+;; 		opal:MOTIF-GRAY-FILL
+;; 		opal:MOTIF-BLUE-FILL
+;; 		opal:MOTIF-ORANGE-FILL
+;; 		opal:MOTIF-GREEN-FILL
+;; 	opal:FONT-FROM-FILE
+;;   opal:VIEW-OBJECT
+;; 	opal:AGGREGATE
+;; 		opal:MULTIFONT-TEXT
+;; 		opal:AGGREGADGET
+;; 		opal:AGGRELIST
+;; 	opal:GRAPHICAL-OBJECT
+;; 		opal:LINE
+;; 		opal:RECTANGLE
+;; 			opal:ROUNDTANGLE
+;; 		opal:ARC
+;; 			opal:OVAL
+;; 			opal:CIRCLE
+;; 		opal:MULTIPOINT
+;; 			opal:POLYLINE
+;;                               opal:ARROWHEAD
+;; 		opal:TEXT
+;; 			opal:CURSOR-TEXT
+;;                       opal:MULTI-TEXT
+;;                               opal:CURSOR-MULTI-TEXT
+;; 		opal:BITMAP
+;; 			opal::WHITE-FILL-BITMAP
+;; 			opal::LIGHT-GRAY-FILL-BITMAP
+;; 			opal::GRAY-FILL-BITMAP
+;; 			opal::DARK-GRAY-FILL-BITMAP
+;; 			opal:ARROW-CURSOR
+;; 			opal:ARROW-CURSOR-MASK
+;; 			opal:PIXMAP
+;; 		opal:VIRTUAL-AGGREGATE
+;; 	opal:WINDOW
+
+
 (in-package "OPAL")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; I *hate* to do this, but this function needs to go here so that the
-;;; the reference to it below doesn't generate a warning at compile time.  Of
-;;; course, we *should* be able to just declare it, but no...  Bug in compiler!
-;;;
-(defun build-pixmap (a-window image width height bitmap-p)
-  (gem:create-pixmap a-window width height 1 image bitmap-p))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;  The Opal Hierarchy  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#|
-  opal:GRAPHIC-QUALITY
-	opal:FONT
-		opal:DEFAULT-FONT
-	opal:COLOR
-		opal:WHITE
-		opal:BLACK
-		opal:RED
-		opal:GREEN
-		opal:BLUE
-		opal:YELLOW
-		opal:CYAN
-		opal:ORANGE
-		opal:PURPLE
-		opal:MOTIF-GRAY
-		opal:MOTIF-BLUE
-		opal:MOTIF-ORANGE
-		opal:MOTIF-GREEN
-	opal:LINE-STYLE
-		opal:DEFAULT-LINE-STYLE
-		opal:THIN-LINE
-		opal:LINE-0
-		opal:LINE-1
-		opal:LINE-2
-		opal:LINE-4
-		opal:LINE-8
-		opal:DOTTED-LINE
-		opal:DASHED-LINE
-		opal:RED-LINE
-		opal:GREEN-LINE
-		opal:BLUE-LINE
-		opal:YELLOW-LINE
-		opal:ORANGE-LINE
-		opal:CYAN-LINE
-		opal:PURPLE-LINE
-		opal:WHITE-LINE
-	opal:FILLING-STYLE
-		opal:DEFAULT-FILLING-STYLE
-		opal:WHITE-FILL
-		opal:LIGHT-GRAY-FILL
-		opal:GRAY-FILL
-		opal:DARK-GRAY-FILL
-		opal:BLACK-FILL
-		opal:RED-FILL
-		opal:GREEN-FILL
-		opal:BLUE-FILL
-		opal:YELLOW-FILL
-		opal:ORANGE-FILL
-		opal:CYAN-FILL
-		opal:PURPLE-FILL
-		opal:MOTIF-GRAY-FILL
-		opal:MOTIF-BLUE-FILL
-		opal:MOTIF-ORANGE-FILL
-		opal:MOTIF-GREEN-FILL
-	opal:FONT-FROM-FILE
-  opal:VIEW-OBJECT
-	opal:AGGREGATE
-		opal:MULTIFONT-TEXT
-		opal:AGGREGADGET
-		opal:AGGRELIST
-	opal:GRAPHICAL-OBJECT
-		opal:LINE
-		opal:RECTANGLE
-			opal:ROUNDTANGLE
-		opal:ARC
-			opal:OVAL
-			opal:CIRCLE
-		opal:MULTIPOINT
-			opal:POLYLINE
-                                opal:ARROWHEAD
-		opal:TEXT
-			opal:CURSOR-TEXT
-                        opal:MULTI-TEXT
-                                opal:CURSOR-MULTI-TEXT
-		opal:BITMAP
-			opal::WHITE-FILL-BITMAP
-			opal::LIGHT-GRAY-FILL-BITMAP
-			opal::GRAY-FILL-BITMAP
-			opal::DARK-GRAY-FILL-BITMAP
-			opal:ARROW-CURSOR
-			opal:ARROW-CURSOR-MASK
-			opal:PIXMAP
-		opal:VIRTUAL-AGGREGATE
-	opal:WINDOW
-
-|#
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;  Graphic-Quality Hierarchy  ;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Graphic-Quality Hierarchy
+;;
 
 (create-instance 'GRAPHIC-QUALITY NIL)
 
@@ -236,10 +225,10 @@
   (s-value fff :font-from-file fff))
 
 (setf (gethash '(:fixed :roman :medium) *font-hash-table*)
-  (create-instance 'opal::default-font-from-file opal:font-from-file
-    (:font-name (o-formula (gem:make-font-name
-                            (gv DEVICE-INFO :current-device)
-                            '(:fixed :roman :medium))))))
+      (create-instance 'default-font-from-file font-from-file
+	(:font-name (o-formula (gem:make-font-name
+				(gv DEVICE-INFO :current-device)
+				'(:fixed :roman :medium))))))
 
 (defun fff-to-xfont (fff root-window)
   (gem:font-to-internal root-window fff))
@@ -257,7 +246,7 @@
   (:size :medium)
   (:xfont (o-formula (fff-to-xfont (gvl :font-from-file)
 				   (gv device-info :current-root))))
-  (:char-width (o-formula (if (eq (gvl :family) :fixed)
+  (:char-width (o-formula (when (eq (gvl :family) :fixed)
 			    (gem:text-width (gv device-info :current-root)
 					    (gv :self) "X"))))
   (:max-char-ascent
@@ -278,8 +267,10 @@
 		      (create-instance NIL font-from-file
 		        (:font-name font-name)))
 	        (progn
-		  (warn "~A not allowed for :~A slot of font; substituting default-font." (car font-name) (cdr font-name))
-		  opal::default-font-from-file))))))))
+		  (warn "~A not allowed for :~A slot of font; substituting default-font." 
+			(car font-name)
+			(cdr font-name))
+		  default-font-from-file))))))))
 
 (create-instance 'DEFAULT-FONT FONT
    (:constant T))
@@ -288,7 +279,7 @@
   (:constant T)
   (:font-name "cursor"))
 
-;;; Used in multifonts
+;; Used in multifonts
 (defvar *Font-Table* (make-array '(3 4 4)
       :initial-contents '(((nil nil nil nil) (nil nil nil nil)
                            (nil nil nil nil) (nil nil nil nil))
@@ -298,6 +289,7 @@
                            (nil nil nil nil) (nil nil nil nil)))))
 
 ;; Fetch a font from the font table corresponding to the attribute parameters.
+;;
 (defun GET-STANDARD-FONT (family face size)
   "
 Get-Standard-Font returns a font object.  If this function is called multiple
@@ -344,7 +336,7 @@ avoiding wasted objects.
       ;; Find out the first colormap index that you are actually allowed to
       ;; allocate and deallocate.
       ;;THIS WON'T WORK ON A TRUE-COLOR SCREEN! [1995/12/08:goldman]
-      (if *read-write-colormap-cells-p*
+      (when gem:*read-write-colormap-cells-p*
 	(setq *first-allocatable-colormap-index*
 	      (gem:colormap-property root-window :FIRST-ALLOCATABLE-INDEX)))
       (setf first-time NIL))
@@ -362,8 +354,7 @@ avoiding wasted objects.
 
 (create-instance 'COLOR GRAPHIC-QUALITY
   :declare ((:parameters :red :green :blue :color-name)
-	    (:type #+(or lucid allegro-V3.1) (number :red :green :blue)
-		   #-(or lucid allegro-V3.1) ((real 0 1) :red :green :blue)
+	    (:type ((real 0 1) :red :green :blue)
 		   ((or string atom) :color-name))
 	    (:constant :color-p))
   (:red 1.0)
@@ -373,17 +364,17 @@ avoiding wasted objects.
   (:xcolor (o-formula
 	    (let ((name (gvl :color-name)))
 	      (if name
-		(multiple-value-bind (red green blue)
-		    (gem:colormap-property (gv device-info :current-root)
-					   :LOOKUP-RGB name)
-		  ;; The PS module needs the RGB values
-		  (s-value (gv :self) :red red)
-		  (s-value (gv :self) :green green)
-		  (s-value (gv :self) :blue blue)
-		  name)
-		(gem:colormap-property
-		 (gv device-info :current-root)
-		 :MAKE-COLOR (gvl :red) (gvl :green) (gvl :blue))))))
+		  (multiple-value-bind (red green blue)
+		      (gem:colormap-property (gv device-info :current-root)
+					     :LOOKUP-RGB name)
+		    ;; The PS module needs the RGB values
+		    (s-value (gv :self) :red red)
+		    (s-value (gv :self) :green green)
+		    (s-value (gv :self) :blue blue)
+		    name)
+		  (gem:colormap-property
+		   (gv device-info :current-root)
+		   :MAKE-COLOR (gvl :red) (gvl :green) (gvl :blue))))))
   (:colormap-index
    (o-formula
     (let* ((root-window (gv device-info :current-root))
@@ -391,32 +382,27 @@ avoiding wasted objects.
 	   (new-index (gem:colormap-property root-window :ALLOC-COLOR
 					     (gvl :xcolor))))
       ;;changed the following [1995/12/08:goldman]
-      (when *read-write-colormap-cells-p*
-	(if (and old-index
-		 (>= old-index
-		     (first-allocatable-colormap-index root-window))
-		 (zerop (decf (gethash old-index *colormap-index-table*)))
-;		 (zerop (decf (aref *colormap-index-table* old-index)))
-		 )
+      (when gem:*read-write-colormap-cells-p*
+	(when (and old-index
+		   (>= old-index
+		       (first-allocatable-colormap-index root-window))
+		   (zerop (decf (gethash old-index *colormap-index-table*))))
 	  (gem:colormap-property root-window :FREE-COLORS (list old-index)))
-	(incf (gethash new-index *colormap-index-table* 0))
-;	(incf (aref *colormap-index-table* new-index))
-	)
+	(incf (gethash new-index *colormap-index-table* 0)))
       new-index))))
 	
 
-(define-method :destroy-me opal:color (hue)
-  (if *is-this-a-color-screen?*
-      (let ((index (g-cached-value hue :colormap-index)))
-        (dolist (device (g-value DEVICE-INFO :active-devices))
-          (let ((root-window (g-value device :root-window)))
-	    (if (and index
+(define-method :destroy-me COLOR (hue)
+  (when gem:*color-screen-p*
+    (let ((index (g-cached-value hue :colormap-index)))
+      (dolist (device (g-value DEVICE-INFO :active-devices))
+	(let ((root-window (g-value device :root-window)))
+	  (when (and index
 		     ;;replaced the old array with a hash-table
-		     (zerop (decf (gethash old-index *colormap-index-table*)))
-;		     (zerop (decf (aref *colormap-index-table* index)))
+		     (zerop (decf (gethash index *colormap-index-table*)))
 		     (>= index (first-allocatable-colormap-index root-window)))
-                (gem:colormap-property root-window
-                                       :FREE-COLORS (list index)))))))
+	    (gem:colormap-property root-window
+				   :FREE-COLORS (list index)))))))
   (destroy-schema hue))
 
 				    
@@ -447,17 +433,17 @@ avoiding wasted objects.
 (create-instance 'BLACK color
   (:red 0.0) (:green 0.0) (:blue 0.0))
 
-(create-instance 'opal:LINE-STYLE opal:graphic-quality
-  :declare ((:type (integer :line-thickness)
+(create-instance 'LINE-STYLE graphic-quality
+  :declare ((:type (fixnum :line-thickness) ;(integer :line-thickness)
 		   (keyword :line-style :cap-style :join-style)
 		   ((is-a-p color) :foreground-color :background-color))
 	    (:maybe-constant :line-thickness :line-style :cap-style :join-style
 			     :dash-pattern :foreground-color :background-color
 			     :stipple))
   (:line-thickness 0)
-  (:line-style :solid)    ;; or :dash or :double-dash
-  (:cap-style :butt)      ;; or :not-last, :round or :projecting
-  (:join-style :miter)    ;; or :round or :bevel
+  (:line-style :solid)			; or :dash or :double-dash
+  (:cap-style :butt)			; or :not-last, :round or :projecting
+  (:join-style :miter)			; or :round or :bevel
   (:dash-pattern nil)
   (:foreground-color black)
   (:background-color white)
@@ -537,16 +523,16 @@ avoiding wasted objects.
 
 (create-instance 'DEFAULT-FILLING-STYLE filling-style)
 
-;;;; For the *-FILL schemas, please see the end of this file (to avoid
-;;;; forward references, they had to be put there)....
+;; For the *-FILL schemas, please see the end of this file (to avoid
+;; forward references, they had to be put there)....
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;  View-Object Hierarchy  ;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; View-Object Hierarchy
+;;
 
-(create-instance 'opal:VIEW-OBJECT NIL
-  :declare ((:type (integer :left :top)
-		   ((integer 0) :width :height :hit-threshold)
+(create-instance 'VIEW-OBJECT NIL
+  :declare ((:type (fixnum :left :top) ; (integer :left :top)
+		   (#-(and) (integer 0) #+(and) fixnum :width :height :hit-threshold)
 		   (known-as-type :known-as)
 		   (kr-boolean :visible))
 	    (:update-slots :visible :fast-redraw-p)
@@ -568,20 +554,20 @@ avoiding wasted objects.
   (:global-limit-values 5))
 
 
-;;; Aggregates allow for a group of graphical-objects to be associated
-;;; together to form a new, more complex object.
-;;;
-;;; An implementation detail:
-;;; The children of a gob are stored in a list from bottom most to top
-;;; most, since we want to redraw fastest and redraws occur from bottom to
-;;; top.
-
-(create-instance 'opal:AGGREGATE opal:view-object
+;; Aggregates allow for a group of graphical-objects to be associated
+;; together to form a new, more complex object.
+;;
+;; An implementation detail:
+;; The children of a gob are stored in a list from bottom most to top
+;; most, since we want to redraw fastest and redraws occur from bottom to
+;; top.
+(create-instance 'AGGREGATE view-object
   :declare (:type (list :components))
   (:components)
-  (:update-slots NIL)	;; New update does not use AGGREGATE'S visible!
+  (:update-slots NIL) ; New update does not use AGGREGATE'S visible!
   (:left (o-formula
           (let ((min-x 999999))
+	    (declare (fixnum min-x))
 	    (dolist (child (gv-local (gv :self) :components))
 	      (when (gv child :visible)
 		(setf min-x (min min-x (gv child :left)))))
@@ -589,6 +575,7 @@ avoiding wasted objects.
 	  0))
   (:top (o-formula
 	 (let ((min-y 999999))
+	   (declare (fixnum min-y))
 	   (dolist (child (gv-local (gv :self) :components))
 	     (when (gv child :visible)
 	       (setf min-y (min min-y (gv child :top)))))
@@ -597,6 +584,7 @@ avoiding wasted objects.
   (:width (o-formula
 	   (let ((max-x -999999)
 		 (min-x (gvl :left)))
+	     (declare (fixnum max-x min-x))
 	     (dolist (child (gv-local (gv :self) :components))
 	       (when (gv child :visible)
 		 (setf max-x (max max-x (+ (or (gv child :left) 0)
@@ -605,6 +593,7 @@ avoiding wasted objects.
   (:height (o-formula
 	    (let ((max-y -999999)
 		  (min-y (gvl :top)))
+	      (declare (fixnum max-y min-y))
 	      (dolist (child (gv-local (gv :self) :components))
                  (when (gv child :visible)
                    (setf max-y (max max-y (+ (or (gv child :top) 0)
@@ -615,22 +604,22 @@ avoiding wasted objects.
 			    (or (null parent) (gv parent :visible)))
                        t))
 
-#| TOA OMITTED
-  ;; The TOA is the Topmost-Overlapping-Aggregate.  This slot will hopefully
-  ;; improve the performance of the update algorithm.  The formula given here
-  ;; is only for AGGREGATEs.  A different one appears within Graphical-Object.
-  (:toa (o-formula
-	  (let ((parent (gvl :parent)))
-	    (or (and parent (gv parent :toa))
-		(if (gvl :overlapping) kr::*schema-self*)))))
-|#
+  ;;; TOA OMITTED
+  ;;; ;; The TOA is the Topmost-Overlapping-Aggregate.  This slot will hopefully
+  ;;; ;; improve the performance of the update algorithm.  The formula given here
+  ;;; ;; is only for AGGREGATEs.  A different one appears within Graphical-Object.
+  ;;; (:toa (o-formula
+  ;;; 	  (let ((parent (gvl :parent)))
+  ;;; 	    (or (and parent (gv parent :toa))
+  ;;; 		(if (gvl :overlapping) kr::*schema-self*)))))
+
 )
 
 
-;;; Class Graphical-object
-(create-instance 'opal:GRAPHICAL-OBJECT opal:view-object
-  :declare ((:type ((or (is-a-p opal:line-style) null) :line-style)
-		   ((or (is-a-p opal:filling-style) null) :filling-style)
+;; Class Graphical-object
+(create-instance 'GRAPHICAL-OBJECT view-object
+  :declare ((:type ((or (is-a-p line-style) null) :line-style)
+		   ((or (is-a-p filling-style) null) :filling-style)
 		   ((member :copy :xor :no-op :or :clear :set :copy-inverted
 			    :invert :and :equiv :nand :nor :and-inverted
 			    :and-reverse :or-inverted :or-reverse)
@@ -646,12 +635,12 @@ avoiding wasted objects.
   (:filling-style nil)
   (:select-outline-only nil)
 
-#| OMITTING TOA
-  ;; The TOA is the Topmost-Overlapping-Aggregate.  This slot will hopefully
-  ;; improve the performance of the update algorithm.  The formula given here
-  ;; is for NON-AGGREGATE objects.  A different one appears within Aggregates.
-  (:toa (o-formula
-	  (let ((parent (gvl :parent)))
-	    (and parent (gv parent :toa)))))
-|#
+ ;;; OMITTING TOA
+ ;;;  ;; The TOA is the Topmost-Overlapping-Aggregate.  This slot will hopefully
+ ;;;  ;; improve the performance of the update algorithm.  The formula given here
+ ;;;  ;; is for NON-AGGREGATE objects.  A different one appears within Aggregates.
+ ;;;  (:toa (o-formula
+ ;;; 	  (let ((parent (gvl :parent)))
+ ;;; 	    (and parent (gv parent :toa)))))
+
   )

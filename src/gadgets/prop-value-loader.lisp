@@ -26,9 +26,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :prop-value)
   (format t "Loading Prop-Value...~%")
-  (load (common-lisp-user::garnet-pathnames "prop-value-gadgets"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "prop-value-gadgets" Garnet-Gadgets-PathName)
             :verbose T)
   (format t "...Done Prop-Value.~%"))
 

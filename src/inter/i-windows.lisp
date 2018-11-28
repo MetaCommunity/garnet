@@ -1,164 +1,161 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#|
-============================================================
-Change log:
-  10/03/03 RGA --- Carbon Compatability fix.
-  08/24/98 Lyle Borg-Graham - Fix race condition on button press.
-  10/27/95 RGA --- Add check for valid window is many handlers.
-  01/30/95 Andrew Mickish - New default-event-handler for CMUCL
-  06/14/94 Myers/Mickish - Added Mac switches in Wait-Interaction-Complete
-  02/03/94 Andrew Mickish - Check-Double-Press and Set-Interest-In-Moved
-             now in Gem (in x-inter.lisp)
-  01/19/94 Andrew Mickish - Translate-Mouse-Character and Translate-Character
-             are now Gem methods
-  01/15/94 Andrew Mickish - Made inter:main-event-loop a no-op for the Mac
-  01/05/94 Andrew Mickish - Ibid, with main-event-loop
-  12/05/93 Andrew Mickish - Call default-event-handler with current-root, not
-             display, in Wait-Interaction-Complete
-  10/25/93 Andrew Mickish - Called xlib:display-force-output in
-             Set-Interest-In-Moved after changing event-mask
-   9/06/93 Clive Tong - Gave *Process-With-Main-Event-Loop* value in LispWorks
-   7/16/93 Andrew Mickish - LispWorks does not need to eat the garnet-break-key
-                            event at the end of main-event-loop
-   7/15/93 Andrew Mickish - #+lcl3.0 ---> #+lucid
-   6/21/93 Brad Myers - make window enter/leave events depend on
-                         window :want-enter-leave-events slot
-   3/17/93 Dave Kosbie - added "verbose" keyword to "Transcript-events-from-
-                            file".  If NIL, no formats or warp-pointers.
-   3/12/93 Brad Myers - add window enter and exit events; small bug in w-i-c
-   3/05/93 Andrew Mickish - Added type and parameter declarations to
-                            inter:interactor-window
-   1/20/93 Dave Kosbie - Made change of 1/18 more robust and faster, added
-			 inter::katie-window object
-   1/18/93 Dave Kosbie-Replaced *katie-event-hook* with *check-katie-events?*
-			 and placed KATIE event checking higher up, so now it
-			 is in #'default-event-handler.
-  12/10/92 Andrew Mickish - *drawable-to-window-mapping* --> *garnet-windows*
-  10/22/92 Brad Myers - set variable so animation process can avoid running if
-                        main-event-loop crashes
-  10/21/92 Dave Kosbie - Now sets "state" field of "event" struct for
-				mouse and keyboard actions (for Katie)
-   9/25/92 Brad Myers - Need a display-force-output in change-window-multi-grab
-   8/19/92 Brad Myers - fixed bugs with wait-interaction-complete and
-                        main-event-loop-process.
-                      - made modal windows go off if window is iconified.
-   8/10/92 Andrew Mickish - Added check in main-event-loop to do nothing if
-                            already in main-event-loop
-    8/3/92 Brad Myers - fixed bug with nested wait-interaction-complete's
-    7/13/92 Dave Kosbie (koz) - Added Trans-Out-And-Process-Current-Event,
-                         which provides a central dispatch point for mouse
-                         and keyboard events and a hook for KATIE --
-                         inter::*katie-event-hook*.  Also made a minor
-                         change to Read-All-Transcript-Events.
-    7/12/92 Dave Kosbie (koz) - Changed call to "event-timer" to "event-char"
-                         in Read-All-Transcript-Events
-    5/22/92 Brad Myers - added :modal-p T windows
-    5/19/92 Brad Myers - fix so new windows will work with inters that have
-                           (:window T)
-    4/22/92 Pervin - Switch common-lisp-user::launch-process-p tells whether to
-			launch process at load time.
-                     Used new function opal:main-event-loop-process-running-p
-    4/14/92 Ed Pervin - uncommented out process code.  Got it to work on HP.
-    4/8/92  Brad Myers - removed (setq opal::*inside-main-event-loop* nil) from
-                         wait-interactor-complete.
-                       - fixed compile complaint for HANDLE-CASE
-    3/31/92 Brad Myers - allow transcription to create window
-                         (thanks to Roderick J Williams).
-                       - fixed in case set-interest-in-move before update
-    3/30/92 Pervin -Temporarily commented out process code.
-    3/25/92 Mickish - Added THE type declarations to eliminate CMUCL warnings
-    3/25/92 Pervin - Now, default-event-handler belongs to the interactors
-                     package, and is only defined in this file (not
-                     opal/windows.lisp).
-    3/23/92 Brad Myers - make sure interactors are consistent before destroying
-                         a window.  Made wait-interaction-complete
-                         turn off main-event-loop-process.  Remove get-values.
-    3/20/92 Pervin - Implemented opal:launch-main-event-loop-process so
-			that you need not explicitly enter main-event-loop
-			in CMU, Allegro or Lucid.
-    3/05/92 Pervin - Must disable and re-enable default-event-handler
-		in cmucl when you redeclare it.
-    3/02/92 Mickish - Added #+cmu (declare (ignore ...)) in main-event-loop
-    3/01/92 Brad Myers - repeatedly return double-click
-    2/13/92 Brad Myers - flush all pending characters before entering m-e-l
-    1/30/92 Brad Myers - added double-click
-                       - grab mouse when multi-windows
-     1/3/92 Brad Myers - New functions Interaction-Complete and
-                         Wait-Interaction-Complete.
-                       - comment out call to xlib:display-finish-output in
-                           set-interest-in-moved
-                       - made opal::*inside-main-event-loop* more reliable
-    11/5/91 Irwin - You may now destroy a window using f.delete or f.kill.
-    10/24/91 Pervin - Exit main-event-loop automatically if no window is
-                      visible.  Also, main-event-loop no longer takes optional
-                      window argument
-    7/10/91 Andrew Mickish - Added Pop-Up-Win-And-Start-Interactor
-    8/02/90 Ed Pervin - Calls to Reparent-Notify must pass along event-window.
-    7/25/90 Ed Pervin - Fixed bug so main-event-loop won't crash if you
-			call it before you've ever created a window.
-    7/11/90 Ed Pervin - new :destroy-me method
-    7/2/90 Pervin  If an expose event occurs, just refresh the parts
-                   of the window that were exposed.
-    6/7/90 Brad Myers - Create and read back a transcript of events
-    6/5/90 Brad Myers - fixed bug where motion events got the wrong window
-    5/8/90 Sannella - In Motion-Notify, discard extra events.
-    4/9/90 Pervin/Cook - Changes to main-event-loop to work better in Lucid
-			 Also indented lines starting with #+cmu or #-cmu.
-    3/22/90 Robert Cook - Changed #+(or allegro lcl3.0) to
-			  #+(or allegro lcl3.0 explorer).
-    2/22/90  Brad Myers - removed the :exposure from *report-motion-pem
-			  that was causing errors in some CLX's
-    12/13/89 Ed Pervin changed #+lcl3.0 to #+(or allegro lcl3.0) in one spot.
-    12/11/89 Ed Pervin - hitting *garnet-break-key* exits main event loop in Lucid.
-                        Uncommented a loop in Motion-Notify so as to throw away
-			unnecessary motion events in Lucid 3.0.
-    12/5/89 Ed Pervin - added a couple ignore declarations
-    11/7/89 Ed Pervin - all changes marked by #-cmu
-    10/6/89 Brad Myers - change name of *event* to *Current-Event* and
-			 export it
-    10/4/89 Roger Dannenberg - Change debugging output
-    8/23/89 Brad Myers - Moved event record to interactors.lisp and made
-			 destroy on the window only have one parameter.
-    7/11/89 David Kosbie and Brad Myers - faster updates
-    7/03/89 Brad Myers - Save a list of all interactor windows
-    6/26/89 Brad Myers - Fixed to have quote for create-schema
-    4/19/89 Brad Myers - *schema-call -> call-method, etc.
-		         *Window in event record
-    4/10/89 lkb - event-downp now set correctly in Button-Press
-    4/07/89 Brad Myers and Dario Giuse - Changed to new KR
-    4/05/89 lkb - checked to be sure window is valid before setting
-		  its event mask in update
-    4/05/89 lkb - same checking as above in all the event routines
-    4/03/89 lkb - added fields to event structure, to accomodate switching to
-                  using portable keywords like (:shift-leftdown), instead of
-                  #\super-leftdown
-    3/28/89 Brad Myers - Mouse moved return last point, not first
-			 point of throw-aways
-    3/11/89 lkb - changed call to opal::destroy-notify to comply with new
-                  release of windows.lisp
-============================================================
-|#
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id$
+
+
+;;; Change log:
+;;   10/03/03 RGA --- Carbon Compatability fix.
+;;   08/24/98 Lyle Borg-Graham - Fix race condition on button press.
+;;   10/27/95 RGA --- Add check for valid window in many handlers.
+;;   01/30/95 Andrew Mickish - New default-event-handler for CMUCL
+;;   06/14/94 Myers/Mickish - Added Mac switches in Wait-Interaction-Complete
+;;   02/03/94 Andrew Mickish - Check-Double-Press and Set-Interest-In-Moved
+;;              now in Gem (in x-inter.lisp)
+;;   01/19/94 Andrew Mickish - Translate-Mouse-Character and Translate-Character
+;;              are now Gem methods
+;;   01/15/94 Andrew Mickish - Made inter:main-event-loop a no-op for the Mac
+;;   01/05/94 Andrew Mickish - Ibid, with main-event-loop
+;;   12/05/93 Andrew Mickish - Call default-event-handler with current-root, not
+;;              display, in Wait-Interaction-Complete
+;;   10/25/93 Andrew Mickish - Called xlib:display-force-output in
+;;              Set-Interest-In-Moved after changing event-mask
+;;    9/06/93 Clive Tong - Gave *Process-With-Main-Event-Loop* value in LispWorks
+;;    7/16/93 Andrew Mickish - LispWorks does not need to eat the garnet-break-key
+;;                             event at the end of main-event-loop
+;;    7/15/93 Andrew Mickish - #+lcl3.0 ---> #+lucid
+;;    6/21/93 Brad Myers - make window enter/leave events depend on
+;;                          window :want-enter-leave-events slot
+;;    3/17/93 Dave Kosbie - added "verbose" keyword to "Transcript-events-from-
+;;                             file".  If NIL, no formats or warp-pointers.
+;;    3/12/93 Brad Myers - add window enter and exit events; small bug in w-i-c
+;;    3/05/93 Andrew Mickish - Added type and parameter declarations to
+;;                             inter:interactor-window
+;;    1/20/93 Dave Kosbie - Made change of 1/18 more robust and faster, added
+;; 			 inter::katie-window object
+;;    1/18/93 Dave Kosbie-Replaced *katie-event-hook* with *check-katie-events?*
+;; 			 and placed KATIE event checking higher up, so now it
+;; 			 is in #'default-event-handler.
+;;   12/10/92 Andrew Mickish - *drawable-to-window-mapping* --> *garnet-windows*
+;;   10/22/92 Brad Myers - set variable so animation process can avoid running if
+;;                         main-event-loop crashes
+;;   10/21/92 Dave Kosbie - Now sets "state" field of "event" struct for
+;; 				mouse and keyboard actions (for Katie)
+;;    9/25/92 Brad Myers - Need a display-force-output in change-window-multi-grab
+;;    8/19/92 Brad Myers - fixed bugs with wait-interaction-complete and
+;;                         main-event-loop-process.
+;;                       - made modal windows go off if window is iconified.
+;;    8/10/92 Andrew Mickish - Added check in main-event-loop to do nothing if
+;;                             already in main-event-loop
+;;     8/3/92 Brad Myers - fixed bug with nested wait-interaction-complete's
+;;     7/13/92 Dave Kosbie (koz) - Added Trans-Out-And-Process-Current-Event,
+;;                          which provides a central dispatch point for mouse
+;;                          and keyboard events and a hook for KATIE --
+;;                          inter::*katie-event-hook*.  Also made a minor
+;;                          change to Read-All-Transcript-Events.
+;;     7/12/92 Dave Kosbie (koz) - Changed call to "event-timer" to "event-char"
+;;                          in Read-All-Transcript-Events
+;;     5/22/92 Brad Myers - added :modal-p T windows
+;;     5/19/92 Brad Myers - fix so new windows will work with inters that have
+;;                            (:window T)
+;;     4/22/92 Pervin - Switch common-lisp-user::launch-process-p tells whether to
+;; 			launch process at load time.
+;;                      Used new function opal:main-event-loop-process-running-p
+;;     4/14/92 Ed Pervin - uncommented out process code.  Got it to work on HP.
+;;     4/8/92  Brad Myers - removed (setq opal::*inside-main-event-loop* nil) from
+;;                          wait-interactor-complete.
+;;                        - fixed compile complaint for HANDLE-CASE
+;;     3/31/92 Brad Myers - allow transcription to create window
+;;                          (thanks to Roderick J Williams).
+;;                        - fixed in case set-interest-in-move before update
+;;     3/30/92 Pervin -Temporarily commented out process code.
+;;     3/25/92 Mickish - Added THE type declarations to eliminate CMUCL warnings
+;;     3/25/92 Pervin - Now, default-event-handler belongs to the interactors
+;;                      package, and is only defined in this file (not
+;;                      opal/windows.lisp).
+;;     3/23/92 Brad Myers - make sure interactors are consistent before destroying
+;;                          a window.  Made wait-interaction-complete
+;;                          turn off main-event-loop-process.  Remove get-values.
+;;     3/20/92 Pervin - Implemented opal:launch-main-event-loop-process so
+;; 			that you need not explicitly enter main-event-loop
+;; 			in CMU, Allegro or Lucid.
+;;     3/05/92 Pervin - Must disable and re-enable default-event-handler
+;; 		in cmucl when you redeclare it.
+;;     3/02/92 Mickish - Added #+cmu (declare (ignore ...)) in main-event-loop
+;;     3/01/92 Brad Myers - repeatedly return double-click
+;;     2/13/92 Brad Myers - flush all pending characters before entering m-e-l
+;;     1/30/92 Brad Myers - added double-click
+;;                        - grab mouse when multi-windows
+;;      1/3/92 Brad Myers - New functions Interaction-Complete and
+;;                          Wait-Interaction-Complete.
+;;                        - comment out call to xlib:display-finish-output in
+;;                            set-interest-in-moved
+;;                        - made opal::*inside-main-event-loop* more reliable
+;;     11/5/91 Irwin - You may now destroy a window using f.delete or f.kill.
+;;     10/24/91 Pervin - Exit main-event-loop automatically if no window is
+;;                       visible.  Also, main-event-loop no longer takes optional
+;;                       window argument
+;;     7/10/91 Andrew Mickish - Added Pop-Up-Win-And-Start-Interactor
+;;     8/02/90 Ed Pervin - Calls to Reparent-Notify must pass along event-window.
+;;     7/25/90 Ed Pervin - Fixed bug so main-event-loop won't crash if you
+;; 			call it before you've ever created a window.
+;;     7/11/90 Ed Pervin - new :destroy-me method
+;;     7/2/90 Pervin  If an expose event occurs, just refresh the parts
+;;                    of the window that were exposed.
+;;     6/7/90 Brad Myers - Create and read back a transcript of events
+;;     6/5/90 Brad Myers - fixed bug where motion events got the wrong window
+;;     5/8/90 Sannella - In Motion-Notify, discard extra events.
+;;     4/9/90 Pervin/Cook - Changes to main-event-loop to work better in Lucid
+;; 			 Also indented lines starting with #+cmu or #-cmu.
+;;     3/22/90 Robert Cook - Changed #+(or allegro lcl3.0) to
+;; 			  #+(or allegro lcl3.0 explorer).
+;;     2/22/90  Brad Myers - removed the :exposure from *report-motion-pem
+;; 			  that was causing errors in some CLX's
+;;     12/13/89 Ed Pervin changed #+lcl3.0 to #+(or allegro lcl3.0) in one spot.
+;;     12/11/89 Ed Pervin - hitting *garnet-break-key* exits main event loop in Lucid.
+;;                         Uncommented a loop in Motion-Notify so as to throw away
+;; 			unnecessary motion events in Lucid 3.0.
+;;     12/5/89 Ed Pervin - added a couple ignore declarations
+;;     11/7/89 Ed Pervin - all changes marked by #-cmu
+;;     10/6/89 Brad Myers - change name of *event* to *Current-Event* and
+;; 			 export it
+;;     10/4/89 Roger Dannenberg - Change debugging output
+;;     8/23/89 Brad Myers - Moved event record to interactors.lisp and made
+;; 			 destroy on the window only have one parameter.
+;;     7/11/89 David Kosbie and Brad Myers - faster updates
+;;     7/03/89 Brad Myers - Save a list of all interactor windows
+;;     6/26/89 Brad Myers - Fixed to have quote for create-schema
+;;     4/19/89 Brad Myers - *schema-call -> call-method, etc.
+;; 		         *Window in event record
+;;     4/10/89 lkb - event-downp now set correctly in Button-Press
+;;     4/07/89 Brad Myers and Dario Giuse - Changed to new KR
+;;     4/05/89 lkb - checked to be sure window is valid before setting
+;; 		  its event mask in update
+;;     4/05/89 lkb - same checking as above in all the event routines
+;;     4/03/89 lkb - added fields to event structure, to accomodate switching to
+;;                   using portable keywords like (:shift-leftdown), instead of
+;;                   #\super-leftdown
+;;     3/28/89 Brad Myers - Mouse moved return last point, not first
+;; 			 point of throw-aways
+;;     3/11/89 lkb - changed call to opal::destroy-notify to comply with new
+;;                   release of windows.lisp
+
+
 (in-package "INTERACTORS")
-
-;(proclaim (declaration values))
 
 ;; Hitting the key *garnet-break-key* will cause an exit from the
 ;; main-event-loop and exit from replaying a transcript.
 (defvar *Garnet-Break-Key* :F1)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;  Functions to deal with transcripts
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;
 
 (defparameter *trans-from-file* NIL) ; file to read from
 (defparameter *trans-to-file* NIL) ; file to save to
@@ -228,13 +225,16 @@ Change log:
     (when win
       (format *trans-to-file*
 	  "> ~s ~s ~s ~s ~s ~s ~s ~s~%"
-	  (event-char event) (event-code event) (event-mousep event)
-	  (event-downp event) (event-x event) (event-y event)
-	  (- (get-internal-real-time) *trans-time*) ; store time difference
-						    ; from start time
+	  (event-char event)
+	  (event-code event)
+	  (event-mousep event)
+	  (event-downp event)
+	  (event-x event)
+	  (event-y event)
+	  (- (get-internal-real-time) *trans-time*) ; store time difference from start time
 	  win))))
 
-;;recursively add all the subwindows of the windows in win-list 
+;; recursively add all the subwindows of the windows in win-list 
 (defun Add-All-Subwindows (win-list)
   (do* ((lst win-list (cdr lst))
 	(item (car lst)(car lst))
@@ -243,7 +243,7 @@ Change log:
     (nconc lst (copy-list (g-value item :child))))
   (remove-duplicates win-list :from-end T))
  
-;;; Uses *current-event*
+;; Uses *current-event*
 (defun Read-Transcript-Event ()
   (let ((val (read-char *trans-from-file* NIL NIL)))
     (when val
@@ -298,15 +298,9 @@ Change log:
 	  ;; now start reading the events
 	  (Read-All-Transcript-Events)))))
 
-;; This used to be the point-of-entry for KATIE, but that has been moved
-;; to within "default-event-handler"
-#|
-(defmacro Process-Current-Event ()
-  `(if *katie-event-hook*
-     (funcall *katie-event-hook*)
-     (process-event *current-event*)))
-|#
-(defmacro Process-Current-Event () `(process-event *current-event*))
+(declaim (inline Process-Current-Event))
+(defun Process-Current-Event ()
+  (process-event *current-event*))
 
 ;; read the events
 (defun Read-All-Transcript-Events ()
@@ -320,44 +314,44 @@ Change log:
     (unwind-protect
 	 (block eventloop
 	   (loop
-	    (setf new-ev (Read-Transcript-Event))
-	    (if new-ev 
-		(progn
-		  (if-debug :event 
-			    (format t "~%<><><><> Event from transcript ~s~%"
-				    new-ev))
-		  (if *trans-wait-elapsed-time*
-		      (progn
-			(setf cur-wait-interval
-			      (if last-event-time
-				  (- (event-timestamp new-ev)
-				     last-event-time)
-				  0))
-			(setf last-event-time (event-timestamp new-ev))
-			(loop		; until enough time elapsed
-			 (when (eq (Trans-Check-CLX-Events display) :abort)
-			   (return-from eventloop))
-			 (when (>= (- (get-internal-real-time) start-time)
-				   cur-wait-interval)
-			   (return)))	; return from time wait loop
-			(setf start-time (get-internal-real-time)))
-		      ;; else just check for events to see if abort
-		      ;; or window refresh
-		      (when (eq (Trans-Check-CLX-Events display) :abort)
-			(return-from eventloop)))
-		  (if *transcript-verbose*
-		    (gem:set-window-property (event-window new-ev)
-					     :POINTER-POSITION
-					     (cons (event-x new-ev)
-						   (event-y new-ev))))
-		  (if (eq (event-char new-ev) :timer)
-		    (Handle-Timer-Event (event-code new-ev)) ;;index of inter
-		    (process-current-event))) ;; for KATIE (koz)
-		;; else no more chars, so exit
-		(progn
-		  (if *transcript-verbose*
-		    (format T "~%Transcript Complete~%"))
-		  (return)))))
+	      (setf new-ev (Read-Transcript-Event))
+	      (if new-ev 
+		  (progn
+		    (if-debug :event 
+			      (format t "~%<><><><> Event from transcript ~s~%"
+				      new-ev))
+		    (if *trans-wait-elapsed-time*
+			(progn
+			  (setf cur-wait-interval
+				(if last-event-time
+				    (- (event-timestamp new-ev)
+				       last-event-time)
+				    0))
+			  (setf last-event-time (event-timestamp new-ev))
+			  (loop		; until enough time elapsed
+			     (when (eq (Trans-Check-CLX-Events display) :abort)
+			       (return-from eventloop))
+			     (when (>= (- (get-internal-real-time) start-time)
+				       cur-wait-interval)
+			       (return))) ; return from time wait loop
+			  (setf start-time (get-internal-real-time)))
+			;; else just check for events to see if abort
+			;; or window refresh
+			(when (eq (Trans-Check-CLX-Events display) :abort)
+			  (return-from eventloop)))
+		    (when *transcript-verbose*
+		      (gem:set-window-property (event-window new-ev)
+					       :POINTER-POSITION
+					       (cons (event-x new-ev)
+						     (event-y new-ev))))
+		    (if (eq (event-char new-ev) :timer)
+			(Handle-Timer-Event (event-code new-ev)) ;;index of inter
+			(process-current-event)))		 ;; for KATIE (koz)
+		  ;; else no more chars, so exit
+		  (progn
+		    (if *transcript-verbose*
+			(format T "~%Transcript Complete~%"))
+		    (return)))))
       ;; unwind-protect exit
       (setq opal::*inside-main-event-loop* NIL))
     (setq opal::*inside-main-event-loop* NIL)
@@ -365,12 +359,14 @@ Change log:
     (close-transcript)))
 
 
-(defmacro Trans-Out-Event (event)
-  `(when *trans-to-file* (write-transcript-event ,event)))
+(declaim (inline Trans-Out-Event))
+(defun Trans-Out-Event (event)
+  (when *trans-to-file* (write-transcript-event event)))
 
 (defun Trans-Out-And-Process-Current-Event (&optional motion-event?)
-  (if (and *trans-to-file*
-           (or (not motion-event?) *trans-to-file-motion*))
+  (when (and
+	 *trans-to-file*
+	 (or (not motion-event?) *trans-to-file-motion*))
     (write-transcript-event *current-event*))
   (process-current-event))
 
@@ -378,17 +374,17 @@ Change log:
 ;; processed, at which time the :timeout 0 will cause it to exit
 (defun Trans-Check-CLX-Events (display)
   (declare (ignore display))
-  (let ((result (gem:event-handler (g-value opal::device-info :current-root)
-				   T)))
+  (let ((result
+	 (gem:event-handler
+	  (g-value opal:device-info :current-root) 
+	  T)))
     (if (eq result :abort)
-      result
-      T)))
+	result
+	T)))
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Interactor Windows
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;
 
 (create-schema 'INTERACTOR-WINDOW
   :declare ((:parameters :left top :width :height :border-width
@@ -413,10 +409,7 @@ Change log:
 					 ; events on this window
 
 
-
-
 (defparameter *last-grab-mouse-window* NIL)
-
 
 (defun grab-mouse (window &key (owner-p NIL))
   (when window
@@ -425,8 +418,6 @@ Change log:
       (when drawable
 	(setf *last-grab-mouse-window* window)
 	(gem:mouse-grab window T want-enter-leave owner-p)))))
-
-
 
 (defun Change-window-multi-grab (window needmultigrab)
   (if-debug :mouse (format T "Change-window-multi-grab to ~s for win ~s~%"
@@ -443,7 +434,6 @@ Change log:
 	(s-value window :event-mask em)
 	(gem:set-window-property window :EVENT-MASK em)))))
 
-
 ;; releases the mouse grab that X does when there is a down press.  This
 ;; should be called before set-interest-in-moved
 ;;
@@ -455,13 +445,11 @@ Change log:
       (setf *last-grab-mouse-window* NIL)
       (gem:mouse-grab window NIL nil)))))
 
-
 ;; iconified doesn't count as visible for the modal stuff
 (defun Win-Visible (window)
   (let ((vis (g-value window :visible)))
     (and vis
 	 (not (eq vis :ICONIFIED)))))
-
 
 (define-method :update interactor-window (window &optional (total nil))
   (opal::update-method-window window total) ; just call directly rather
@@ -495,13 +483,9 @@ Change log:
     (if (and drawable (eq event-mask gem:*exposure-event-mask*))
         (gem:set-interest-in-moved window NIL))))
 
-
-
-;;;;            Debugging tools
-
-
-;;; DZG - moved into Gem   (defvar *mouse-debug* nil)
-;;; DZG - moved into Gem   (defvar *mouse-throw-aways* 0)
+
+;;; Debugging tools
+;;
 
 ;; When true, *expose-throw-aways* will increment each time an exposure
 ;; event is thrown away
@@ -511,7 +495,7 @@ Change log:
 (defun Key-Press (window x y state code time)
   ;; state is the modifier-bits
   ;; code is the lookup in keysym
-  (if (null window)
+  (unless window
     (return-from key-press t))	; if window was just destroyed, exit.
   (let ((c (gem:translate-character window x y state code time)))
     (when c
@@ -519,7 +503,6 @@ Change log:
        :event
        (format t "~%<><><><> Key ~S code=~s  state=~s  win=~s x=~s y=~s~%"
 	       c code state window x y))
-      #-(and cmu (not mp))
       (when (eq c *garnet-break-key*)
 	(if-debug
 	 :event
@@ -558,13 +541,12 @@ Change log:
 
 (defun Button-Press (window x y state code event-key time)
   (let (c)
-    ;; Change 8/24/98 LBG
     ;; Check for null window before getting gem:Check-Double-Press code.
-    (when (null window);; if window was just destroyed, exit.
+    (unless window			; if window was just destroyed, exit.
       (return-from button-press t))
     (setf code (gem:Check-Double-Press window state code time))
-    (when (or (null window)  ;; if window was just destroyed, exit.
-              (null code))   ;; if bad double press (Mac) then exit
+    (unless (and window code)		; if window was just destroyed, exit.
+					; if bad double press (Mac) then exit
       (return-from button-press t))
     (setf c (gem:translate-mouse-character window code state event-key))
     (if-debug
@@ -586,16 +568,13 @@ Change log:
     (trans-out-and-process-current-event))
   t)
 
-
-
 (defun Button-Release (window x y state code event-key time)
-  ;; Change 8/24/98 LBG
-  ;; Check for null window before getting GEM:TRANSLATE-MOUSE-CHARACTER code.
-  (when (null window)			; if window was just destroyed, exit.
+  (unless window			; if window was just destroyed, exit.
     (return-from button-release t))
   (let ((c (gem:translate-mouse-character window code state event-key)))
-    (when (null window)
-      (return-from button-release t))  ;; if window was just destroyed, exit.
+    ;; FMG Do we have to do this again?
+    (unless window
+      (return-from button-release t))	; if window was just destroyed, exit.
     (if-debug :event 
       (format t "~%<><><><> Button Up ~s event=~s code=~s state=~s window=~s"
 	      c event-key code state window)
@@ -615,7 +594,7 @@ Change log:
 
 (defun Window-Enter (window x y time)
   (unless window
-    (return-from Window-Enter t))  ;; if window was just destroyed, exit.
+    (return-from Window-Enter t))	; if window was just destroyed, exit.
   (if-debug :event 
 	    (format t "~%<><><><> Enter Window ~s event=~s"
 		    window :window-enter)
@@ -633,10 +612,9 @@ Change log:
   (trans-out-and-process-current-event)
   t)
 
-
 (defun Window-Leave (window x y time)
   (unless window
-    (return-from Window-Leave t))  ;; if window was just destroyed, exit.
+    (return-from Window-Leave t))	; if window was just destroyed, exit.
   (if-debug :event 
 	    (format t "~%<><><><> Leave Window ~s event=~s"
 		    window :window-Leave)
@@ -652,25 +630,22 @@ Change log:
 	(event-state *Current-Event*) NIL)	
   (trans-out-and-process-current-event)
   t)
-  
-
 
 (defun Motion-Notify (window x y)
-  (if (null window)
+  (unless window
     (return-from motion-notify t))	; if window was just destroyed, exit.
   (let ((current-x x)
 	(current-y y)
 	(current-win window))
     (multiple-value-bind (e-x e-y e-w)
 	(gem:discard-mouse-moved-events window)
-      (if e-x
+      (when e-x
 	(setf current-x e-x
 	      current-y e-y
 	      current-win e-w)))
     ;; done throwing away interim mouse-moved events
-    (unless (eq current-win window)
-      (unless current-win
-	(return-from motion-notify t)))	; if window was destroyed, exit.
+    (unless (and current-win  (eq current-win window))
+      (return-from motion-notify t))	; if window was destroyed, exit.
 
     (if-debug :event
 	      (format t "~%<><><><> Mouse Moved ~s ~s  window=~s~%"
@@ -683,66 +658,25 @@ Change log:
 	  (event-window *Current-Event*) window
 	  (event-timestamp *Current-Event*) 0)
   
-    (trans-out-and-process-current-event T));; T --> Motion Notify
+    (trans-out-and-process-current-event T)) ; T --> Motion Notify
   t)
-
-
-;;;;;;;;
-;;; KATIE code:
-;;; If *check-katie-events?* is T, then the default-event-handler will check
-;;; mouse and keyboard events to see if KATIE claims them.  If so, it will
-;;; replace calls to "Button-Press" with calls to "Katie-Button-Press", etc.
-
-(defvar *check-katie-events?* NIL)
-
-(create-schema 'katie-window
-  (:is-a interactor-window))
-
-
-(defun katie-event?-fn (garnet-window)
-  (case (g-value garnet-window :garnet-type)
-    (:katie T)
-    (:inter NIL)
-    (T
-     (let ((katie? (if garnet-window (is-a-p garnet-window katie-window))))
-       (when garnet-window
-	 (s-value garnet-window :garnet-type (if katie? :katie :inter))
-	 katie?)))))
-
-
-(defmacro katie-event? (event-window)
-  `(and *check-katie-events?*
-	(katie-event?-fn ,event-window)))
-
-
-;;; end of KATIE code:
-;;;;;;;;
-
 
 (defun do-button-press (a-window x y state code time event-key)
   (if *trans-from-file*
     T					; ignore events when read transcript
-    (when a-window			;RGA ignore if event window is
-					;no longer valid.
-      (if (katie-event? a-window)
-	  (Katie-Button-Press a-window x y state code event-key time)
-	(Button-Press a-window x y state code event-key time)))))
-
+    (when a-window			; RGA ignore if event window is
+					; no longer valid.
+      (Button-Press a-window x y state code event-key time))))
 
 (defun do-button-release (a-window x y state code time event-key)
   (if *trans-from-file*
     T					;ignore events when read trnscript
     (when a-window			;RGA ignore if event window is
 					;no longer valid.
-      (if (katie-event? a-window)
-	  (Katie-Button-Release a-window x y state code event-key time)
-	(Button-Release a-window x y state code event-key time)))))
-
+      (Button-Release a-window x y state code event-key time))))
 
 (defun do-circulate-notify ()
   (opal::Circulate-Notify (debug-p :event)))
-
-
 
 (defun do-configure-notify (event-window x y width height
 			    above-sibling)
@@ -752,18 +686,13 @@ Change log:
 			    width height
 			    event-window above-sibling)))
 
-
-
 (defun do-enter-notify (a-window x y time)
   (if *trans-from-file*
     T					; ignore events when read
 					; transcript
     (when a-window			;RGA ignore if window is no
 					;longer valid.
-      (if (katie-event? a-window)
-	  NIL				; no katie handle for this
-	(Window-Enter a-window x y time)))))
-
+	(Window-Enter a-window x y time))))
 
 (defun do-exposure (event-window x y width height count display)
   (when event-window			;RGA ignore if window is no
@@ -771,152 +700,135 @@ Change log:
     (opal::Exposure (debug-p :event) event-window count x y
 		    width height display)))
 
-
 (defun do-gravity-notify ()
   (opal::Gravity-Notify (debug-p :event)))
-
 
 (defun do-key-press (a-window x y state code time)
   (if *trans-from-file*
     T					; ignore events when read transcript
     (when a-window			;RGA -- skip if window no
 					;longer valid.
-      (if (katie-event? a-window)
-	  (Katie-Key-Press a-window x y state code time)
-	(Key-Press a-window x y state code time)))))
-
+      (Key-Press a-window x y state code time))))
 
 (defun do-leave-notify (a-window x y time)
   (if *trans-from-file*
     T					; ignore events when read transcript
-    (if (katie-event? a-window)
-      NIL				; no katie handle for this
-      (Window-Leave a-window x y time))))
-
+    (Window-Leave a-window x y time)))
 
 (defun do-map-notify (event-window)
   (opal::Map-Notify (debug-p :event) event-window))
 
-
 (defun do-motion-notify (a-window x y display)
+  (declare (ignore display))
   (if *trans-from-file*
     T					; ignore events when read transcript
-    (if (katie-event? a-window)
-      (Katie-Motion-Notify a-window x y display)
-      (Motion-Notify a-window x y))))
-
+    (Motion-Notify a-window x y)))
 
 (defun do-unmap-notify (a-window)
   (opal::Unmap-Notify (debug-p :event) a-window))
 
+;;; XXX FMG This breaks modularity --- xlib symbols in interactors.
+(defun do-client-message (event-window type atom-id format display)
+  (cond ((and (eq format 32)
+	      (eq type :WM_PROTOCOLS)
+	      (eq (xlib:atom-name 
+		   display
+		   atom-id)
+		  :WM_DELETE_WINDOW))
+	 (opal::Delete-Notify NIL event-window))
+	((and (eq format 32)
+	      (eq type :TIMER_EVENT))
+	 (if interactors::*trans-from-file*
+	   T
+	   ;; ignore events when read transcript
+	   (interactors::Queue-Timer-Event atom-id))))
+  NIL)
 
-;;; We want this to run once and then exit.  (We used to want this to
-;;; run forever until exit-main-event-loop is called, but now we are
-;;; introducing a parellel process to run the event handler.
-;;; Therefore, main-event-loop etc. must put the call to
-;;; default-event-handler into a loop statement.
-;;;
+
+;; We want this to run once and then exit.  (We used to want this to
+;; run forever until exit-main-event-loop is called, but now we are
+;; introducing a parellel process to run the event handler.
+;; Therefore, main-event-loop etc. must put the call to
+;; default-event-handler into a loop statement.
 (defun default-event-handler (root-window)
   "Event handler for the interactor windows"
-  ;; variable is defined in inter:animation-process.lisp
-  (setq *Process-With-Main-Event-Loop*
+  (setq *Process-With-Main-Event-Loop*	; defined in inter:animation-process.lisp
 	#+allegro mp:*current-process*
-	#+lucid common-lisp-user::*current-process*
 	#+(and cmu mp) mp:*current-process*
-	#-(or allegro lucid (and cmu mp)) NIL)
-  ;; In CMUCL, the default-event-hander is still invoked with a display.
-  ;; Intercept this bogus argument and pass on a real root-window from here.
-  (gem:event-handler  #-(and cmu (not mp)) root-window
-		      #+(and cmu (not mp)) gem::*root-window*
-		      NIL))
+	#+sb-thread sb-thread:*current-thread*
+	#-(or allegro sb-thread (and cmu mp)) NIL)
+  (gem:event-handler root-window NIL))
 
 
-
-;;; Now that default-event-handler is defined, enable it for CMUCL.
-#+(and cmu (not mp))
-(ext:enable-clx-event-handling opal::*default-x-display*
-                                 #'inter::default-event-handler)
-
-;;; Now that default-event-handler is defined, launch it for non-CMUCL.
-;;; launch-process-p is defined in garnet-loader.lisp
-#-(and cmu (not mp))
+;; Now that default-event-handler is defined, launch it for non-CMUCL.
+;; launch-process-p is defined in garnet-loader.lisp
 (when common-lisp-user::launch-process-p
   (opal:launch-main-event-loop-process))
 
 (defun main-event-loop (&key (exit-when-no-window-visible :on))
   "Event handler for the interactor windows"
-  #+(or (and cmu (not mp)) apple)
-  (declare (ignore exit-when-no-window-visible))
-  #-(or (and cmu (not mp)) apple)
-  (when (null opal::*main-event-loop-process*)
+  (unless opal:*main-event-loop-process*
     (if (and (eq exit-when-no-window-visible :on)
-             (not (opal::any-top-level-window-visible)))
-      (format t "Cannot call main-event-loop when no window is visible~%")
-      ;; else do real work
-      (unless opal::*inside-main-event-loop*
-	(let ((root-window (g-value opal::device-info :current-root)))
-	  (if (eq exit-when-no-window-visible :on)
-	    (setq opal::*inside-main-event-loop* t)
-	    (setq opal::*inside-main-event-loop* :dont-care))
-          ;;; first, throw away any characters pending already
-	  (gem:discard-pending-events root-window)
-	  (unwind-protect
-	       (catch 'exit-main-loop-exception
-		 (loop 
-		  (default-event-handler root-window)))
-	    ;; end handler-case
-	    (progn			; unwind-protect exit
-	      (setq opal::*inside-main-event-loop* NIL)))
-	  (setq opal::*inside-main-event-loop* nil)
-	  #-LISPWORKS
-	  ;; Discard current event which was the typing of *garnet-break-key*
-	  (gem:discard-pending-events root-window 5))))))
+	     (not (opal::any-top-level-window-visible)))
+	(format t "Cannot call main-event-loop when no window is visible~%")
+	;; else do real work
+	(unless opal::*inside-main-event-loop*
+	  (let ((root-window (g-value opal:device-info :current-root)))
+	    (if (eq exit-when-no-window-visible :on)
+		(setq opal::*inside-main-event-loop* t)
+		(setq opal::*inside-main-event-loop* :dont-care))
+	    (opal::m-e-l)		; Defined in opal/process.lisp
+	    (setq opal::*inside-main-event-loop* NIL)
+	    (gem:discard-pending-events root-window 5))))))
 
 
 (defun exit-main-event-loop ()
-#-(or (and cmu (not mp)) apple)
-  (when (and (null opal::*main-event-loop-process*)
-	     opal::*inside-main-event-loop*)
-    (setq opal::*inside-main-event-loop*  NIL)
+  (when (and (null opal:*main-event-loop-process*)
+	     opal:*inside-main-event-loop*)
+    (setq opal:*inside-main-event-loop* NIL)
     (throw 'exit-main-loop-exception t)))
 
-;;; This variable tells opal what function to call when you delete the
-;;; last window, so that main-loop will be exited automatically.
 
-(declaim (special opal::*exit-main-event-loop-function*))
-(setq opal::*exit-main-event-loop-function*
-      #'exit-main-event-loop)
+;; This variable tells opal what function to call when you delete the
+;; last window, so that main-loop will be exited automatically.
+(setf opal:*exit-main-event-loop-function* #'exit-main-event-loop)
 
-#|
-;; RGA, this appears to be already defined in the MCL guts,
-;; lets just use their definition.
-#+apple
-(defmacro with-event-processing-enabled (&body body)
-  `(let ((ccl::*interrupt-level* 0))
-     (ccl::without-interrupts)               ; startup kernel timer
-     (let ((ccl::*processing-events* nil))
-        ,@body)))
-|#
-#+apple
-(defmacro with-event-processing-enabled (&body body)
-  `(ccl:with-event-processing-enabled ,@body))
 
-#+apple (defparameter *wait-inter-done-flag* NIL)
-#+apple (defparameter *wait-inter-done-value* NIL)
+;;; Wait-Interaction-Complete
+;;
+
 (defparameter *waiting-for-exit-wait-interaction-complete* 0)
 
+;; FMG Need to properly interface this with the protected-eval stuff
+;; so we pull out the inner loop so that we can have a version wrapped
+;; in WITH-GARNET-ERROR-HANDLING.
+
+(defun W-I-C-I-L ()
+  "Wait-Interaction-Complete-Inner-Loop; pulled out so it can be smashed
+by the protected-eval code."
+  (catch 'exit-wait-interaction-complete
+    (incf *waiting-for-exit-wait-interaction-complete*)
+    (if *trans-from-file*
+	(loop			      ; in a loop in case event handler exits
+	   (Read-All-Transcript-Events)) ; read from transcript
+	;; else get event from event handler
+	(catch 'exit-main-loop-exception
+	  (loop
+	     (default-event-handler
+		 (g-value opal:DEVICE-INFO :current-root)))
+	  ))))
+  
 (defun Wait-Interaction-Complete (&optional window-to-raise)
   "Processes events, but this procedure does not exit unless the
   Interaction-Complete procedure is called.  The value returned by
   Wait-Interaction-Complete is the value passed to Interaction-Complete"
-  (let* (;; the next boolean is T if the main-event-loop process is running BUT
-	 ;; Wait-Interaction-Complete was NOT called inside it.  If
-	 ;; w-i-c was called from inside the m-e-l process, then don't
-	 ;; want to kill the process.
-	 (running-mel-process-elsewhere
-	  (opal:running-main-event-loop-process-elsewhere-p))
-	 (old-count *waiting-for-exit-wait-interaction-complete*)
-	 val)
+  (let (;; the next boolean is T if the main-event-loop process is running BUT
+	;; Wait-Interaction-Complete was NOT called inside it.  If
+	;; w-i-c was called from inside the m-e-l process, then don't
+	;; want to kill the process.
+	(running-mel-process-elsewhere
+	 (opal:running-main-event-loop-process-elsewhere-p))
+	(old-count *waiting-for-exit-wait-interaction-complete*))
     (when running-mel-process-elsewhere
       (opal:kill-main-event-loop-process))
     ;; need to update AFTER process is killed so the update message
@@ -924,37 +836,15 @@ Change log:
     ;; exposure and configure events to being to be processed in the
     ;; m-e-l-p which would cause a race condition.
     (when window-to-raise (opal:raise-window window-to-raise))
-    #+apple (setq *wait-inter-done-flag* NIL)
     (unwind-protect
-	 (setq val (catch 'exit-wait-interaction-complete
-		     (incf *waiting-for-exit-wait-interaction-complete*)
-		     (if *trans-from-file*
-			 (loop ; in a loop in case event handler exits
-			  (Read-All-Transcript-Events)) ; read from transcript
-			 ;; else get event from event handler
-                         (catch 'exit-main-loop-exception
-                           #+apple (with-event-processing-enabled
-                                     (loop
-                                       (ccl:event-dispatch)
-                                       (when *wait-inter-done-flag*
-                                         (throw 'exit-wait-interaction-complete
-                                                *wait-inter-done-value*))))
-                           #-apple (loop
-			           (default-event-handler
-				     (g-value opal::DEVICE-INFO :current-root)
-				     ))
-                           ))))
-      ;; unwind-protect exit
-      (progn
-	(setq *waiting-for-exit-wait-interaction-complete* old-count)
-        #+apple (setq *wait-inter-done-flag* NIL)
-	;; discard current event which was the one that caused the exit
-	(gem:discard-pending-events (g-value opal::device-info :current-root)
-				    0)
-	(when running-mel-process-elsewhere
-	  (opal:launch-main-event-loop-process))))
-    val))
-
+	 (w-i-c-i-l) 			; Note: the result of this form gets returned.
+      ;; unwind-protect cleanups.
+      (setf *waiting-for-exit-wait-interaction-complete* old-count)
+      ;; discard current event which was the one that caused the exit
+      (gem:discard-pending-events (g-value opal:device-info :current-root) 0)
+      (when running-mel-process-elsewhere
+	(opal:launch-main-event-loop-process)))
+    ))
 
 (defun Interaction-Complete (&optional val)
   "Call this to exit the Wait-Interaction-Complete procedure.  Typically,
@@ -962,13 +852,7 @@ Change log:
    :final-function"
   (if (zerop *waiting-for-exit-wait-interaction-complete*)
       (format T "WARNING: Interaction-Complete called but not inside Wait-Interaction-Complete~%")
-      ;; in apple, aren't in the same stack so can't do a throw here.
-      #+apple (progn
-                (setq *wait-inter-done-value* val)
-                (setq *wait-inter-done-flag* T))
-      #-apple (throw 'exit-wait-interaction-complete val)))
-
-
+      (throw 'exit-wait-interaction-complete val)))
 
 (defparameter all-inter-windows NIL)
 
@@ -979,8 +863,8 @@ Change log:
       (format T "~s  " i))
     (format T "~%")))
 
-;;; Removes all interactors from the window, removes the window from the
-;;; global list
+;; Removes all interactors from the window, removes the window from the
+;; global list
 (define-method :destroy-me interactor-window (window)
 "Method to kill an interactor-window"
   (if-debug :window (format T "Destroying interactor window ~s~%" window))
@@ -1002,9 +886,8 @@ Change log:
         (setf *transcript-window-list* (nconc *transcript-window-list*
                                               (list window))))
   (pushnew window all-inter-windows)
-  (Change-window-multi-grab window NIL) ; initialize for single-window inters
-  (s-value window :priority-level-assoc NIL); associates interactors
-					    ; with this window 
+  (Change-window-multi-grab window NIL)	     ; initialize for single-window inters
+  (s-value window :priority-level-assoc NIL) ; associates interactors with this window 
   (Handle-New-Window-for-T-Inters window)
   (call-prototype-method window)
   (if (and (g-value window :modal-p)

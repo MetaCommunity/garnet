@@ -8,6 +8,7 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
 
 #|
 ==================================================================
@@ -29,9 +30,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :graphics-selection)
   (format t "Loading Graphics-Selection...~%")
-  (load (garnet-pathnames "graphics-selection"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "graphics-selection" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done Graphics-Selection.~%"))
 

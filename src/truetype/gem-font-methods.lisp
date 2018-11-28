@@ -35,9 +35,9 @@ using X conventions, or a cons of the bad value and slot."
   (declare (ignore root-window))
   (let ((family-part
           (case (first key)
-            (:fixed      opal::*Fixed-Font-Family*)
-            (:serif      opal::*Serif-Font-Family*)
-            (:sans-serif opal::*Sans-Serif-Font-Family*)
+            (:fixed      *Fixed-Font-Family*)
+            (:serif      *Serif-Font-Family*)
+            (:sans-serif *Sans-Serif-Font-Family*)
 	    (otherwise   nil)))
         (face-part
          (let ((face-spec (if (consp (second key))
@@ -47,10 +47,10 @@ using X conventions, or a cons of the bad value and slot."
 	     face-spec)))
         (size-part
 	  (case (third key)
-            (:small      (princ-to-string opal::*Small-Font-Point-Size*))
-            (:medium     (princ-to-string opal::*Medium-Font-Point-Size*))
-            (:large      (princ-to-string opal::*Large-Font-Point-Size*))
-            (:very-large (princ-to-string opal::*Very-Large-Font-Point-Size*))
+            (:small      (princ-to-string *Small-Font-Point-Size*))
+            (:medium     (princ-to-string *Medium-Font-Point-Size*))
+            (:large      (princ-to-string *Large-Font-Point-Size*))
+            (:very-large (princ-to-string *Very-Large-Font-Point-Size*))
             (otherwise   nil))))
     (cond ((null family-part)
            (cons (first key) :family)) ;; for reporting error
@@ -79,7 +79,7 @@ using X conventions, or a cons of the bad value and slot."
 
 (defun x-font-exists-p (root-window name)
   (declare (ignore root-window))
-  (xlib:list-font-names opal::*default-x-display* name))
+  (xlib:list-font-names *default-x-display* name))
 
 
 (defun x-font-to-internal (root-window font-from-file)

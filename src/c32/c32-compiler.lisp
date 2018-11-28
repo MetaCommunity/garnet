@@ -10,6 +10,8 @@
 ;;; Garnet project, please contact Brad Myers (Brad.Myers@CS.CMU.EDU).
 ;;;___________________________________________________________________
 ;;;
+;;; $Id::                                                             $	
+
 
 #|
 ==================================================================
@@ -23,6 +25,18 @@ Change log:
 |#
 
 (in-package "COMMON-LISP-USER")
+
+(defvar *debug-c32-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-c32-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
 
 (format t "Compiling C32...~%")
 
@@ -54,7 +68,7 @@ Change log:
 		  "scrolling-labeled-box-loader"	; for package name
 		  "motif-scrolling-window-loader"
 		  ))
-  (garnet-load (concatenate 'string "gadgets:" gadget)))
+  (load (merge-pathnames gadget garnet-gadgets-pathname)))
 
 (defvar C32-files '(
 		    "c32"
@@ -67,6 +81,7 @@ Change log:
 		    "c32dialog"
 		    "c32-lapidary"
 		    ))
+
 
 (dolist (file c32-files)
   (garnet-compile (concatenate 'string "c32:" file))

@@ -1,46 +1,44 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: OPAL; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; rectangle-conflict-object.lisp
-;;;
-;;; Written by A. Bryan Loyall
-;;; Winter 1990-1991
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
-#|
-======================================================================
-Change log:
-   07/15/93  Andrew Mickish - #+lcl3.0 ---> #+lucid
-    12/6/91  Nikos Drakos - Remove duplicates after storing the position
-                        of a new node in aggregraph.
-    7/8/91   Steven Berson - Changed #+lcl4.0 switch to #+lcl3.0
-    3/21/91  Pedro Szekely - Added optimize declaration in
-			make-rectangle-conflict-object.
-    3/11/91  Andrew Mickish - Massaged into Opal/Aggregadgets format
-    3/09/91  Bryan Loyall - Created
-======================================================================
-|#
+;;; $Id::                                                             $
+;;
 
-;; Helper file for aggregraphs.lisp
+;;; Helper file for aggregraphs.lisp
+;;  Written by A. Bryan Loyall
+;;  Winter 1990-1991
+;; 
 
+
+;;; Change log:
+;;   07/15/93  Andrew Mickish   - #+lcl3.0 ---> #+lucid
+;;   12/06/91  Nikos Drakos     - Remove duplicates after storing the position
+;;                                of a new node in aggregraph.
+;;   07/08/91  Steven Berson    - Changed #+lcl4.0 switch to #+lcl3.0
+;;   03/21/91  Pedro Szekely    - Added optimize declaration in
+;;			          make-rectangle-conflict-object.
+;;   03/11/91  Andrew Mickish   - Massaged into Opal/Aggregadgets format
+;;   03/09/91  Bryan Loyall     - Created
+
+
 (in-package "OPAL")
 
-;; true if v is between low and high inclusive.
 (defun between (v low high)
+  "true if v is between low and high inclusive."
   (and (>= v low) (<= v high)))
 
-;; determines if two rectangles overlap (not counting borders).  A
-;; given rectangle is represented by four numbers: x1, x2, y1, y2,
-;; which is interpretted to be the rectangle: {(x,y) | x1 <= x <= x2
-;; and y1 <= y <= y2}
 (defun rectangle-conflictp (lowx1 highx1 lowy1 highy1 lowx2 highx2 lowy2 highy2)
-  (labels (;; true if the two ranges [low1 high1] and [low2 high2] overlap.
+  "determines if two rectangles overlap (not counting borders).  A
+given rectangle is represented by four numbers: x1, x2, y1, y2,
+which is interpretted to be the rectangle: {(x,y) | x1 <= x <= x2
+and y1 <= y <= y2}"
+  (labels (			; true if the two ranges [low1 high1] and [low2 high2] overlap.
            (range-conflict (low1 high1 low2 high2)
              (or (between low2 low1 high1)
                  (between high2 low1 high1)
@@ -348,36 +346,35 @@ Change log:
 ;; removed from the object instead (so it can not be returned for any
 ;; future calls.)  The result is then unspecified.
 (defun make-rectangle-conflict-object ()
-  #+lucid(declare (optimize (compilation-speed 0) (safety 3) (speed 0)))
-  ;; naive implementation
-  ;(let ((rectangle-list '()))
-  ;  (labels ((add-rectangle (x1 x2 y1 y2)
-  ;             (push (list x1 x2 y1 y2) rectangle-list))
-  ;           (remove-rectangle (x1 x2 y1 y2)
-  ;             (setf rectangle-list
-  ;                   (remove (list x1 x2 y1 y2) rectangle-list :test #'equal)))
-  ;           (get-potential-conflicts (x1 x2 y1 y2)
-  ;             (declare (ignore x1 x2 y1 y2))
-  ;             rectangle-list))
-  ;  ))
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Rectangles are denoted by four-tuples (x1 x2 y1 y2).  A given
-  ;; four-tuple denotes the rectangle:
-  ;;                  {(x,y) | (x1 <= x <= x2) & (y1 <= y <= y2)}.
-  ;; 
-  ;; This implementation uses two binary trees (one for the x axis and
-  ;; one for the y axis).  Each binary tree node contains a coordinate
-  ;; of the axis as its key associated with all of the rectangles that
-  ;; overlaps that coordinate.   A seperate entry in the tree is made
-  ;; for the lower and upper bounds on each axis that define the
-  ;; rectangle.
-  ;;
-  ;; With this structure maintained, the potential conflicts for a
-  ;; rectangle (x1 x2 y1 y2) are only the rectangles that overlap
-  ;; with coordinates closest to x1 or x2, intersected with the
-  ;; rectangles that overlap with coordinates closest to y1 or y2.
-  ;; These rectangles can then be checked in a linear fashion for
-  ;; actual conflicts with the given rectangle.
+  "naive implementation
+	(let ((rectangle-list '()))
+	  (labels ((add-rectangle (x1 x2 y1 y2)
+		     (push (list x1 x2 y1 y2) rectangle-list))
+		   (remove-rectangle (x1 x2 y1 y2)
+		     (setf rectangle-list
+			   (remove (list x1 x2 y1 y2) rectangle-list :test #'equal)))
+		   (get-potential-conflicts (x1 x2 y1 y2)
+		     (declare (ignore x1 x2 y1 y2))
+		     rectangle-list))
+	    ))
+
+Rectangles are denoted by four-tuples (x1 x2 y1 y2).  A given
+four-tuple denotes the rectangle:
+                 {(x,y) | (x1 <= x <= x2) & (y1 <= y <= y2)}.
+
+This implementation uses two binary trees (one for the x axis and
+one for the y axis).  Each binary tree node contains a coordinate
+of the axis as its key associated with all of the rectangles that
+overlaps that coordinate.   A seperate entry in the tree is made
+for the lower and upper bounds on each axis that define the
+rectangle.
+
+With this structure maintained, the potential conflicts for a
+rectangle (x1 x2 y1 y2) are only the rectangles that overlap
+with coordinates closest to x1 or x2, intersected with the
+rectangles that overlap with coordinates closest to y1 or y2.
+These rectangles can then be checked in a linear fashion for
+actual conflicts with the given rectangle."
   (let ((xtree (make-binary-tree #'= #'< #'equal))
         (ytree (make-binary-tree #'= #'< #'equal)))
     (labels ((rects-that-cross-coord (coord tree low-f high-f)
@@ -432,21 +429,20 @@ Change log:
              )
 
       #'(lambda (x1 x2 y1 y2 deletep)
-;          (format t "~%In rect-conf-obj ~A." (list x1 x2 y1 y2 deletep))
-;          (finish-output)
+;;;        (format t "~%In rect-conf-obj ~A." (list x1 x2 y1 y2 deletep))
+;;;        (finish-output)
           (cond
             (deletep (remove-rectangle x1 x2 y1 y2))
             (t (labels ((conflictp (rect)
                           (apply #'rectangle-conflictp x1 x2 y1 y2 rect)))
                  (let* ((potential-conflicting-rectangles
                          (get-potential-conflicts x1 x2 y1 y2))
-;                        (dummy (progn (format t "~&Potential conflicting-rectangles:  ~A"
-;                                              potential-conflicting-rectangles)
-;                                      (finish-output)))
+;;;                      (dummy (progn (format t "~&Potential conflicting-rectangles:  ~A"
+;;;                                            potential-conflicting-rectangles)
+;;;                                    (finish-output)))
                         (conflicting-rectangles
                          (member-if #'conflictp potential-conflicting-rectangles)))
                    (cond
                      (conflicting-rectangles (car conflicting-rectangles))
                      (t (add-rectangle x1 x2 y1 y2)
                         nil))))))))))
-

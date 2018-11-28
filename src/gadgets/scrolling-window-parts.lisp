@@ -44,7 +44,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Scrolling-Window Auto-Scroll
 	    Scroll-Win-Inc Scroll-Win-To
 	    Scrolling-Window-Go Scrolling-Window-Stop

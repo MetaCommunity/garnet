@@ -11,6 +11,9 @@
 ;;;  The :fix-update-slots method for opal:aggrelist and supporting functions
 ;;; 
 ;;;  Written by Andrew Mickish and Dave Kosbie
+;;;
+;;; $Id::                                                             $
+
 
 #|
 ======================================================================
@@ -32,7 +35,7 @@ Change log:
 
 (in-package "OPAL")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Set-Rank-Slots)))
 
 (defun same-type-p (item1 item2)
@@ -125,7 +128,7 @@ Change log:
 
     ;; Deal with changing components first
     (unless (equal (g-value the-lister :items)
-		   (aref us-vals *lister-items*))
+		   (aref us-vals +lister-items+))
       (Fix-Items the-lister))
     
     ;; Must set :rank slots before determining the dimensions of the aggrelist.
@@ -151,28 +154,28 @@ Change log:
       (s-value the-lister :force-computation? NIL))
     
     (when us-vals-changed?
-      (if (aref us-vals *lister-direction*)
+      (if (aref us-vals +lister-direction+)
 	  (let* ((components        (g-local-value the-lister :components))
-		 (max-width         (aref us-vals *lister-max-width*))
-		 (max-height        (aref us-vals *lister-max-height*))
-		 (left              (aref us-vals *lister-left*))
-		 (top               (aref us-vals *lister-top*))
-		 (direction         (aref us-vals *lister-direction*))
-		 (h-spacing         (aref us-vals *lister-h-spacing*))
-		 (v-spacing         (aref us-vals *lister-v-spacing*))
-		 (indent            (aref us-vals *lister-indent*))
-		 (h-align           (aref us-vals *lister-h-align*))
-		 (v-align           (aref us-vals *lister-v-align*))
-		 (fixed-width-p     (aref us-vals *lister-fixed-width-p*))
-		 (fixed-height-p    (aref us-vals *lister-fixed-height-p*))
-		 (fixed-width-size  (aref us-vals *lister-fixed-width-size*))
-		 (fixed-height-size (aref us-vals *lister-fixed-height-size*))
-		 (rank-margin       (aref us-vals *lister-rank-margin*))
-		 (pixel-margin      (aref us-vals *lister-pixel-margin*))
+		 (max-width         (aref us-vals +lister-max-width+))
+		 (max-height        (aref us-vals +lister-max-height+))
+		 (left              (aref us-vals +lister-left+))
+		 (top               (aref us-vals +lister-top+))
+		 (direction         (aref us-vals +lister-direction+))
+		 (h-spacing         (aref us-vals +lister-h-spacing+))
+		 (v-spacing         (aref us-vals +lister-v-spacing+))
+		 (indent            (aref us-vals +lister-indent+))
+		 (h-align           (aref us-vals +lister-h-align+))
+		 (v-align           (aref us-vals +lister-v-align+))
+		 (fixed-width-p     (aref us-vals +lister-fixed-width-p+))
+		 (fixed-height-p    (aref us-vals +lister-fixed-height-p+))
+		 (fixed-width-size  (aref us-vals +lister-fixed-width-size+))
+		 (fixed-height-size (aref us-vals +lister-fixed-height-size+))
+		 (rank-margin       (aref us-vals +lister-rank-margin+))
+		 (pixel-margin      (aref us-vals +lister-pixel-margin+))
 		 ;; RGA added these for right-justify-last
 		 ;; (help-style) mode layout  
-		 (right-justify-last (aref us-vals *lister-right-justify-last*))
-		 (bottom-justify-last (aref us-vals *lister-bottom-justify-last*))
+		 (right-justify-last (aref us-vals +lister-right-justify-last+))
+		 (bottom-justify-last (aref us-vals +lister-bottom-justify-last+))
 		 (lister-width (if right-justify-last
 				   (g-value the-lister :justify-width)))
 		 (lister-height (if bottom-justify-last

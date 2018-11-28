@@ -1,71 +1,73 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: INTERACTORS; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id::                                                             $
+;;
 
-#| 
+
+;;; This file contains the mouse and keyboard ACCELERATORS code
+;; 
+;; Designed and implemented by David S. Kosbie
+;; 
+;; The punchline for those who hate to read is that if you type the
+;; following keys into a Garnet window, you get the associated action:
+;; 
+;;     :SHIFT-F1 -  raise window
+;;     :SHIFT-F2 -  lower window
+;;     :SHIFT-F3 -  iconify window
+;;     :SHIFT-F4 -  zoom window
+;;     :SHIFT-F5 -  fullzoom window
+;;     :SHIFT-F6 -  refresh window
+;;     :SHIFT-F7 -  destroy window
+;; 
+;;     :HELP - INSPECT object
+;;     :SHIFT-HELP - print out object under the mouse (also in inspector.lisp)
+;; 
+;; In interactors.lisp, the function "process-event" first checks the "first"
+;; accelerators, as follows
+;; 	1) Try to match event (using assoc) against one in window's
+;; 		:first-Accelerators slot, which should contain an alist
+;;                 of the form  ( (char1 . fun1) (char2 . fun2) ... )
+;; 		[Note: these functions take 1 arg, the low-level event struct]
+;; 	2) If that succeeds, invoke the found function, else repeat the
+;; 	   same process using the global variable *global-first-accelerators*
+;; Then each low-level event to see if any interactors (or priority-levels 
+;; with :stop-when of :always) claim the event.  If not, then it does the following:
+;; 	1) Try to match event (using assoc) against one in window's
+;; 		:Accelerators slot, which should contain an alist of the form
+;; 		( (char1 . fun1) (char2 . fun2) ... )
+;; 		[Note: these functions take 1 arg, the low-level event struct]
+;; 
+;; 	2) If that succeeds, invoke the found function, else repeat the
+;; 		same process using the global variable *global-accelerators*
+;; 
+;; The variables *global-accelerators* and *global-first-accelerators* are defvar'd
+;; in interactors.lisp, so they can be properly referenced.
+;; 
+;; This file first defines the *default-global-accelerators* and all the
+;; functions it references.  At the end, it invokes this function.
+;; 
+;; This file also defines a programmatic interface to accelerators
+;; 
+;; 
 
-This file contains the mouse and keyboard ACCELERATORS code
+
+;;; Change log:
+;;  1/18/93 Brad Myers - supply accelerators that go FIRST before the inters
+;;                     - removed ident as accelerator, since garnet-debug might
+;;                       not be loaded
+;;  10/22/92 Dave Kosbie - created
 
-Designed and implemented by David S. Kosbie
-
-The punchline for those who hate to read is that if you type the
-following keys into a Garnet window, you get the associated action:
-
-    :SHIFT-F1 -  raise window
-    :SHIFT-F2 -  lower window
-    :SHIFT-F3 -  iconify window
-    :SHIFT-F4 -  zoom window
-    :SHIFT-F5 -  fullzoom window
-    :SHIFT-F6 -  refresh window
-    :SHIFT-F7 -  destroy window
-
-    :HELP - INSPECT object
-    :SHIFT-HELP - print out object under the mouse (also in inspector.lisp)
-
-In interactors.lisp, the function "process-event" first checks the "first"
-accelerators, as follows
-	1) Try to match event (using assoc) against one in window's
-		:first-Accelerators slot, which should contain an alist
-                of the form  ( (char1 . fun1) (char2 . fun2) ... )
-		[Note: these functions take 1 arg, the low-level event struct]
-	2) If that succeeds, invoke the found function, else repeat the
-	   same process using the global variable *global-first-accelerators*
-Then each low-level event to see if any interactors (or priority-levels with :stop-when of :always) claim the event.  If not, then it does the following:
-	1) Try to match event (using assoc) against one in window's
-		:Accelerators slot, which should contain an alist of the form
-		( (char1 . fun1) (char2 . fun2) ... )
-		[Note: these functions take 1 arg, the low-level event struct]
-
-	2) If that succeeds, invoke the found function, else repeat the
-		same process using the global variable *global-accelerators*
-
-The variables *global-accelerators* and  *global-first-accelerators* are defvar'd in interactors.lisp, so they can be properly referenced.
-
-This file first defines the *default-global-accelerators* and all the
-functions it references.  At the end, it invokes this function.
-
-This file also defines a programmatic interface to accelerators
-
-
-============================================================
-Change log:
- 1/18/93 Brad Myers - supply accelerators that go FIRST before the inters
-                    - removed ident as accelerator, since garnet-debug might
-                      not be loaded
- 10/22/92 Dave Kosbie - created
-============================================================
-|#
-
+
 (in-package "INTERACTORS")
 
-;; the exported functions and variables
+;;; the exported functions and variables
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(
 	    *global-accelerators*	; defined in interactors.lisp
@@ -79,9 +81,9 @@ Change log:
 
 	    )))
 
-                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                         ;;;  Default Support Fns  ;;;
-                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Default Support Fns
+;;
 
 ;; args should be a list:  (variable event)
 (defmacro with-event-win (args &rest body)
@@ -111,7 +113,8 @@ Change log:
                          ;;;  Basic Interface ;;;
                          ;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;; internal ;;;;;;;;;;;
+
+;;; internal
 
 (defun add-accelerator (alist key fn replace-existing?)
   (let ((alist-entry (assoc key alist)))
@@ -123,7 +126,8 @@ Change log:
 (defun remove-accelerator (alist key remove-all?)
   (delete key alist :count (if remove-all? NIL 1) :key #'car))
 
-;;;;;;; exported ;;;;;;;;;;;
+
+;;; exported
 
 (defun add-global-accelerator (key fn &key replace-existing? first?)
   (if first?

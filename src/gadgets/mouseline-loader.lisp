@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $	
+
 
 #|
 ==================================================================
@@ -26,9 +28,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :mouseline)
   (format t "Loading MouseLine...~%")
-  (load (common-lisp-user::garnet-pathnames "mouseline"
-			 #+cmu "gadgets:"
-			 #+(not cmu) Garnet-Gadgets-PathName)
+  (load (merge-pathnames "mouseline" Garnet-Gadgets-PathName)
 	:verbose T)
   (format t "...Done MouseLine.~%"))
 

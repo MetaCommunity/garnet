@@ -103,7 +103,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Radio-Button Radio-Button-Panel))
   #+garnet-test
   (export '(Radio-Buttons-Go Radio-Buttons-Stop Radio-Button-Obj

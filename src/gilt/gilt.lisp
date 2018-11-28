@@ -113,8 +113,7 @@ Change log:
 
 (in-package "GILT")
 
-(eval-when #-(or cmu lucid) (:compile-toplevel :load-toplevel :execute)
-	   #+(or cmu lucid) (compile load eval)
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(Do-Go Do-Stop)))
 
 (defparameter Gilt-Version "V3.0")
@@ -351,8 +350,7 @@ Change log:
 			(gg:is-a-motif-rect gad))
 	      (pushnew (string-downcase (Load-File-Name item)) gadgets-to-load)))))
     (when gadgets-to-load
-      (format T "(eval-when #-(or cmu lucid) (:compile-toplevel :load-toplevel :execute)
-           #+(or cmu lucid) (compile load eval)~%")
+      (format T "(eval-when (:compile-toplevel :load-toplevel :execute)~%")
       (format T "  (dolist (gadget '(")
       (dolist (gad gadgets-to-load)
 	(format T "\"~a-loader\"~%		    " gad))
@@ -1032,8 +1030,9 @@ you give the 'Properties' command or go into Run mode."))))
   (setq *Error-Gadget* (Make-Error-Gadget *work-win*))
   (make-prop-sheet *error-gadget*)
   *work-win* ; return work-win
-    ;;if not CMU CommonLisp, then start the main event loop to look for events
-    #-cmu (inter:main-event-loop))
+  ;;if not CMU CommonLisp, then start the main event loop to look for events
+  #-cmu (inter:main-event-loop)
+  )
   
 (defmacro careful-delete (obj)
   `(when (and (boundp ',obj) (schema-p ,obj))

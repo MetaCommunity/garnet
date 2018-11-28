@@ -7,6 +7,8 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; $Id$
 ;;;
 ;;; **********************************************************************
 ;;; This file was originally written as part of the Spice Lisp project at
@@ -152,7 +154,7 @@ Change log:
 (define-keysym 65291 :Clear)
 (define-keysym 65293 #\return)			;enter on RT
 (define-keysym 65299 :pause)
-(define-keysym 65307 #-kcl #\esc #+kcl #\^[)
+(define-keysym 65307 #\esc)
 (define-keysym 65312 :compose)
 (define-keysym 65360 :home)
 (define-keysym 65361 :leftarrow)

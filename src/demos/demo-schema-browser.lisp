@@ -90,8 +90,8 @@
 	   (create-instance 'SCHEMA-BROWSER-TOP-AGG opal:aggregate))
 
 
-  ; Create SCHEMA-BROWSER schema and add to window
-  ;
+  ;; Create SCHEMA-BROWSER schema and add to window
+  ;;
   (create-instance 'SCHEMA-BROWSER garnet-gadgets:browser-gadget
      (:left 10)
      (:top 85)
@@ -111,8 +111,8 @@
   (opal:update SCHEMA-BROWSER-WIN)
 
 
-  ; Create CONTROL-PANEL and add to window
-  ;
+  ;; Create CONTROL-PANEL and add to window
+  ;;
   (create-instance 'CONTROL-PANEL opal:aggregadget
      (:constant :top :left)
      (:left 10)
@@ -154,26 +154,26 @@
 		  (declare (ignore gadget))
 		  (let ((coordinate (g-value SCHEMA-BROWSER
 					     :additional-selection-coordinate)))
-		    (if coordinate
-			; Gray box is over an item in one of the menus
-			(if (equal value "Top")
-			    (progn
-			      (garnet-gadgets:promote-item
-			       SCHEMA-BROWSER coordinate)
-			      (s-value SCHEMA-BROWSER
-				       :additional-selection-coordinate NIL))
-			    (ps (g-value SCHEMA-BROWSER :additional-selection)))
-			; Gray box is over the labeled-box
-			(if (g-value SCHEMA-BROWSER :gray-feedback :obj-over)
-			    (let ((item (car (g-value SCHEMA-BROWSER :items))))
-			      (if item
-				  (when (equal value "PS")
-				    (ps item))
-				  (garnet-gadgets:display-error
-				   SCHEMA-BROWSER-ERROR-GADGET
-				   (concatenate 'string
-				    "Unable to access schema "
-				    (g-value CONTROL-PANEL :l-box :value)))))))))))
+		    (when coordinate
+		      ;; Gray box is over an item in one of the menus
+		      (if (equal value "Top")
+			  (progn
+			    (garnet-gadgets:promote-item
+			     SCHEMA-BROWSER coordinate)
+			    (s-value SCHEMA-BROWSER
+				     :additional-selection-coordinate NIL))
+			  (ps (g-value SCHEMA-BROWSER :additional-selection)))
+		      ;; Gray box is over the labeled-box
+		      (if (g-value SCHEMA-BROWSER :gray-feedback :obj-over)
+			  (let ((item (car (g-value SCHEMA-BROWSER :items))))
+			    (if item
+				(when (equal value "PS")
+				  (ps item))
+				(garnet-gadgets:display-error
+				 SCHEMA-BROWSER-ERROR-GADGET
+				 (concatenate 'string
+					      "Unable to access schema "
+					      (g-value CONTROL-PANEL :l-box :value)))))))))))
 
 	(:l-box ,garnet-gadgets:labeled-box
 	    (:left ,(o-formula (+ 20 (gvl :parent :gray-control :left)
@@ -267,12 +267,12 @@
      (:start-where (list :in-box (g-value CONTROL-PANEL :l-box :frame)))
      (:start-event :middledown)
      (:start-action
-      ; The :obj-over slot of the gray feedback object is set to the FRAME
-      ; part of the labeled box.  (Small abuse of :additional-selection, which
-      ; should ideally be set to the item named by the string in the l-box.
-      ; Here, :additional-selection is just gets NIL, since error checking
-      ; would involve a call to VERIFY-BINDING and maybe fiddling with the
-      ; ERROR-GADGET, etc.)
+      ;; The :obj-over slot of the gray feedback object is set to the FRAME
+      ;; part of the labeled box.  (Small abuse of :additional-selection, which
+      ;; should ideally be set to the item named by the string in the l-box.
+      ;; Here, :additional-selection is just gets NIL, since error checking
+      ;; would involve a call to VERIFY-BINDING and maybe fiddling with the
+      ;; ERROR-GADGET, etc.)
       #'(lambda (interactor l-box-frame)
 	  (declare (ignore interactor))
 	  (let ((feedback-obj (g-value SCHEMA-BROWSER :gray-feedback)))
@@ -308,7 +308,7 @@
 (defun do-quit (gadget value)
   (declare (ignore gadget value))
   (do-stop)
-  ;;for demo-controller
+  ;; for demo-controller
   (unless (and (fboundp 'common-lisp-user::Garnet-Note-Quitted)
 	       (common-lisp-user::Garnet-Note-Quitted "DEMO-SCHEMA-BROWSER")))
 )

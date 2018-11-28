@@ -7,6 +7,8 @@
 ;;; domain.  If you are using this code or any part of Garnet,      ;;;
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; $Id::                                                             $	
 
 ;;; This is the loader file for the special Garnet Tour
 
@@ -33,19 +35,17 @@
 
 
 ; Old loads kept below just in case                
-#|
-(common-lisp-user::garnet-load (common-lisp-user::garnet-pathnames "radio-buttons-loader" common-lisp-user::Garnet-Gadgets-PathName)
+#||
+(common-lisp-user::garnet-load (merge-pathnames "radio-buttons-loader" common-lisp-user::Garnet-Gadgets-PathName)
       :verbose T)
-(load (common-lisp-user::garnet-pathnames "v-slider-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
-(load (common-lisp-user::garnet-pathnames "menu-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
-(load (common-lisp-user::garnet-pathnames "v-scroll-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
+(load (merge-pathnames "v-slider-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
+(load (merge-pathnames "menu-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
+(load (merge-pathnames "v-scroll-loader" common-lisp-user::Garnet-Gadgets-PathName) :verbose T)
 
-(load (common-lisp-user::garnet-pathnames "mge" Garnet-Demos-PathName) :verbose T)
-(load (common-lisp-user::garnet-pathnames "demo-othello" Garnet-Demos-PathName) :verbose T)
-|#
+(load (merge-pathnames "mge" Garnet-Demos-PathName) :verbose T)
+(load (merge-pathnames "demo-othello" Garnet-Demos-PathName) :verbose T)
+||#
 
-
-#+allegro-v4.0 (unintern 'path (find-package "COMMON-LISP-COMMON-LISP-USER"))
 (create-instance 'moving-rectangle opal:rectangle
 		 (:box '(80 20 100 150))
 		 (:left (o-formula (first (gvl :box))))

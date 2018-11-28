@@ -28,9 +28,7 @@ Change log:
 		  (:scrolling-menu "scrolling-menu-loader")
 		  (:browser-gadget "browser-gadget")))
     (unless (get :garnet-modules (car pair))
-      (load (garnet-pathnames (cadr pair)
-			     #+cmu "gadgets:"
-			     #+(not cmu) Garnet-Gadgets-PathName)
+      (load (merge-pathnames (cadr pair) Garnet-Gadgets-PathName)
 	    :verbose T)))
   (format t "...Done Browser-Gadget.~%"))
 

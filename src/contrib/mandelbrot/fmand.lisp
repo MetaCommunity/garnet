@@ -8,20 +8,20 @@
 ;;;
 ;;; Time-stamp: "Sunday 14-Feb-2010 08:55:02 PST"
 ;;;
-;;;
+;;; $Id::                                                    $
 
 ;; (declaim (optimize (speed 2) (safety 3) (space 2) (debug 3) (compilation-speed 0)))
 (declaim (optimize (speed 3) (safety 1) (space 0) (debug 1) (compilation-speed 0)))
 
 (defpackage "FMAND"
-  (:use :common-lisp :kr :opal)
+  (:use :common-lisp :kr :opal :garnet-gadgets)
   (:nicknames "FM")
   (:export start))
 
 (in-package "FMAND")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-(defvar DEMO-MOTIF-INIT
+(defvar FMAND-INIT
   (dolist (file '("motif-text-buttons-loader" "motif-save-gadget-loader"
 		  "motif-h-scroll-loader" "prop-sheet-win-loader"
 		  "mouseline-loader"))
@@ -53,8 +53,8 @@
 	  *depth*
 	  *colormap*))
 
-(declaim (fixnum +plot-xy+))
-(defconstant +plot-xy+ 650)
+(declaim (fixnum *plot-xy*))
+(defparameter *plot-xy* 650)
 
 (declaim (fixnum +black-index+ +white-index+))
 
@@ -66,9 +66,9 @@
 ;;; Graphics parameters.
 ;;;
 (declaim (fixnum *iterations* *initial-iterations* *max-colors*))
-(defparameter *initial-iterations* 256)
-(defparameter *max-iterations*     65535)
-(defparameter *iterations*         256)
+(defparameter *initial-iterations* 128)
+(defparameter *max-iterations*     2048)
+(defparameter *iterations*         128)
 (defparameter *max-colors*         256)
 
 ;;;
@@ -372,7 +372,7 @@ Click right mouse button to zoom out by a factor of 2.")
 ;;;
 ;;; Initialize a plot window.
 ;;;
-(defun init (&optional (title "Plot") (width +plot-xy+) (height +plot-xy+))
+(defun init (&optional (title "Plot") (width *plot-xy*) (height *plot-xy*))
   (unless (and (boundp '*w*) *w*)       ; Only do it once.
 
     (create-plot-window title width height)
@@ -467,11 +467,11 @@ Click right mouse button to zoom out by a factor of 2.")
 
   (let* ((x-point (+ (first *box-list*) (floor (third *box-list*) 2)))
 	 (y-point (+ (second *box-list*) (floor (fourth *box-list*) 2)))
-	 (plot-center (/ +plot-xy+ 2))
-	 (scale-factor (/ (* 2 *radius*) +plot-xy+))
+	 (plot-center (/ *plot-xy* 2))
+	 (scale-factor (/ (* 2 *radius*) *plot-xy*))
 	 (new-x-unscaled (- x-point plot-center))
 	 (new-y-unscaled (- y-point plot-center)))
-    (setf *radius* (* *radius* (/ (third *box-list*) +plot-xy+)))
+    (setf *radius* (* *radius* (/ (third *box-list*) *plot-xy*)))
     (setf *real-center*
 	  (+ *real-center* (* new-x-unscaled scale-factor))
 	  *imaginary-center*
@@ -531,7 +531,7 @@ Radius --- the radius of the plot around the center.")
 
   ;; Set up balloon help.
   (s-value *pixmap* :help-string pixmap-balloon-help)
-  (create-instance 'pixmap-mouseline gg:mouselinepopup (:wait-amount 4))
+  (create-instance 'pixmap-mouseline mouselinepopup (:wait-amount 4))
   (opal:add-component *w-agg* pixmap-mouseline)
   )
 
@@ -605,7 +605,7 @@ Radius --- the radius of the plot around the center.")
      (:string (o-formula (format nil "~D" (gv slider :value)))))
      
   (setf *prop*
-	(create-instance 'PROP gg:prop-sheet
+	(create-instance 'PROP prop-sheet
 	   (:left 75)
 	   (:width (o-formula (- (gvl :parent :window :width) 150)))
 	   (:top (o-formula (+ (opal:gv-bottom iteration-text) 15)))
@@ -623,7 +623,7 @@ Radius --- the radius of the plot around the center.")
 	   (:top (o-formula (+ (opal:gv-bottom prop) 15)))
 	   (:h-align :center)
 	   (:val-1 0)
-	   (:val-2 +plot-xy+)
+	   (:val-2 *plot-xy*)
 	   (:scr-incr 100)
 	   (:scr-trill-p nil)
 	   (:percent-visible 0.0)
@@ -638,7 +638,7 @@ Radius --- the radius of the plot around the center.")
 	   (:top (o-formula (+ (opal:gv-bottom indicator) 5)))
 	   (:string "Percent Complete: 0")))
 
-  (create-instance 'control-mouseline gg:mouselinepopup (:wait-amount 2))
+  (create-instance 'control-mouseline mouselinepopup (:wait-amount 2))
 
   (opal:add-components *gw-agg*
 		       *buttons*
@@ -689,7 +689,7 @@ Radius --- the radius of the plot around the center.")
   (s-value *slider* :value *iterations*))
 
 (defun update-propsheet ()
-  (gg:reusepropsheet
+  (reusepropsheet
    *prop*
    `(("Real Center" ,(o-formula (format nil "~A" *real-center*)))
      ("Imaginary Center" ,(o-formula (format nil "~A" *imaginary-center*)))
@@ -698,7 +698,7 @@ Radius --- the radius of the plot around the center.")
 
 (defun update-indicator (current)
   (declare (fixnum current))
-  (let ((done (float (/ current +plot-xy+))))
+  (let ((done (float (/ current *plot-xy*))))
     (s-value *indicator* :percent-visible done)
     (s-value *indicator-text* :string
 	     (format nil "Percent Complete: ~D"
@@ -760,12 +760,12 @@ Radius --- the radius of the plot around the center.")
 (defun M ()
   (declare (optimize (speed 3) (safety 0) (space 0)))
   ;; Set up window stuff.
-  (init "Mandelbrot Plot" +plot-xy+ +plot-xy+)
+  (init "Mandelbrot Plot" *plot-xy* *plot-xy*)
   (opal:raise-window *w*)
 
   ;; Do the plot.
   (opal:with-hourglass-cursor
-   (let* ((w +plot-xy+)
+   (let* ((w *plot-xy*)
 	  (half-w (truncate w 2))
 	  (r *radius*)
 	  (s (* 2.0l0 (/ r w)))
@@ -818,7 +818,10 @@ Radius --- the radius of the plot around the center.")
   )
 
 
-(defun start ()
+(defun start (&optional (size *plot-xy* argsupplied))
+  (when argsupplied
+    (setf *w* nil)
+    (setf *plot-xy* size))
   (reset-plot))
 
 (defun reset-plot (&optional g v)
@@ -846,13 +849,13 @@ Radius --- the radius of the plot around the center.")
 
 (defun do-save (gadgets-object item-string)
   (declare (ignore gadgets-object item-string))
-  (gg:display-save-gadget-and-wait *SAVE-DIALOG* *last-filename*)
+  (display-save-gadget-and-wait *SAVE-DIALOG* *last-filename*)
   (update-all t))
 
 
 (defun do-load-colors (gadgets-object item-string)
   (declare (ignore gadgets-object item-string))
-  (gg:display-load-gadget-and-wait *load-dialog*)
+  (display-load-gadget-and-wait *load-dialog*)
   (do-plot nil nil)
   (update-all t))
 

@@ -56,7 +56,7 @@ Change log:
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(MouseLine MouseLinePopup)))
 
 (unless (boundp 'MouseLinePriorityLevel)
@@ -387,7 +387,7 @@ Change log:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+garnet-test
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
  (export '(Mouseline-Go Mouseline-Stop)))
 
 #+garnet-test

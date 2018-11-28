@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; CHANGE LOG:
 ;;; 10/5/03 RGA --- Long filenames and MCL.
 ;;; 10/2/03 RGA --- New compile/load protocol
@@ -49,19 +51,29 @@
 
 (in-package :COMMON-LISP-USER)
 
+(defvar *debug-gadgets-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-gadgets-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
 ;; Only loads this file when not compiling all of Garnet.
 (unless (get :garnet-modules :multifont)
-  (load (common-lisp-user::garnet-pathnames "multifont-loader"
-			 #+cmu "opal:"
-			 #+(not cmu) common-lisp-user::Garnet-Opal-PathName)))
+  (load (merge-pathnames "multifont-loader" Garnet-Opal-PathName))) ; The pathname is CORRECT!
 
-(eval-when (eval load compile)
+(eval-when (:load-toplevel :compile-toplevel :execute)
   (garnet-mkdir-if-needed Garnet-Gadgets-Pathname))
 
 (Defvar Garnet-Gadgets-Files
   '(
-    "GAD-scroll-parts"    ;;  Helper modules containing definitions for 
-    "GAD-slider-parts"    ;;    scroll bar and slider objects
+    "GAD-scroll-parts"			; Helper modules containing definitions for 
+    "GAD-slider-parts"			; scroll bar and slider objects
     "GAD-v-arrows"
     "GAD-v-boxes"
     "GAD-h-arrows"
@@ -71,9 +83,9 @@
     "h-scroll-bar"
     "v-slider"
     "h-slider"
-    "trill-device"        ;;  A horizontal slider without the shaft
+    "trill-device"			; A horizontal slider without the shaft
 
-    "GAD-button-parts"    ;;  Helper module for button and menu objects
+    "GAD-button-parts"			; Helper module for button and menu objects
     "x-buttons"
     "text-buttons"
     "radio-buttons"
@@ -86,11 +98,11 @@
     "scrolling-labeled-box"
     "scrolling-unlabeled-box"
 
-    "gauge"              ;;  Semi-circular gauge
+    "gauge"				; Semi-circular gauge
     "menu"
-    "labeled-box"        ;;  A box with editable text and a label
-    "arrow-line"         ;;  A line/arrowhead combination
-    "graphics-selection" ;;  Selection squares for move-grow interaction
+    "labeled-box"			; A box with editable text and a label
+    "arrow-line"			; A line/arrowhead combination
+    "graphics-selection"		; Selection squares for move-grow interaction
     "option-button"
     "popup-menu-button"
     "save-load-functions"
@@ -139,8 +151,9 @@
 (dolist (file Garnet-Gadgets-Files)
   (let ((gadget-str (concatenate 'string "gadgets:" file)))
     (garnet-compile gadget-str)
-    #+allegro-V3.1 (gc t)
     (garnet-load gadget-str)))
+
+(format t "Copying gadget loader files to ~A~%" Garnet-Gadgets-Pathname)
 
 (garnet-copy-files Garnet-Gadgets-Src Garnet-Gadgets-Pathname
 		   '("arrow-line-loader.lisp"
@@ -164,13 +177,9 @@
 		     "motif-prop-sheet-win-loader.lisp"
 		     "motif-radio-buttons-loader.lisp"
 		     "motif-save-gadget-loader.lisp"
-		     ;; RGA MCL still seems to loose with long file names.
-		     #-apple"motif-scrolling-labeled-box-loader.lisp"
-		     #+apple"motif-scrolling-labeled-box-loa"
-		     #-apple"motif-scrolling-menu-loader.lisp"
-		     #+apple"motif-scrolling-menu-loader.lis"
-		     #-apple"motif-scrolling-window-loader.lisp"
-		     #+apple"motif-scrolling-window-loader.l"
+		     "motif-scrolling-labeled-box-loader.lisp"
+		     "motif-scrolling-menu-loader.lisp"
+		     "motif-scrolling-window-loader.lisp"
 		     "motif-slider-loader.lisp"
 		     "motif-text-buttons-loader.lisp"
 		     "motif-trill-device-loader.lisp"
@@ -186,12 +195,9 @@
 		     "prop-value-loader.lisp"
 		     "radio-buttons-loader.lisp"
 		     "save-gadget-loader.lisp"
-		     #-apple"scrolling-input-string-loader.lisp"
-		     #+apple"scrolling-input-string-loader.l"
-		     #-apple"scrolling-labeled-box-loader.lisp"
-		     #+apple"scrolling-labeled-box-loader.li"
-		     #-apple"scrolling-unlabeled-box-loader.lisp"
-		     #+apple"scrolling-unlabeled-box-loader"
+		     "scrolling-input-string-loader.lisp"
+		     "scrolling-labeled-box-loader.lisp"
+		     "scrolling-unlabeled-box-loader.lisp"
 		     "scrolling-menu-loader.lisp"
 		     "scrolling-window-loader.lisp"
 		     "standard-edit-loader.lisp"

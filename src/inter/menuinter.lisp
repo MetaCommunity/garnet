@@ -8,7 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+;;; $Id$
+;;;
 ;;; This file contains the mouse interactors to handle menus.
 ;;; It should be loaded after Interactor and after MoveGrowInter
 ;;;
@@ -73,7 +74,8 @@ Change log:
 
 (in-package "INTERACTORS")
 
-;;;============================================================
+
+;;;;===========================================================
 ;;;  Utility procedures
 ;;;============================================================
 ;;;============================================================
@@ -102,13 +104,12 @@ Change log:
   (or (third (g-value inter :slots-to-set))
       :*Inter-agg-selected*))
 
-
-;;;============================================================
+
+;;;;===========================================================
 ;;; Final Feedback objects
 ;;;============================================================
 
 (defun Clear-Finals (an-interactor feedback-objs-in-use)
-  #-garnet-debug (declare (ignore an-interactor))
   (dolist (f feedback-objs-in-use)
     (dbprint-feed :obj-over f NIL an-interactor)    
     (s-value f :obj-over NIL)))
@@ -258,8 +259,8 @@ Change log:
 	     (list (g-value an-interactor :final-feedback-obj)))))
 |#
 
-
-;;;============================================================
+
+;;;;===========================================================
 ;;; Exported "useful" functions
 ;;;============================================================
 
@@ -328,7 +329,8 @@ not selected, this does nothing."
 	(Calc-Set-Agg-Slot an-interactor main-agg obj how-set))
     obj))
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Calculating how to set the selected slots
 ;;;============================================================
 
@@ -523,11 +525,12 @@ not selected, this does nothing."
 	 (s-value agg agg-sel-slot newval)
 	 (List-Final-Feedback-Obj an-interactor newval T)))))) ;add
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Menu Interactors
 ;;;============================================================
 
-;;;============================================================
+;;;;===========================================================
 ;;; Default Procedures to go into the slots
 ;;;============================================================
 
@@ -723,7 +726,8 @@ not selected, this does nothing."
 	  (kr-send an-interactor :Stop-Action an-interactor prev-obj-over))
 	(menu-do-abort an-interactor NIL NIL))))
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Menu schema
 ;;;============================================================
 

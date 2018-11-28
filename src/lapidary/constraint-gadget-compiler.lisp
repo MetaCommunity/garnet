@@ -19,6 +19,17 @@ Change log:
 
 (in-package "COMMON-LISP-USER")
 
+(defvar *debug-constraint-gadget-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-constraint-gadget-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
 ;; check first to see if place is set
 (unless (boundp 'Garnet-Gadgets-PathName)
   (error "Load 'Garnet-Loader' first to set Garnet-Gadgets-PathName before loading Gadgets."))

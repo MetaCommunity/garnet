@@ -39,7 +39,8 @@ fi
 
 case $1 in
     sbcl)
-	LISP=$SBCL
+	BUILD="$SBCL --disable-debugger"
+	LOAD=$SBCL
 	QUIT="(quit)"
 	IMAGE=garnet-sbcl
 	;;
@@ -50,17 +51,20 @@ case $1 in
 	IMAGE=garnet-ccl
 	;;
     cmucl)
-	LISP=$CMUCL
+	BUILD="$CMUCL -batch"
+	LOAD=$CMUCL
 	QUIT="(quit)"
-	IMAGE=garnet.core
+	IMAGE=garnet-cmucl
 	;;
     clisp)
-	LISP="$CLISP -K full"
+	BUILD="$CLISP -K full"
+	LOAD=$CLISP
 	QUIT="(exit)"
 	IMAGE=garnet.mem
 	;;
     acl)
-	LISP=$ACL
+	BUILD="$ACL -batch -backtrace-on-error"
+	LOAD=$ACL
 	QUIT="(exit)"
 	IMAGE=garnet.dxl
 	;;
@@ -71,7 +75,7 @@ case $1 in
 esac
 
 
-$LISP << EOF
+$BUILD << EOF
 (load "garnet-prepare-compile")
 (defvar Garnet-Garnet-Debug NIL) ;; no debugging code
 (load "garnet-loader")
@@ -81,10 +85,12 @@ EOF
 
 ./garnet-after-compile
 
-$LISP << EOF
+
+[ $? -eq 0 ] && $LOAD << EOF
 (load "garnet-loader")
 
 (let ((args (list "$IMAGE"
+		  #+allegro :quit #+allegro t
                   #+sbcl :executable #+sbcl t
                   #+cmu :executable #+cmu t
                   #+ccl :prepend-kernel #+ccl t)))

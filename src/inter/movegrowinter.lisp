@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; $Id$
+;;;
 ;;; This file contains the mouse and keyboard interactors to select objects
 ;;; and move them around or grow them.  It should be loaded after
 ;;; Interactors.lisp
@@ -63,7 +65,8 @@ Change log:
 
 (in-package "INTERACTORS")
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Filtering
 ;;;============================================================
 
@@ -87,7 +90,8 @@ Change log:
 	  (t (error ":input-filter of ~s should be NIL, number, list of 4 numbers or functionp" inter)))))
 		   
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Clip-and-Map
 ;;;============================================================
 
@@ -131,7 +135,8 @@ Change log:
 		   (round val) val)))))
 
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Move-Grow-Interactor
 ;;;============================================================
 
@@ -151,6 +156,7 @@ Change log:
         ;; RGA --- added call to get-obj-slots-for-movegrow
     (multiple-value-bind (left top width height)
 	(get-obj-slots-for-movegrow obj nil an-interactor)
+      (declare (ignore left top))
         ;; use a global to avoid cons-ing
       (setf (first *glo-points*)
 	(case attach
@@ -355,11 +361,11 @@ Change log:
     
 
 
-;; ----------------------------------------------------------------------
-;; functions to deal with :where-hit and initialize the interactor
-;; ----------------------------------------------------------------------
-;; Orig-?-dist is the distance from x2 to x1, unless centered in which case it
-;; is half the distance.
+;;; ----------------------------------------------------------------------
+;;; functions to deal with :where-hit and initialize the interactor
+;;; ----------------------------------------------------------------------
+;;; Orig-?-dist is the distance from x2 to x1, unless centered in which case it
+;;; is half the distance.
 (defun SetLineInitialSlots (an-interactor obj x y)
   ;; RGA --- added call to get-obj-slots-for-movegrow
   (multiple-value-bind (x1 y1 x2 y2)
@@ -381,10 +387,10 @@ Change log:
 	    (s-value an-interactor :x-off (- x x1))
 	    (s-value an-interactor :y-off (- y y1))))))))
 
-;; Call this when press and attach-point is :where-hit and moving an
-;; end-point of a line to set the
-;; interactor's :where-hit-attach slot based on hit position.
-;; Returns :where-hit-attach
+;;; Call this when press and attach-point is :where-hit and moving an
+;;; end-point of a line to set the
+;;; interactor's :where-hit-attach slot based on hit position.
+;;; Returns :where-hit-attach
 (defun CalcLineWhereHitAttach (an-interactor x y)
   (let* ((origpoints (g-value an-interactor :saved-original-points))
 	 (x1 (first origpoints))
@@ -405,10 +411,10 @@ Change log:
 	      (format T "Calculated attach point for line is endpoint ~s~%" attach))
     attach))
 
-;; Call this when press and attach-point is :where-hit and growing a
-;; rectangle to set the
-;; interactor's :where-hit-attach slot based on hit position.  Also sets
-;; x-off and y-off.  Returns :where-hit-attach
+;;; Call this when press and attach-point is :where-hit and growing a
+;;; rectangle to set the
+;;; interactor's :where-hit-attach slot based on hit position.  Also sets
+;;; x-off and y-off.  Returns :where-hit-attach
 (defun CalcWhereHitAttach (an-interactor x y)
   (let* ((origbox (g-value an-interactor :saved-original-points))
 	 (x-off (- (first origbox) x))  ; should be negative numbers
@@ -453,11 +459,10 @@ Change log:
     (s-value an-interactor :where-hit-attach control)
     control))
 
-;; makes the feedback for interactor be visible if vis = T or invisible if
-;; vis = NIL
+;;; makes the feedback for interactor be visible if vis = T or invisible if
+;;; vis = NIL
 (defun sel-change-feedback-visible (an-interactor feedback
 						  object-being-changed vis)
-  #-garnet-debug (declare (ignore an-interactor))
   (when feedback
     (let ((val (if vis object-being-changed NIL)))
       (dbprint-feed :obj-over feedback val an-interactor)
@@ -474,7 +479,6 @@ Change log:
 
 ;; Copies the 4 values into an existing list if there, otherwise creates one
 (defun set-obj-list4-slot (obj slot new-list4 inter feedbackp)
-  #-garnet-debug (declare (ignore inter feedbackp))
   (dbprint-either slot obj new-list4 inter feedbackp)
   (set-obj-list4-slot-no-db obj slot new-list4))
 
@@ -518,7 +522,6 @@ Change log:
 	    (t (error "bad :slots-to-set in ~s.  Should be :box :points or list of slots" inter))))))
 	     
 (defun slot-set (obj slot default-slot new-val inter feedbackp)
-  #-garnet-debug (declare (ignore feedbackp))
   (cond ((null slot)) ; don't set
 	((eq slot T)
 	 (dbprint-either default-slot obj new-val inter feedbackp)
@@ -533,7 +536,7 @@ Change log:
 (defun get-obj-slots-for-movegrow (obj line-p inter)
   (when obj 
     (let ((slots-to-set (g-value inter :slots-to-set))
-	  (old-points (kr:g-value obj (if line-p :points :box))))
+	  #-(and) (old-points (kr:g-value obj (if line-p :points :box))))
       (cond ((member slots-to-set '(:box :points))
 	     ;; RGA using old-points gives some odd effects
 	     ;; (if old-points (values-list old-points))
@@ -567,12 +570,12 @@ Change log:
 	(t (error "slots-to-get value bad ~s in inter ~s" slot inter))))
 
 
-
-;;;============================================================
+
+;;;;===========================================================
 ;;; Default Procedures to go into the slots
 ;;;============================================================
 
-(proclaim '(special Move-Grow-Interactor))
+(declaim (special Move-Grow-Interactor))
 
 (defun Move-Grow-Interactor-Initialize (new-Move-Grow-schema)
   (if-debug new-Move-Grow-schema (format T "Select change initialize ~s~%"
@@ -580,7 +583,7 @@ Change log:
   (Check-Interactor-Type new-Move-Grow-schema inter:Move-Grow-Interactor)
   (Check-Required-Slots new-Move-Grow-schema)
   (Set-Up-Defaults new-Move-Grow-schema)
-  ) ;end initialize procedure
+  )
 
 (defun Move-Grow-Int-Start-Action (an-interactor object-being-changed
 						  first-points)
@@ -667,12 +670,12 @@ Change log:
 				 an-interactor
 				 NIL))))
   
-;;;============================================================
+;;;;===========================================================
 ;;; Go procedure utilities
 ;;;============================================================
 
-;;Want a non-standard default running-where so call this instead of calling
-;;Fix-Up-Running-where.    Default here is T (anywhere).
+;;; Want a non-standard default running-where so call this instead of calling
+;;; Fix-Up-Running-where.    Default here is T (anywhere).
 ;;; probably it doesn't really make much sence to use '* with movegrow, but it
 ;;; is supported anyway
 (defun Move-Grow-Fix-Running-where (an-interactor new-obj-over)
@@ -744,7 +747,7 @@ Change log:
 	  (GoToStartState an-interactor NIL)
 	  (kr-send an-interactor :stop-action an-interactor obj points))))))
 
-#| ----------------------------------------------------------------------
+#|| ----------------------------------------------------------------------
 ---- Pedro's proposal for :where-hit when filter doesn't work because
 ---- object jumps to off-grid even if it was on grid to start with
 (defun Move-Grow-do-start (an-interactor new-obj-over event)
@@ -802,7 +805,7 @@ Change log:
 	  (GoToStartState an-interactor NIL)
 	  (kr-send an-interactor :stop-action an-interactor obj points))))))
 ----------------------------------------------------------------------
-|#
+||#
 
 (defun Move-Grow-do-outside (an-interactor)
   (if-debug an-interactor (format T "Move-Grow outside~%"))
@@ -884,7 +887,8 @@ Change log:
 			   (g-value an-interactor :saved-last-points))
       (Move-Grow-do-abort an-interactor NIL event)))
 
-;;;============================================================
+
+;;;;===========================================================
 ;;; Move-Grow schema
 ;;;============================================================
 

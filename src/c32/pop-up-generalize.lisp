@@ -3,6 +3,8 @@
 ;;; This file created by GILT V0.4: The Garnet Interface Builder
 ;;; on Apr 11, 1991, 4:52 PM
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; $Id::                                                     $
 
 ;;; This file uses the following objects:
 ;;;     TEXT-BUTTON-PANEL from package GARNET-GADGETS
@@ -13,7 +15,7 @@
 ;;;     LABELED-BOX from package GARNET-GADGETS
 
 
-#|
+#||
 (dolist (gadget '("labeled-box-loader"
 		  "x-buttons-loader"
 		  "text-buttons-loader"
@@ -24,7 +26,7 @@
 ;;;     Functions needed from Gilt
 (load (common-lisp-user::garnet-pathnames "gilt-functions-loader"
 			 common-lisp-user::Garnet-Gilt-PathName))
-|#
+||#
 
 
 ;;;

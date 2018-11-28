@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; Changes:
 ;;; 02/24/93  Andrew Mickish - Removed references to compile-opal/inter-p
 ;;; 04/15/92  Andrew Mickish - Added load of ps-multifont
@@ -34,13 +36,13 @@
     ))
 
 (unless (get :garnet-modules :ps)
-  (load (garnet-pathnames "ps" Garnet-PS-PathName)
+  (load (merge-pathnames "ps" Garnet-PS-PathName)
 	:verbose T))
 
 ; Load printing functions for multifont if multifont files already loaded
 ; (otherwise they will be loaded by the multifont-loader when needed).
 (if (get :garnet-modules :multifont)
-    (load (garnet-pathnames "ps-multifont" Garnet-PS-Pathname)
+    (load (merge-pathnames "ps-multifont" Garnet-PS-Pathname)
 	  :verbose T))
 
 (setf (get :garnet-modules :ps) t)

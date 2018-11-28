@@ -110,9 +110,9 @@
 
 (defconstant sel-box-size 7)
 (defconstant sel-box-sizeD2 3)
-(defconstant *agg-sel-circle-size* 17)
-(defconstant *min-agg-size* (+ (* 2 *agg-sel-circle-size*) 4))
-(defconstant *min-leaf-size* (+ (* 2 sel-box-size) 4))
+(defconstant +agg-sel-circle-size+ 17)
+(defconstant +min-agg-size+ (+ (* 2 +agg-sel-circle-size+) 4))
+(defconstant +min-leaf-size+ (+ (* 2 sel-box-size) 4))
 
 ;; error gadget to display error messages
 (create-instance '*lapidary-error-window* garnet-gadgets:error-gadget)

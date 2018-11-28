@@ -1,46 +1,47 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: GARNET-DEBUG; Base: 10 -*-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;         The Garnet User Interface Development Environment.      ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; This code was written as part of the Garnet project at          ;;;
-;;; Carnegie Mellon University, and has been placed in the public   ;;;
-;;; domain.  If you are using this code or any part of Garnet,      ;;;
-;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;*******************************************************************;;
+;;          The Garnet User Interface Development Environment.       ;;
+;;*******************************************************************;;
+;;  This code was written as part of the Garnet project at           ;;
+;;  Carnegie Mellon University, and has been placed in the public    ;;
+;;  domain.                                                          ;;
+;;*******************************************************************;;
 
+;;; $Id$
+
+
 ;;; Pop up a window displaying the slots of the object under the mouse
-;;; when the HELP key is hit.  Allow editing of slots of the object.
-;;;
-;;; Designed and implemented by Brad Myers
-;;;
-#|
-============================================================
-Change log:
-   11/08/93 Andrew Mickish - Moved load of dependent files to debug-loader
-   10/07/93 Andrew Mickish - Fixed typo in GO-TO-PREV-CHAR call, renamed
-              local COLOR variable to TEXT-COLOR to avoid name conflicts
-   09/06/93 Clive Tong - Added LispWorks stuff
-   07/26/93 Andrew Mickish - Proclaimed used-window-list special to avoid
-                             compiler warning
-   07/19/93 Brad Myers - Use color to show parameter slots
-   06/16/93 Brad Myers - Allow Break or Notify on Multiple slots
-   05/25/93 Brad Myers - Fixed for new KR, removed use of file kr-extra
-   05/21/93 Brad Myers - Run main-event-loop if invoked from debugger.
-                         Show slots that are constant.
-   05/4/93  Brad Myers - added trace of formula dependencies
-   03/23/93 Brad Myers - added break and notify on slot setting
-   03/11/93 Brad Myers - added Find-Slot-Starting-With and search
-   02/21/93 Brad Myers - made work better for inspecting interactors
-   02/19/93 Dario Giuse - moved internal functions into KR
-   02/02/93 Andrew Mickish - opal:set-strings ---> opal:set-text & fix
-    1/18/93 Brad Myers - use FIRST global accelerators.
-                       - Inspect-next-inter
-   12/28/92 Brad Myers - started
-============================================================
-|#
+;;  when the HELP key is hit.  Allow editing of slots of the object.
+;; 
+;;  Designed and implemented by Brad Myers
 
+
+
+;;; Change log:
+;;    11/08/93 Andrew Mickish - Moved load of dependent files to debug-loader
+;;    10/07/93 Andrew Mickish - Fixed typo in GO-TO-PREV-CHAR call, renamed
+;;               local COLOR variable to TEXT-COLOR to avoid name conflicts
+;;    09/06/93 Clive Tong - Added LispWorks stuff
+;;    07/26/93 Andrew Mickish - Proclaimed used-window-list special to avoid
+;;                              compiler warning
+;;    07/19/93 Brad Myers - Use color to show parameter slots
+;;    06/16/93 Brad Myers - Allow Break or Notify on Multiple slots
+;;    05/25/93 Brad Myers - Fixed for new KR, removed use of file kr-extra
+;;    05/21/93 Brad Myers - Run main-event-loop if invoked from debugger.
+;;                          Show slots that are constant.
+;;    05/4/93  Brad Myers - added trace of formula dependencies
+;;    03/23/93 Brad Myers - added break and notify on slot setting
+;;    03/11/93 Brad Myers - added Find-Slot-Starting-With and search
+;;    02/21/93 Brad Myers - made work better for inspecting interactors
+;;    02/19/93 Dario Giuse - moved internal functions into KR
+;;    02/02/93 Andrew Mickish - opal:set-strings ---> opal:set-text & fix
+;;     1/18/93 Brad Myers - use FIRST global accelerators.
+;;                        - Inspect-next-inter
+;;    12/28/92 Brad Myers - started
+
+
 (in-package "GARNET-DEBUG")
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(inspector inspect-next-inter Find-Slot-Starting-With
 	    *INSPECTOR-KEY* *SHOW-OBJECT-KEY* *INSPECTOR-NEXT-INTER-KEY*)))
 
@@ -57,7 +58,7 @@ Change log:
 (defparameter valid-marker (cons " (V)" bold-italic-font))
 (defparameter constant-marker (cons " (C)" bold-italic-font))
 
-;;; for debugging, when reload this module
+;; for debugging, when reload this module
 (declaim (special used-window-list))
 (when (boundp 'used-window-list)
   (dolist (w used-window-list)
@@ -73,58 +74,39 @@ Change log:
   (princ str)
   (terpri))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;*******************************************************************
 
 (defparameter debug-started-main-event-loop NIL)
 
-;;; This function returns T if we are in the debugger from inside the
-;;; main-event-loop-process or if we are not using the m-e-l-p then
-;;; returns T if inside debugger
+;; This function returns T if we are in the debugger from inside the
+;; main-event-loop-process or if we are not using the m-e-l-p then
+;; returns T if inside debugger
 (defun broken-inside-main-event-loop ()
-  #+(and CMU (not mp)) NIL
-  #-(and CMU (not mp))
   (if opal::*main-event-loop-process*
       ;; if the current process is the same as the m-e-l process
       (when (eq opal::*main-event-loop-process*
 		#+allegro mp:*current-process*
-		#+lucid common-lisp-user::*current-process*
-                #+lispworks mp::*current-process*
-                #+(and cmu mp) mp:*current-process*
-		#-(or allegro lucid lispworks (and cmu mp)) T)
+                #+cmu mp:*current-process*
+		#+sb-thread sb-thread:*current-thread*
+		#-(or allegro cmu sb-thread) T)
 	;; and if it is in the debugger...
 	;; the allegro code supplied by georgej@Franz.COM (George Jacob)
-	#+(and allegro (not (version>= 7 0)))
-	(not (zerop (mp:symeval-in-stack-group 'tpl::*break-level*
-					       (mp:process-stack-group opal::*main-event-loop-process*))))
-	#+(and allegro (version>= 7 0))
+	#+allegro
 	(not (zerop (multiprocessing:symeval-in-process
 		     'tpl::*break-level*
 		     opal::*main-event-loop-process*)))
-	#+lucid NIL
-	#+lispworks
-	(let ((value (system::read-special-in-sg
-		      (mp::process-stack-group opal::*main-event-loop-process*)
-		      'system::*debug-level*)))
-	  (and (numberp value) (not (zerop value))))
-	#-(or allegro lucid lispworks) NIL
+	#-allegro NIL
 	)
       ;; if not running the m-e-l process, then check if in debugger.
       ;; If so, then assume main-event-loop was in the process that crashed.
       ;; (This might be wrong if there are multiple processes in the
       ;; application, but the one that crashed is NOT the one running m-e-l).
+      #+sb-thread
+      (not opal::*inside-main-event-loop*)
+      #+allegro
       (if opal::*inside-main-event-loop*
-	#+(and allegro (not (version>= 7 0)))
-	(not (zerop (mp:symeval-in-stack-group 'tpl::*break-level*
-		       (mp:process-stack-group mp:*current-process*))))
-	#+(and allegro (version>= 7 0))
-	(not (zerop (mp:symeval-in-process 'tpl::*break-level* mp:*current-process*)))
-	#+lucid NIL
-	#+lispworks
-	(let ((value (system::read-special-in-sg
-		      (mp::process-stack-group mp::*current-process*)
-		      'system::*debug-level*)))
-	  (and (numberp value) (not (zerop value))))
-	  #-(or allegro lucid lispworks) NIL
+	  (not (zerop (mp:symeval-in-process 'tpl::*break-level* mp:*current-process*)))
 	  ;; if not in m-e-l, then need to run it
 	  T)
       ))
@@ -159,7 +141,7 @@ Change log:
 	(beep-print "Will pop up inspect window on next interactor")
 	(inspect-next-inter))))
 	   
-;;; This is set as a global accelerator to view objects
+;; This is set as a global accelerator to view objects
 (defun Pop-Up-ps-for-event (ev)
   (let ((win (inter:event-window ev))
 	 agg obj)
@@ -181,7 +163,7 @@ Change log:
 	(beep-print
 		 (format NIL "INSPECTOR: No window in event ~s" ev)))))
 	    
-;;; This is set as a global accelerator to just print out the object's name
+;; This is set as a global accelerator to just print out the object's name
 (defun Show-Object-On-event (ev)
   (let ((win (inter:event-window ev))
 	 agg obj)
@@ -201,12 +183,12 @@ Change log:
 	(format T "--> No window in event ~s~%" ev))))
 	    
 
-;;;(defvar *INSPECTOR-KEY* :help)
-;;;(defvar *INSPECTOR-NEXT-INTER-KEY* :control-help)
-;;;(defvar *SHOW-OBJECT-KEY* :shift-help)
-(defvar *INSPECTOR-KEY* :f2)
-(defvar *INSPECTOR-NEXT-INTER-KEY* :control-f2)
-(defvar *SHOW-OBJECT-KEY* :shift-f2)
+;;;	(defvar *INSPECTOR-KEY* :help)
+;;;	(defvar *INSPECTOR-NEXT-INTER-KEY* :control-help)
+;;;	(defvar *SHOW-OBJECT-KEY* :shift-help)
+(defvar *INSPECTOR-KEY* :f1)
+(defvar *INSPECTOR-NEXT-INTER-KEY* :control-f1)
+(defvar *SHOW-OBJECT-KEY* :shift-f1)
 
 (inter:add-global-accelerator *INSPECTOR-KEY* 'Pop-Up-ps-for-event :first? T)
 (inter:add-global-accelerator *INSPECTOR-NEXT-INTER-KEY*
@@ -221,14 +203,15 @@ Change log:
 (format T "==> Garnet-Debug: hit ~A to list obj under mouse~%~%"
         *show-object-key*)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;*******************************************************************
 
 (defun Db-Show-Error (window string &optional (error? T))
   (let ((err-obj (g-value window :aggregate :error-string))
 	(err-str (if error?
 		 (format NIL "** ERROR: ~a" string)
 		 string)))
-    ;; ** remove any cr's in the string
+    ;; ** remove any CRs in the string
     ;; ** (setq err-str (substitute #\space #\newline err-str))
     (s-value err-obj :string err-str)
     (s-value err-obj :font bold-font)
@@ -251,7 +234,7 @@ Change log:
 			 (caaar (opal:copy-selected-text string-obj)))
   (inter:stop-interactor inter))
 
-;;;; Called when hit return
+;; Called when hit return
 (defun Edit-Field (inter string-obj event)
   (declare (ignore event))
   ;; find = to the left, if not there then error
@@ -303,19 +286,19 @@ Change log:
 	  (dotimes (i len)
 	    (setf (char str i) (opal:GO-TO-NEXT-CHAR gob)))))
       (opal:set-cursor-to-line-char-position gob orig-line orig-char)
-      str))) ; may be NIL
+      str)))				; may be NIL
 
 (defparameter spacers " 
  ") ;; space and newline
 
-;;; must be used in a "Dependencies" line.  Returns (values obj slot) or NIL
+;; must be used in a "Dependencies" line.  Returns (values obj slot) or NIL
 (defun search-line-for-slot-and-obj (gob &key (previous? NIL))
   (let (slot-name slot obj-name obj start end)
     (multiple-value-bind (orig-line orig-char)
 	(opal:get-cursor-line-char-position gob)
       (when previous? (opal:go-to-prev-line gob))
       (opal:go-to-beginning-of-line gob)
-      (opal:go-to-next-word gob) ;; skip white-space
+      (opal:go-to-next-word gob)	; skip white-space
       (setq slot-name (opal:go-to-next-word gob))
       (setq slot-name (string-trim spacers slot-name))
       (when (and (> (length slot-name) 0)
@@ -324,7 +307,7 @@ Change log:
 	    (gg:careful-read-from-string slot-name)
 	  (unless error?
 	    (setq slot val)
-	    (opal:go-to-next-word gob) ;; " of "
+	    (opal:go-to-next-word gob)	; " of "
 	    (setq obj-name (string-trim spacers (opal:go-to-next-word gob)))
 	    (setq obj-name (string-upcase obj-name))
 	    (when (and (setq start (search "#K<" obj-name))
@@ -357,7 +340,7 @@ Change log:
       (opal:set-cursor-to-line-char-position gob orig-line orig-char)
       slot)))
 	
-;;;*** TEMP, until #K<...> is a reader macro
+;;*** TEMP, until #K<...> is a reader macro
 ;; if the str is an object definition, returns the object itself.  If
 ;; error, returns NIL and sets error string
 (defun Find-Object-In-Word (str win &key (ok-no-selection NIL)
@@ -415,14 +398,14 @@ Change log:
 	(unless new-error?
 	  (setq val new-val))))
 		 
-    (cond (error? ; then return string
+    (cond (error?			; then return string
 	   (Db-Show-Error error-win (princ-to-string error?)))
 	  ;; else read was ok, check types
 	  ((stringp (setq error? (kr:check-slot-type obj slot val NIL)))
 	   (Db-Show-Error error-win error?))
-	  (T ;; value is OK
+	  (T				; value is OK
 	   (let ((win (g-value obj :window)))
-	     (when (slot-constant-p obj slot)  ;; exported by KR
+	     (when (slot-constant-p obj slot) ; exported by KR
 	       (Db-Show-Error error-win (format NIL
 		     "~s is constant, set anyway but may not work" slot) NIL))
 	     (with-constants-disabled
@@ -431,7 +414,7 @@ Change log:
 	       ;; the global update-all won't update the obj's window if there
 	       ;; was a previous error, so explicitly update it
 	       (opal:update win))
-	     NIL))))) ; return NIL when all OK
+	     NIL)))))			; return NIL when all OK
 
 (defun Select-Word-Around-Cursor (gob)
   (multiple-value-bind (orig-line orig-char)
@@ -450,7 +433,8 @@ Change log:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;******************************************************************
 
 (defun Find-Common-Prefix (slot-list)
   (let* ((min-mism 9999)
@@ -464,33 +448,34 @@ Change log:
 	  (setq min-mism (min min-mism len))))
     (subseq first-slot 0 min-mism)))
 
-;;; If a single slot starts with str, then returns the slot,
-;;; If a single slot is the same as str, then returns slot
-;;; If multiple slots start with str, then returns multiple values:
-;;; (NIL list-of-slots unique-prefix), where list-of-slots are all
-;;; the slots that start with str, and unique-prefix is the string
-;;; starting with str that is unique among all slots.
-;;; The colon on the front of the str is optional.
+;; If a single slot starts with str, then returns the slot,
+;; If a single slot is the same as str, then returns slot
+;; If multiple slots start with str, then returns multiple values:
+;; (NIL list-of-slots unique-prefix), where list-of-slots are all
+;; the slots that start with str, and unique-prefix is the string
+;; starting with str that is unique among all slots.
+;; The colon on the front of the str is optional.
 (defun Find-Slot-Starting-With (object str)
   "Find a slot of object that starts with str"
   (let* ((match-str (string-upcase (string-left-trim ": " str)))
 	 (len (length match-str))
 	 slot-list)
-    (call-on-ps-slots object
-		  #'(lambda (schema slot form inherited valid real-value
-				   types bits indent limit)
-		      (declare (ignore schema form inherited valid real-value
-				   types bits indent limit))
-		      (let* ((slotname (symbol-name slot))
-			     (mism (mismatch match-str slotname)))
-			(cond ((null mism) ; names are identical
-			       (return-from Find-Slot-Starting-With slot))
-			      ((eq len mism) ; then is a prefix
-			       (push slot slot-list)))))
-		  :inherit T)
+    (call-on-ps-slots 
+     object
+     #'(lambda (schema slot form inherited valid real-value
+		types bits indent limit)
+	 (declare (ignore schema form inherited valid real-value
+			  types bits indent limit))
+	 (let* ((slotname (symbol-name slot))
+		(mism (mismatch match-str slotname)))
+	   (cond ((null mism)		; names are identical
+		  (return-from Find-Slot-Starting-With slot))
+		 ((eq len mism)		; then is a prefix
+		  (push slot slot-list)))))
+     :inherit T)
     (cond ((null slot-list) NIL)
 	  ((null (cdr slot-list)) (car slot-list))
-	  (T ;; multiple slots match
+	  (T				; multiple slots match
 	   (values NIL slot-list (Find-Common-Prefix slot-list))))))
 	
 
@@ -500,12 +485,14 @@ Change log:
 
 (create-instance 'debug-edit inter:multifont-text-interactor
   (:start-where (o-formula (list :in (gvl :operates-on :string-obj))))
-  (:running-priority inter:normal-priority-level)  ; so buttons can
-						    ; be hit
-  (:stop-event :foo) ; stopped explicitly by actions
+  (:running-priority inter:normal-priority-level) ; so buttons can be hit
+  (:stop-event :foo)				  ; stopped explicitly by actions
   )
 
+
+
 ;;; remove all the font change commands
+
 (inter:unbind-key :control-\u debug-edit) 
 (inter:unbind-key :control-B debug-edit) 
 (inter:unbind-key :control-I debug-edit) 
@@ -533,11 +520,9 @@ Change log:
 (inter:bind-key :NUM-PAD-ENTER #'Edit-Field debug-edit)
 
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Commands
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 
 (defun Re-Fetch (widget value)
   (declare (ignore value))
@@ -569,18 +554,19 @@ Change log:
 	 (string-obj (g-value ps-pop :string-obj))
 	 (str (opal::text-to-string (opal:copy-selected-text string-obj)))
 	 (obj (Find-Object-In-Word str window)))
-    (when obj  ; find object-in-word will print error message
+    (when obj				; find object-in-word will print error message
       (let ((new-win (Get-Window-For-pop-up-debug
 		      (+ 30 (g-value window :left))
 		      (+ 30 (g-value window :top)))))
 	(Create-Multi-Font-String-For-PS obj NIL new-win)))))
 
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;******************************************************************
 
 (defparameter search-prompt "Find slot named: ")
 
-;;; Button function for search: start text editing
+;; Button function for search: start text editing
 (defun Search-Slot (widget value)
   (declare (ignore value))
   (let* ((ps-pop (g-value widget :parent))
@@ -594,7 +580,7 @@ Change log:
     (setf (inter:event-y inter:*current-event*) (g-value search-str :top))
     (inter:start-interactor (g-value ps-pop :search-edit))))
 
-;;; Final-Function for when hit CR in search
+;; Final-Function for when hit CR in search
 (defun Do-Search (inter search-str-obj ev final-str x y)
   (declare (ignore ev x y))
   (let* ((ps-pop (g-value inter :operates-on))
@@ -635,8 +621,8 @@ Change log:
 		  
 
 	   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;******************************************************************
 
 (create-instance 'ps-pop-agg opal:aggregadget
   (:current-object-l NIL) ; a list of the current object.  is a list
@@ -672,7 +658,7 @@ Change log:
       (:SHADOW-OFFSET 1)
       (:DIRECTION :HORIZONTAL)
       (:fixed-width-p NIL))
-     (:error-string ,opal:multi-text  ; used for title and errors
+     (:error-string ,opal:multi-text	; used for title and errors
       (:font ,big-font)
       (:string "<no object>")
       (:left 2)(:top ,(o-formula (+ 2 (opal:gv-bottom
@@ -697,7 +683,7 @@ Change log:
 	(:window ,(o-formula (gvl :operates-on :window)))
 	(:abort-event (:control-\g :any-mousedown))
 	(:cursor-where-press NIL)
-	(:start-event NIL) ; explicitly started
+	(:start-event NIL)		; explicitly started
 	(:start-where ,(o-formula (list :in
 					(gvl :operates-on :search-string))))
 	(:final-function Do-Search)
@@ -772,16 +758,17 @@ Change log:
 	 (obj (Find-Object-In-Word str pop-win :ok-no-selection T)))
     ;; find-object-in-word will return a valid object, or else
     ;; will print a message, unless NOTHING is selected
-    (cond ((eq obj :none) ; then print the main object
+    (cond ((eq obj :none)		; then print the main object
 	   (cond ((schema-p main-obj)
 		  (flash-it main-obj ps-pop))
-		 (T ;; whoops, obj was destroyed
-		  (Db-Show-Error pop-win
-				 (format NIL
-	           "Object ~s seems to be invalid.  Might be destroyed."
-		   main-obj)))))
+		 (T			; whoops, obj was destroyed
+		  (Db-Show-Error 
+		   pop-win
+		   (format NIL
+			   "Object ~s seems to be invalid.  Might be destroyed."
+			   main-obj)))))
 	   (obj (flash-it obj ps-pop))
-	   (T  ; error message already printed
+	   (T				; error message already printed
 	    ))))
 
 (defun Show-Hide-Inherited-Slots (widget value)
@@ -795,10 +782,9 @@ Change log:
 			       :reset-extra-slots NIL)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Formula dependencies view
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;
 
 (defparameter indent-amt 3)
 (defparameter max-depth 3)
@@ -880,7 +866,7 @@ Change log:
 	     (Db-Show-Error window "Can't find obj and slot on line above ...")
 	     (return-from Show-Dependencies)))
 	  ((keywordp other-obj)
-	   (setq slot other-obj) ; that slot of obj
+	   (setq slot other-obj)	; that slot of obj
 	   (multiple-value-bind (new-obj new-slot)
 	       (search-line-for-slot-and-obj string-obj)
 	     (if (and new-obj (eq new-slot slot))
@@ -911,7 +897,7 @@ Change log:
 
     (setq string-list (append title (Generate-Dependencies slot obj)))
 
-    ;;; now set string-list
+    ;; now set string-list
     
     (opal:set-text string-obj string-list)
     (s-value string-obj :visible T)
@@ -922,9 +908,9 @@ Change log:
     (opal:update window)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Break and Notify
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 
 (defun show-inspector-break (schema slot new-value reason window break?)
   (let ((s (format NIL "~s slot ~s set with ~s due to ~a"
@@ -968,9 +954,9 @@ Change log:
 					 :ok-keyword T))
 	 slot)
     (cond ((schema-p other-obj) (setq obj other-obj)
-	   (setq slot :*any*)) ; use other obj; any slot
-	  ((eq other-obj :none) (setq slot :*any*)) ; any slot of this obj
-	  ((keywordp other-obj) (setq slot other-obj)) ; that slot
+	   (setq slot :*any*))				   ; use other obj; any slot
+	  ((eq other-obj :none) (setq slot :*any*))	   ; any slot of this obj
+	  ((keywordp other-obj) (setq slot other-obj))	   ; that slot
 	  (T (return-from Internal-Break-or-Notify-Slot))) ; error printed
     (Db-Show-Error window (format NIL "--Will ~a when ~s slot ~s set."
 				  (if (eq fnc #'Inspector-Break-Slot)
@@ -979,10 +965,9 @@ Change log:
     (call-func-on-slot-set obj slot :*any* fnc window))) ; in debug-fns
       
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Object Window
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 
 (defun List-Other-Objects (widget value)
   (declare (ignore value))
@@ -997,7 +982,7 @@ Change log:
     ;; will print a message, unless NOTHING is selected
     (cond ((schema-p other-obj)
 	   (Set-Up-Ps-Pop-For-Obj window ps-pop other-obj NIL T T))
-	  ((eq other-obj :none)) ; fine
+	  ((eq other-obj :none))		; fine
 	  (T (return-from List-Other-Objects))) ; error already printed
 
     (setq obj (car (g-value ps-pop :current-object-l)))
@@ -1017,7 +1002,7 @@ Change log:
 	    (push o is-a-list)
 	    (if (formula-p o)
 		(setq o (g-formula-value o :is-a))
-		(return)))) ; a broken one
+		(return))))		; a broken one
 	  ((schema-p obj)
 	   (setq title
 		 (list (cons (format NIL "For ~s :" obj) bold-font)))
@@ -1027,8 +1012,8 @@ Change log:
 	    (push o is-a-list)
 	    (if (schema-p o)
 		(setq o (car (g-value o :is-a)))
-		(return)))) ; a bad object
-	  (T ;; must be a destroyed object
+		(return))))		; a bad object
+	  (T				; must be a destroyed object
 	   (Db-Show-Error window
 		     (format NIL "Object ~s is invalid; might be destroyed"
 			     obj))
@@ -1044,13 +1029,13 @@ Change log:
        (push o agg-list)
        (if (schema-p o)
 	   (setq o (g-value o :parent))
-	   (return)))) ; must be a destroyed object
+	   (return))))			; must be a destroyed object
 
-    ;;; now set string-list
+    ;; now set string-list
     
     (setq string-list (Gen-Object-Columns history is-a-list agg-list))
     (push title string-list)
-    (push (list "") string-list) ; blank line
+    (push (list "") string-list)	; blank line
     (opal:set-text string-obj string-list)
     (s-value string-obj :visible T)
     (Db-Done-Error window)
@@ -1062,43 +1047,38 @@ Change log:
      
 (defun Gen-Object-Columns (history is-a-list agg-list)
   (let (strings)
-
     (if history
-      (dolist (o history)
-	(push (list (format NIL "   ~s" o)) strings))
-      ;; else
-      (push (list "   <<none>>") strings))
+	(dolist (o history)
+	  (push (list (format NIL "   ~s" o)) strings))
+	(push (list "   <<none>>") strings))
     (push (list (cons "Objects Shown in This Window:" bold-font))
 	  strings)
-    (push (list "") strings) ; blank line
-    
+    (push (list "") strings)		; blank line
     (if agg-list
-      (dolist (o agg-list)
-	(push (list (format NIL "   ~s" o)) strings))
-      ;; else
-      (push (list "   <<none>>") strings))
+	(dolist (o agg-list)
+	  (push (list (format NIL "   ~s" o)) strings))
+	(push (list "   <<none>>") strings))
     (push (list (cons "Aggregate hierarchy (:parent slot):" bold-font))
 	  strings)
-    (push (list "") strings) ; blank line
+    (push (list "") strings)		; blank line
 
     (if is-a-list
-      (dolist (o is-a-list)
-	(push (list (format NIL "   ~s" o)) strings))
-      ;; else
-      (push (list "   <<none>>") strings))
+	(dolist (o is-a-list)
+	  (push (list (format NIL "   ~s" o)) strings))
+	(push (list "   <<none>>") strings))
     (push (list (cons "IS-A hierarchy:" bold-font)) strings)
-    (push (list "") strings) ; blank line
+    (push (list "") strings)		; blank line
 
     strings))
 
     
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+;;;******************************************************************
 
 (defun Get-Window-For-pop-up-debug (left top)
   (let ((win (pop used-window-list)))
     (unless (and win
-		 (schema-p win))  ;make sure not destroyed somehow
+		 (schema-p win))	; make sure not destroyed somehow
       (setq win (create-instance NIL inter:interactor-window
 		  (:title "Inspector")
 		  (:aggregate (create-instance NIL ps-pop-agg))
@@ -1114,9 +1094,9 @@ Change log:
   (s-value (g-value win :aggregate) :object-history NIL)
   (push win used-window-list))
 
-;;; Sets up the data structure and window but doesn't load the string list.
+;; Sets up the data structure and window but doesn't load the string list.
 (defun Set-Up-Ps-Pop-For-Obj (window ps-pop schema inherit? reset-error-msg
-				     push-object)
+			      push-object)
   (let (temp-w)
     (s-value ps-pop :current-object-l (list schema))
     (s-value ps-pop :showing-inherited? inherit?)
@@ -1173,13 +1153,13 @@ Change log:
     (push (list (format NIL "~s" slot) opal:default-font text-color) l)
     (push l *strings-list*)))
 
-;;; calls the format function except for slots that have already been
-;;; printed because they are in the *extra-slot-list*
+;; calls the format function except for slots that have already been
+;; printed because they are in the *extra-slot-list*
 (defun Elim-extra-FUNCTION (schema slot form inherited valid real-value
-			       types bits indent limit)
+			    types bits indent limit)
   (unless (member slot *extra-slot-list*)
     (format-function schema slot form inherited valid real-value
-			       types bits indent limit)))
+		     types bits indent limit)))
 
 (defun Create-Multi-Font-String-For-PS (schema inherit? window
 					       &key (reset-error-msg T)
@@ -1209,6 +1189,14 @@ Change log:
       (Set-Up-Ps-Pop-For-Obj window ps-pop schema inherit? reset-error-msg
 			     push-object)
       (opal:update window)
+
+      ;; XXX Work around --- somehow the height doesn't get set right in the above.
+      ;; Re-setting it after update corrects this.
+      (s-value window :height (+ (g-value string-obj :top)
+				 (g-value string-obj :height)
+				 5))
+      (opal:update window)
+
       ;; Next is a special hack to make sure can interact with the
       ;; inspector windows even if there is a modal window visible.  It
       ;; is probably OK not to re-enable the modal-ness after finished

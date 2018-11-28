@@ -401,53 +401,44 @@ Change log:
   (setq menu1 (make-gauge 10 10 "Pressure" 'needle2))
   (opal:add-components top-agg4 menu1)
   (opal:update vp)
-  (create-instance   'inter1
-		     inter:angle-interactor
-		     (:start-where
-		      `(:in-box ,(g-value menu1 :box)))
-		     (:center-of-rotation
-		      (g-value (g-value menu1 :box)
-			       :center-rot))
-		     (:obj-to-change (g-value menu1 :feedback))
-		     (:feedback-obj (g-value menu1 :interim-feedback))
-		     (:outside :last)
-		     (:window vp))
+  (create-instance 'inter1 inter:angle-interactor
+    (:start-where `(:in-box ,(g-value menu1 :box)))
+    (:center-of-rotation (g-value (g-value menu1 :box) :center-rot))
+    (:obj-to-change (g-value menu1 :feedback))
+    (:feedback-obj (g-value menu1 :interim-feedback))
+    (:outside :last)
+    (:window vp))
 
   ;; ** Menu 2 **
   (setq menu2 (make-stirrer 200 10))
   (opal:add-components top-agg4 menu2)
   (opal:update vp)
-  (create-instance 'inter2
-		   inter:angle-interactor 
-		   (:start-where
-		    `(:in-box ,(g-value menu2 :box)))
-		   (:obj-to-change (g-value menu2 :str))
-		   (:start-action NIL)
-		   (:back-inside-action NIL)
-		   (:stop-action NIL)
-		   (:center-of-rotation (g-value menu2 :box :center-rot))
-		   (:running-action
-		    #'(lambda(an-interactor obj-to-change new-angle angle-delta)
-			(declare (ignore an-interactor new-angle))
-			(when *test-debug* (format T "delta=~s~%" angle-delta))
-			(incf (g-value obj-to-change :my-angle)
-			      (/ angle-delta 5.0))))
-		   (:window vp))
+  (create-instance 'inter2 inter:angle-interactor 
+    (:start-where
+     `(:in-box ,(g-value menu2 :box)))
+    (:obj-to-change (g-value menu2 :str))
+    (:start-action NIL)
+    (:back-inside-action NIL)
+    (:stop-action NIL)
+    (:center-of-rotation (g-value menu2 :box :center-rot))
+    (:running-action
+     #'(lambda(an-interactor obj-to-change new-angle angle-delta)
+	 (declare (ignore an-interactor new-angle))
+	 (when *test-debug* (format T "delta=~s~%" angle-delta))
+	 (incf (g-value obj-to-change :my-angle)
+	       (/ angle-delta 5.0))))
+    (:window vp))
 
   ;; ** Menu 3 **
   (setq menu3 (make-gauge 10 150 "Temperature" 'needle1))
   (opal:add-components top-agg4 menu3)
   (opal:update vp)
-  (create-instance   'inter3
-		     inter:angle-interactor 
-		     (:start-where
-		      `(:in-box ,(g-value menu3 :box)))
-		     (:center-of-rotation
-		      (g-value (g-value menu3 :box)
-			       :center-rot))
-		     (:obj-to-change (g-value menu3 :feedback))
-		     (:outside :last)
-		     (:window vp))
+  (create-instance 'inter3 inter:angle-interactor 
+    (:start-where `(:in-box ,(g-value menu3 :box)))
+    (:center-of-rotation (g-value (g-value menu3 :box) :center-rot))
+    (:obj-to-change (g-value menu3 :feedback))
+    (:outside :last)
+    (:window vp))
 
   (opal:update vp)
   (Format T "~%Demo-Angle:

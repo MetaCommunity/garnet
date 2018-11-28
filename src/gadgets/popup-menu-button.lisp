@@ -67,7 +67,7 @@
 
 (in-package "GARNET-GADGETS")
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (export '(Popup-Menu-Button lines-bitmap downarrow-bitmap))
 
   #+garnet-test
@@ -178,14 +178,14 @@
 ;; initialization.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#-apple
+
 (create-instance 'lines-bitmap opal:bitmap
-    (:image (opal:read-image (common-lisp-user::garnet-pathnames "pop-up-icon-no-border.bm"
-					     common-lisp-user::Garnet-Bitmap-Pathname))))
-#-apple
+    (:image (opal:read-image (merge-pathnames "pop-up-icon-no-border.bm"
+					      common-lisp-user::Garnet-Bitmap-Pathname))))
+
 (create-instance 'downarrow-bitmap opal:bitmap
-    (:image (opal:read-image (common-lisp-user::garnet-pathnames "downarrow.bm"
-					     common-lisp-user::Garnet-Bitmap-Pathname))))
+    (:image (opal:read-image (merge-pathnames "downarrow.bm"
+					      common-lisp-user::Garnet-Bitmap-Pathname))))
 
 (create-instance 'Popup-Menu-Button gg:text-button
   :declare ((:parameters :left :top :string :items :v-spacing :h-align

@@ -8,7 +8,7 @@
 ;;; Ported by Jim Davis 4 Aug 92 from some code I wrote for the Lisp Machine long ago.
 
 (defpackage "CLWIN"
-  (:use "LISP" "KR")
+  (:use "COMMON-LISP" "KR")
   (:export
    ;; aggregates defined here, you might build upon them
    coordinate-transform-window		;window with coord xforms

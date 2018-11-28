@@ -27,8 +27,7 @@ Change log:
 ;;;
 (unless (get :garnet-modules :Scrolling-String)
   (format t "Loading Scrolling-String...~%")
-  (load (common-lisp-user::garnet-pathnames "scrolling-string"
-			 Garnet-Gadgets-PathName)
+  (load (merge-pathnames "scrolling-string" Garnet-Gadgets-PathName)
 	:verbose T))
 
 (setf (get :garnet-modules :Scrolling-String) t)

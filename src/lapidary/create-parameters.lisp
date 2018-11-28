@@ -56,12 +56,12 @@ retrieve its value from. If you do not want a slot
 to be a parameter, just leave the text box next to 
 it blank (or make it blank it it currently contains 
 the name of a slot."))
-#|
+#||
       (:string "To make a slot a parameter, select its text box and
 enter the name of the slot in the secondary selection that
 the slot should retrieve its value from. To deselect a slot, 
 make its text box be blank"))
-|#
+||#
     (:slots ,opal:aggrelist
       (:items ,(o-formula (gvl :parent :items)))
       (:fixed-height-p t)

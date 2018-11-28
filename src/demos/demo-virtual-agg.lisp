@@ -91,7 +91,7 @@ Change log:
   (setq *vp* w)
 
   (setq *input*
-    (open (common-lisp-user::garnet-pathnames "circles.data" common-lisp-user::Garnet-DataFile-PathName)
+    (open (merge-pathnames "circles.data" common-lisp-user::Garnet-DataFile-PathName)
           :direction :input))
 
   ;; gray rectangle behind virtual aggregate
@@ -216,7 +216,10 @@ Change log:
                    (:outside :last)
                    (:start-where `(:in ,little-star))
                    (:obj-to-change nil)
-                   (:feedback-obj feedback-star)
+		   ;; Nobody does it this way any more.
+;;                   (:feedback-obj feedback-star)
+		   ;; Real "drag-and-drop"
+		   (:feedback-obj little-star)
                    (:attach-point :where-hit))
 
   (create-instance 'DESTROYER inter:two-point-interactor

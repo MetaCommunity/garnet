@@ -21,16 +21,28 @@
 
 (in-package "COMMON-LISP-USER")
 
+(defvar *debug-debug-mode* nil)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (proclaim
+   (if *debug-debug-mode*
+       (and (boundp '*garnet-compile-debug-settings*)
+	    *garnet-compile-debug-settings*)
+       ;; Global default settings.
+       (and (boundp '*default-garnet-proclaim*) 
+	    *default-garnet-proclaim*))))
+
+
 ;; load utilities needed by inspector, unless already loaded
 
 (unless (get :garnet-modules :multifont)
-  (load (common-lisp-user::garnet-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)))
+  (load (merge-pathnames "multifont-loader" common-lisp-user::Garnet-Opal-PathName)))
 (unless (get :garnet-modules :text-buttons)
-  (load (common-lisp-user::garnet-pathnames "text-buttons-loader" common-lisp-user::Garnet-Gadgets-PathName)))
+  (load (merge-pathnames "text-buttons-loader" common-lisp-user::Garnet-Gadgets-PathName)))
 (unless (get :garnet-modules :error-gadget-utils)
   (common-lisp-user::garnet-load "gg:error-gadget-utils"))
 
-(eval-when (eval load compile)
+(eval-when (:execute :load-toplevel :compile-toplevel)
   (garnet-mkdir-if-needed Garnet-debug-Pathname))
 
 (Defvar Garnet-Debug-Files   ;; defvar rather than defparameter so can setq
@@ -48,8 +60,5 @@
 
 (garnet-copy-files Garnet-debug-Src Garnet-debug-Pathname
 		   '("debug-loader.lisp"))
-
-
-#+allegro-v3.1 (gc t)
 
 (setf (get :garnet-modules :debug) T)

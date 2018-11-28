@@ -8,6 +8,8 @@
 ;;; please contact garnet@cs.cmu.edu to be put on the mailing list. ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; $Id::                                                             $
+
 ;;; Changes:
 ;;; 27-Nov-18 spchamp - Moved mac.lisp into gem; use conditional load
 ;;;                     from opal-loader.lisp
@@ -34,7 +36,7 @@
 
 (unless (get :garnet-modules :gem)
   (dolist (file Garnet-Gem-Files)
-    (load (garnet-pathnames file Garnet-Gem-PathName)
+    (load (merge-pathnames file Garnet-Gem-PathName)
 	  :verbose T)))
 
 (setf (get :garnet-modules :gem) t)
