@@ -11,8 +11,67 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-;; NB #+GARNET-PROCESSES cf. garnet-loader.lisp and ./shared.lisp
+;; NB: This file represents something of a prototype towards a
+;; component-oriented representation of application resources in Garnet,
+;; focusing mainly on Garnet Bitmap, Pixmap, and Icon resources. An
+;; effort is made for developing a reusable class-oriented
+;; representation of such resources, for their represenation in
+;; individual, digitally encoded filesystem objects and towards their
+;; representatiin in KR and broader Garnet schema objects,
+;;
+;;
+;; Commentary - The Garnet-Bitmaps System
+;;
+;; [T.D - cf. *.asd files]
+;;
+;; Not as-yet addressed here:
+;;
+;; - Portability. This edition requires a single generic function and a
+;;   number of methods specialized onto that generic function, such as
+;;   are provided via an externally linked system - presently, the
+;;   ltp-asdf-utils system. That system has been published in the
+;;   Thinkum Labs Lisp Tools Project (LTP) source repository.
+;;
+;;   This external linkage has been viable, if only insofar as for
+;;   purposes of protoyping. This exernal linkage should be removed,
+;;   before any formal release of this system.
+;;
+;; - XDG Application Directories, for Desktop Environments - not, as
+;;   yet, represented in this system. Such representation must
+;;   necessarily entail a linkage onto implementation-specific features
+;;   such as for interfacing onto platform APIs for shell commands,
+;;   process objects, PTYs and file streams -- principally vis a vis
+;;   standard POSIX APIs, if not also in reference to the X/Open Single
+;;   Unix Specificaitons, up to and including SUSv4.
+;;
+;; - Device-Independent Representation of Static Graphics Resources
+;;
+;;   The nearest sense of device-independent abstraction that this
+;;   system approaches is entailed in a manner of representation of
+;;   application resources as generic filesystem objects, principally in
+;;   the PIXMAP and CURSOR component classes. In the instance of the
+;;   CUROR class, this component class reprsents something of an
+;;   aggregate class onto a cursor bitmap and a cursor mask --
+;;   insofar as such resources may be represented, each, with a static
+;;   filesystem object.
+;;
+;;   The representation in this system is developed as independent of
+;;   any application of such resources.
+;;
+;;   In the case of a cursor object, the resources may be used
+;;   principally for image compositing in the X window system, namely
+;;   for image transparency in the cursor object. Theoretically -- as
+;;   via Garnet -- this should also be portable onto the Garnet gworld
+;;   system.
+;;
+;;   In order to retain separation to the application, this system does
+;;   not in itself utilize any features of the Garnet KR system, in this
+;;   present revision.
+;;
+;; [spchamp - Nov 2018]
 
+;; NB #+GARNET-PROCESSES cf. garnet-loader.lisp and ./shared.lisp
+;; b.c INIT-OP (TO-DO)
 
 ;; FIXME: Parse source code for each of:
 ;;  Garnet-Bitmap-Pathname
@@ -24,7 +83,7 @@
 ;;
 ;; ensuring:
 ;;  #+Garnet.ASDF
-;;    (find-bitmap-pathname <name> :system <system>)
+;;    (bitmap-pathnames <name> :system <system>)
 
 ;; FIXME: System deps
 ;;  A. Depending on garnet-bitmaps :
@@ -60,9 +119,17 @@
 
 (export '(bitmap cursor cursor-cursor-bitmap cursor-mask-bitmap
           image
-          find-bitmap-pathname
+          bitmap-pathnames
           ))
 
+
+;; --- cf CMUCL
+
+(define-condition simple-program-error (program-error simple-condition)
+  ())
+
+(define-condition simple-style-warning (style-warning simple-condition)
+  ())
 
 ;; ----
 
@@ -97,6 +164,21 @@
   ;; no-op
   )
 
+#+CBSE-INSTALL
+(defmethod perform ((op install-bytecode-op) (component resource-file))
+  ;; TBD onto XDG APP DIRS
+  ;;
+  ;; TBD :IF-EXISTS :error-if-checksum-mismatch
+  )
+
+#+CBSE-INSTALL
+(defmethod perform ((op install-source-op) (component resource-file))
+  ;; TBD onto XDG APP DIRS
+  ;;
+  ;; TBD :IF-EXISTS :error-if-checksum-mismatch
+  )
+
+
 (defmethod asdf/component:module-default-component-class
     ((module resource-module))
   (find-class 'resource-file))
@@ -116,6 +198,9 @@
 ;;; PIXMAP component class
 
 (defclass pixmap (resource-file)
+  ;; e.g *.xpm
+  ;;
+  ;; NB also *.bm files in garnet:lib;c32; - appears to be an XPM format
   ())
 
 (defmethod source-file-type ((component pixmap) (context parent-component))
@@ -126,6 +211,7 @@
 ;;; BITMAP Component Class
 
 (defclass bitmap (resource-file)
+  ;; FIXME This could share a common class onto PIXMAP other than per RESOURCE-FILE
   ())
 
 (defmethod source-file-type ((component bitmap) (context parent-component))
@@ -136,57 +222,83 @@
 ;;; CURSOR Component Class
 
 (defclass cursor (resource parent-component)
-  ;: A cursor, in Garnet -- certainly, in a manner as would similar as
-  ;; to CLX and braoder XLIB -- for a cursor's effective storage  in
-  ;; the filesystem, a cursor is comprised of an X _bitmap_
-  ;; resource and an X _bitmap mask_ resource, each being
-  ;; represented of an individual file in the filesystem.
+  ;; FIXME: It may be feasible to use a common superclass onto PIXMAP,
+  ;; other than the generic RESOURCE class -- if only for purpose of
+  ;; representing, in this system, any "Appliction file" characteristics
+  ;; of cursor and pixmap resources, by-in-large indepenent of resource
+  ;; interface implemenations.
   ;;
-  ;; This class specifies a single CURSOR component class
-  ;; for ASDF, such that this CURSOR component class
-  ;; will represent both file resouces, effectiely.
+  ;; NB: It may serve to facilitate application onto ADSF pathname
+  ;; transformations, to use a single GRAPHICS-RESOURCE superclass.
+  ;;
+  ;; Gesture definitons would not use the GRAPHICS-RESOURCE class, of
+  ;; course.
+
+  ;; A cursor, in Garnet -- certainly, in a manner as may be similar to
+  ;; to CLX and broader XLIB -- for a cursor's effective storage in
+  ;; the filesystem, a cursor may be comprised of an X _bitmap_
+  ;; resource and an X _bitmap mask_ resource. Typically, in Garnet,
+  ;; each such resource would be represented with an individual file in
+  ;; the filesystem.
+
+  ;; This class specifies a single, aggregate CURSOR component class
+  ;; for ASDF, such that an instance of this CURSOR component class
+  ;; will be representative od both file resources -- each, represented
+  ;; with an ASDF COMPONENT object, in the aggregate CURSOR object. This
+  ;; is for providing application data for the CURSOR presentation.
+  ;;
+  ;; In the definition developed here, a CURSOR does not per se comprise
+  ;; an ASDF module, considering that the bitmap and mask resources may
+  ;; not need to be individually evaluated for most ASDF:PERFORM
   ;;
   ;; A corresponding interface is defined in the function,
-  ;; FIND-BITMAP-PATHNAME such as to utilize this extension
+  ;; BITMAP-PATHNAMES such as to utilize this extension
   ;; on ASDF for purpose of locating cursor, bitmap, and pixmap
   ;; resources within the filesystem.
   ((cursor-bitmap
     :initarg :cursor-bitmap
-    :type component
+    :type component ;; FIXME see following comments
+    ;; :type (or component pathname) ;; NB - see SHARED-INITIALIZE method, subsq.
+    ;;
+    ;; NB It may be simpler to just store a pathname, not a complete
+    ;; component object, in each of these aggregate component slots.
+    ;;
+    ;; Insofar as this system may be assume to not have been distributed
+    ;; for reuse, should then be able to just use :type pathname
+    ;;
+    ;; :type pathname
     :accessor cursor-cursor-bitmap)
    (mask-bitmap
     :initarg :mask-bitmap
     :type component
+    ;; :type (or component pathname)
+    ;; :type pathname
     :accessor cursor-mask-bitmap)
    ))
 
-#+NIL ;; may be redundant, or overriden by other code in ASDF
+#+NIL ;; may be redundant
 (defmethod component-pathname :around ((component cursor))
   ;; CURSOR is a component with no single source-file mapping.
   ;;
   ;; As similiar to conventional MODULE components, the pathname
-  ;; of a CURSOR will nonetheless establish the pathname of
-  ;; the effective components of a CURSOR
+  ;; of a CURSOR may nonetheless establish a base pathname to the
+  ;; pathname of the effective components of a CURSOR
   ;;
   ;; If a :pathname was specified to the component when the object
-  ;; was initialized, then this method SHOULD revert to that pathname,
-  ;; effectively.
+  ;; was initialized, then this method SHOULD revert to that pathname -
+  ;; such that this method presumes to do via the next method.
   ;;
   ;; Otherwise, this method SHOULD revert to the pathname
   ;; of the containing component, if applicable.
-  (let* ((parent (component-parent component))
-         (*default-pathname-defaults*
-          (cond
-            (parent
-             (component-pathname parent))
-            (t *default-pathname-defaults*)))
-         (p (when (next-method-p)
-              (call-next-method))))
-    ;; BORKED.
-    #+NIL (warn "PING: ~s (~s) ~s" component parent p) ;; debug
-    (or p
-        (when parent
-          *default-pathname-defaults*))))
+  (let ((p (when (next-method-p)
+             (call-next-method))))
+    #+NIL (warn "Debug: ~s (~s) ~s" component parent p)
+    (cond
+      (p p)
+      (t
+       (let ((parent (component-parent component)))
+         (or (when parent (componet-pathname parent))
+             *default-pathname-defaults*))))))
 
 (defmethod component-children ((component cursor))
   (let ((cursor (cursor-cursor-bitmap component))
@@ -194,9 +306,9 @@
     (list* cursor mask (call-next-method*))))
 
 (defmethod module-components ((component cursor))
-    ;; "Backwards compat"
+  ;; "Backwards compat" (??)
+  ;; or cross-wise compat. onto the ASDF 3 API
   (component-children component))
-
 
 
 (defmethod shared-initialize :around ((instance cursor) slot-names
@@ -204,33 +316,45 @@
                                       &key pathname
                                         parent
                                         &allow-other-keys)
-  (when (and (or (eq slot-names t)
-                 (find 'asdf::relative-pathname slot-names :test #'eq))
-             (not pathname))
-    ;; Cannot (SETF COMPONENT-PATHNAME) [ASDF 3.1.3.8]
+  ;; NB: This uses a :PATHNAME initarg to the CURSOR class,
+  ;;     then deriving a behavior onto
+  ;;     ASDF::COMPONENT-RELATIVE-PATHNAME slot which provides that
+  ;;     initarg in a direct slot definition
+  (when (and (not pathname)
+             (or (eq slot-names t)
+                 (and slot-names
+                      (find 'asdf::relative-pathname
+                            (the cons slot-names)
+                            :test #'eq))))
+    ;; NB: Cannot (SETF COMPONENT-PATHNAME) [ASDF 3.1.3.8]
+    ;; ... because there's no writer method for the slot
     ;;
-    ;; So, to set the component's pathname to a custom value,
-    ;; simply a "hack" onto the initargs...
+    ;; Here, will set a default for the component's pathname,
+    ;; using simply a "hack" onto the initargs.
     (setf (getf initargs :pathname)
 	  (cond
+            ;; FIXME PARENT may be derived in the next method
 	    (parent (component-pathname parent))
 	    (t (make-pathname  :directory '(:relative))))))
 
   (when (next-method-p)
+    ;; NB: Would only need to use this form if initargs was locally modified
     (apply #'call-next-method instance slot-names initargs))
 
 
-  (macrolet ((default (arg value)
+  (macrolet ((init-default (arg value)
                (let ((%arg `(quote ,arg)))
                  `(when (or (eq slot-names t)
-                            (member ,%arg slot-names :test #'eq))
+                            (and slot-names
+                                 (member ,%arg (the cons slot-names)
+                                         :test #'eq)))
                     (unless (slot-boundp instance ,%arg)
                       (setf (slot-value instance ,%arg)
                             ,value)))))
-             (default-bm (slot-name type obj-name instance)
-               (let ((%cbm-path (gentemp "%cbm-path-"))
-                     (%cname (gentemp "%cname-")))
-                 `(default ,slot-name
+             (init-default-bm (slot-name type obj-name instance)
+               (let ((%cbm-path (make-symbol "%cbm-path"))
+                     (%cname (make-symbol "%cname")))
+                 `(init-default ,slot-name
                       (let ((,%cname (format nil "~A-~A"
                                              (asdf:coerce-name ,obj-name)
                                              (asdf:coerce-name
@@ -240,7 +364,18 @@
                                             :type ,type
                                             :defaults
                                             (component-pathname ,instance))))
-                        (make-instance 'bitmap
+                        ;; NB this defaults to storing a BITMAP not
+                        ;; an ASDF COMPONENT into the slot.
+                        ;;
+                        ;; FIXME: This could be adapted to be of a
+                        ;; smaller footpring -- namely, as to store a
+                        ;; PATHNAME into the slot, insetad of a complete
+                        ;; BITMAP component instance -- considering:
+                        ;; (A) The CURSOR is not a MODULE;  (B) Any
+                        ;; COMPONENT stored in the slot might not be
+                        ;; used as an ADSF component, except insofar as
+                        ;; for storing a pathname
+                        (make-instance 'bitmap ;; FIXME hard-coded class name
                                        :name ,%cname
                                        :pathname ,%cbm-path
                                        :parent ,instance))))))
@@ -248,22 +383,27 @@
     (let ((obj-name (component-name instance))
           (rpath (component-pathname instance)))
       (when obj-name
+        ;; derive instance cursor and mask pathnames from component name
+        ;; and component pathname
         (cond
           (rpath
-           (default-bm cursor-bitmap "cursor" obj-name instance)
-           (default-bm mask-bitmap "mask" obj-name instance))
+           (init-default-bm cursor-bitmap "cursor" obj-name instance)
+           (init-default-bm mask-bitmap "mask" obj-name instance))
           (t (flet ((check (slot)
                       (unless (slot-boundp instance slot)
-                        (simple-style-warning
-                         "~<Unable to define default value for ~S slot ~S~>~%
+                        ;; FIXME another dep onto LTP-utils
+                        (warn 'simple-style-warning
+                              :format-control
+                              "~<Unable to infer default value for ~S slot ~S~>~%
 ~<Component pathname not avaialble for ~0@*~S~>"
-                         instance slot))))
+                              :format-arguments (list instance slot)))))
                (check 'cursor-bitmap)
-               (check 'mask-bitmap))))))))
+               (check 'mask-bitmap))))))
+    (values instance)))
 
 
 
-;;; FIND-BITMAP-PATHNAME
+;;; BITMAP-PATHNAMES
 
 
 (deftype image ()
@@ -274,15 +414,24 @@
 
 
 
-(defun find-bitmap-pathname (name &key (errorp t)
+(defun bitmap-pathnames (name &key (errorp t)
                                     (system "garnet-bitmaps")
+                                    ;; ^ NB kind-of arbitrary, specific
+                                    ;; to prototyping for Garnet
                                     submodule)
-  ;; FIXME: should rename this function, across the source tree
-  ;; => find-resource-pathname
-  ;; whereas this function applies both for bitmaps and cursors now
+  ;; NB/FIXME This function does not make any distinction for the
+  ;; "Object State" of the given SYSTEM, such as for whether the
+  ;; pathname should be resolved as onto the source filesystem -- i.e
+  ;; the behavior essentially provided here -- or else resolved such as
+  ;; onto XDG app-dirs, in an installed system.
+
+  ;; Convenience function for integrating the local PIXMAP and CURSOR
+  ;; classes into Garnet
+
+  ;; FIXME: Should also generalize this for application e.g. onto the
+  ;; Gilt system (bitmaps, XPM pixmaps) - garnet:lib;gilt;
   ;;
-  ;; FIXME: Must also generalize this for application e.g. onto the Gilt
-  ;; resource system (bitmaps, pixmaps)
+  ;; also gesture classifiers - garnet:lib;gesture;
   ;;
   ;; Therefore: TO DO
   ;;  1) [X] Move this into a (new) garnet-desktop-shared system [DONE]
@@ -299,46 +448,63 @@
            (values (or pathname null)
                    (or pathname null)))
   (let* ((%name (asdf:coerce-name name))
-         ;; FIXME: Un-depend on ltp-utils
-         (sys (ltp-asdf-utils:find-component* system nil))
+         (sys (asdf:find-system system t))
          (c (cond
               (submodule
                (let* ((%submodule (asdf:coerce-name submodule))
-                      ;; FIXME: LTP DEP ;; !! REMOVE THIS [spchamp]
-                      (module (ltp-asdf-utils:find-component* %submodule sys)))
+                      (module (find-component sys %submodule)))
 
-                 (ltp-asdf-utils:find-component* %name module nil)))
-              (t (ltp-asdf-utils:find-component* %name sys nil)))))
+                 (asdf:find-component module %name)))
+              (t (asdf:find-component sys %name)))))
+
+    ;; (assert is-a-bitmap-resource c &fluff)
+
     (cond
       (c
        (typecase c
+         ;; NB Static dispatch with TYPECASE
          (cursor
           (macrolet ((get-path (property obj)
+                       ;; FIXME revise for storing a pathname such that
+                       ;; the accessor may retrieve and when that's so,
+                       ;; return that pathname, w/o further component
+                       ;; accessor calls
                        `(asdf:component-pathname (,property ,obj))))
             (values
              (get-path cursor-cursor-bitmap c)
              (get-path cursor-mask-bitmap c))))
          (t (values (asdf:component-pathname c) nil))))
       (errorp
-       (simple-program-error
-        "Bitmap resource system ~S does not contain a bitmap named ~S"
-        system %name ))
+       (error 'simple-program-error
+              :format-control
+              "System ~A does not contain a bitmap named ~S"
+              :format-arguments (list sys %name )))
       (t (values nil nil)))))
 
 
 ;;; Misc tests
 
-;; (find-bitmap-pathname "downarrow")
+;; NB: This may cause effective auto-loading of the garnet-bitmaps
+;; system definition when the following forms are evaluated
 
-;; (find-bitmap-pathname "garnet")
+;; (bitmap-pathnames "downarrow")
+;; >  *.bm (pixmap) pathname, NIL
 
-;; (find-bitmap-pathname "line" :submodule "garnetdraw")
+;; (bitmap-pathnames "line" :system "garnet-bitmaps" :submodule "garnetdraw")
+;; >  *.bm (pixmap) pathname, NIL
+
+;; (bitmap-pathnames "garnet")
+;; > cursor, mask pathnames
+
+;; (bitmap-pathnames "dnw")
+
+;; (bitmap-pathnames "dnw" :system "also-dnw")
 
 
 
-;; (asdf:module-components (find-component* "garnet" "garnet-bitmaps"))
+;; (asdf:module-components (asdf:find-component  "garnet-bitmaps" "garnet"))
 ;;
-;; (describe (find-component* "garnet" "garnet-bitmaps"))
+;; (describe (asdf:find-component  "garnet-bitmaps" "garnet"))
 #+NIL
 (defun enumerate-slot-values (instance)
   (let* ((c (class-of instance)))
@@ -349,8 +515,8 @@
                    (list (c2mop:slot-value-using-class c instance sl)))))
             (c2mop:class-slots c))))
 ;;
-;; (enumerate-slot-values (find-component* "garnet" "garnet-bitmaps"))
-;; ^ CHILDREN and CHILDREN-BY-NAME slots are empty. why?
+;; (enumerate-slot-values (asdf:find-component  "garnet-bitmaps" "garnet"))
+;; ^ NB: CHILDREN and CHILDREN-BY-NAME slots werre empty (NIL) in some versions of ASDF
 
 
-;; (component-pathname (cursor-cursor-bitmap (find-component* "garnet" "garnet-bitmaps")))
+;; (component-pathname (cursor-cursor-bitmap (asdf:find-component "garnet-bitmaps" "garnet" )))
